@@ -57,7 +57,7 @@ end
 function sampev.onSendCommand(text)
   if string.find(text, '/pm') then
     id, text = string.match(text, "(%d+) (.+)")
-	if tonumber(id) ~= nil and id < sampGetMaxPlayerId() then
+	if id ~= nil tonumber(id) ~= nil and tonumber(id) < sampGetMaxPlayerId() then
     string = string.format("%s,%s,%s,%s,%s", getid(), sampGetPlayerNickname(id),
     string.gsub(text, "[\"\', ]", ""), os.date('%Y - %m - %d %X'), os.time())
     file_write(file, string)
