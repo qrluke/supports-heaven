@@ -39,6 +39,7 @@ local iYears = {}
 local Qcolor = imgui.ImFloat4(imgui.ImColor(cfg.colors.QuestionColor):GetFloat4())
 local Acolor = imgui.ImFloat4(imgui.ImColor(cfg.colors.AnswerColor):GetFloat4())
 local iMonth = imgui.ImInt(tonumber(os.date("%m")))
+local iDay = imgui.ImInt(tonumber(os.date("%d")))
 local iMonths = {
   [1] = "Январь",
   [2] = "Февраль",
@@ -79,7 +80,9 @@ function main()
     wait(0)
     if wasKeyPressed(key.VK_Z) then
       if not main_window_state.v then
+        local a = os.clock()
         updateStats()
+        sampAddChatMessage("Обработка csv заняла "..os.clock() - a.." сек.", - 1)
       end
       main_window_state.v = not main_window_state.v
     end
@@ -101,8 +104,8 @@ function sampev.onSendCommand(text)
   if string.find(text, '/pm') then
     id, text = string.match(text, "(%d+) (.+)")
     if id ~= nil and tonumber(id) ~= nil and tonumber(id) <= sampGetMaxPlayerId() and sampIsPlayerConnected(id) and sampGetPlayerNickname(id) ~= nil then
-      string = string.format("%s,%s,%s,%s,%s", getid(), sampGetPlayerNickname(id),
-      string.gsub(text, "[\"\', ]", ""), os.date('%Y - %m - %d %X'), os.time())
+      string = string.format("%s,%s,%s,%s,%s,%s,%s", getid(), sampGetPlayerNickname(id), "QUESTION",
+      string.gsub(text, "[\"\', ]", ""), "TIME", os.date('%Y - %m - %d %X'), os.time())
       file_write(file, string)
     end
   end
@@ -134,8 +137,7 @@ function updateStats()
   csv = {}
   csvall = {}
   for _ in io.lines(file) do
-    table.insert(csvall, _)
-    CSV_id, CSV_nickname, CSV_otvet, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+)")
+    CSV_id, CSV_nickname, CSV_vopros, CSV_otvet, CSV_respondtime, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+),(.+),(.+)")
     if tonumber(CSV_unix) ~= nil then
       CSV_unix = tonumber(CSV_unix)
       CSV_year = os.date("%Y", CSV_unix)
@@ -146,6 +148,8 @@ function updateStats()
       end
       if csv[date] == nil then csv[date] = 0 end
       csv[date] = csv[date] + 1
+      if csvall[date] == nil then csvall[date] = {} end
+      table.insert(csvall[date], _)
       checkyear = false
       for i = 0, #iYears do
         if CSV_year == iYears[i] then checkyear = true end
@@ -172,6 +176,12 @@ function getMonthStats(month, year)
   month_histogram[0] = sum
 end
 
+function getDayLogs(month, year, day)
+  if tonumber(month) < 10 then month = "0"..month end
+  if tonumber(year) < 10 then year = "0"..year end
+  if tonumber(day) < 10 then day = "0"..day end
+  date = tostring(month.."/"..day.."/"..year)
+end
 
 --отвечает за /supstats
 function getStats()
@@ -210,7 +220,6 @@ end
 --отвечает за csv
 function file_write(file, string)
   if not doesFileExist(file) then
-    print('хуй')
     f = io.open(file, "wb+")
     f:write("id,nickname,otvet,date and time,unix time\n")
     f:close()
@@ -287,44 +296,86 @@ apply_custom_style()
 --main_window
 function imgui.OnDrawFrame()
   if main_window_state.v then
-    --imgui.SetNextWindowSize(imgui.ImVec2(520, 400))
-    imgui.Begin("Support Assistant v"..thisScript().version, main_window_state, imgui.WindowFlags.NoCollapse + imgui.WindowFlags.AlwaysAutoResize)
-    if imgui.CollapsingHeader(u8"Последние 100 ответов", imgui.TreeNodeFlags.DefaultOpen) then
-      imgui.Columns(4, "mycolumns")
+    imgui.SetNextWindowPos(imgui.ImVec2(80, 310), imgui.Cond.FirstUseEver)
+    imgui.SetNextWindowSize(imgui.ImVec2(800, 400), imgui.Cond.FirstUseEver)
+    imgui.Begin("Support Assistant v"..thisScript().version, main_window_state, imgui.WindowFlags.NoCollapse)
+    if imgui.CollapsingHeader(u8"Лог ответов", imgui.TreeNodeFlags.DefaultOpen) then
+      imgui.PushItemWidth(100)
+      imgui.Combo(u8"Год", iYear, iYears)
+      imgui.PopItemWidth()
+      imgui.SameLine()
+      imgui.PushItemWidth(100)
+      imgui.SliderInt(u8"Месяц", iMonth, 1, 12)
+      --imgui.PopItemWidth()
+      imgui.SameLine()
+      imgui.SliderInt(u8"День", iDay, 1, 31)
+      getDayLogs(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4), iDay.v)
+      --imgui.BeginChild("##header", imgui.ImVec2(0, imgui.GetTextLineHeightWithSpacing() + imgui.GetStyle().ItemSpacing.y))
+      --imgui.BeginChild("##header", imgui.ImVec2(0, imgui.GetTextLineHeightWithSpacing()))
+      imgui.Columns(6, "mycolumns")
       imgui.Separator()
-      imgui.Text("ID")
+      imgui.Text(u8"ID")
+      imgui.SetColumnWidth(-1, 50)
       imgui.NextColumn()
-      imgui.Text("Name")
+      imgui.SetColumnWidth(-1, 135)
+      imgui.Text(u8"Ник")
       imgui.NextColumn()
-      imgui.Text("Path")
+      imgui.SetColumnWidth(-1, 190)
+      imgui.Text(u8"Вопрос")
       imgui.NextColumn()
-      imgui.Text("Hovered")
+      imgui.SetColumnWidth(-1, 190)
+      imgui.Text(u8"Ответ")
+      imgui.NextColumn()
+      imgui.SetColumnWidth(-1, 40)
+      imgui.Text(u8"Сек")
+      imgui.NextColumn()
+      imgui.SetColumnWidth(-1, 140)
+      imgui.Text(u8"Дата")
       imgui.NextColumn()
       imgui.Separator()
-      for _ = #csvall, #csvall - 100, - 1 do
-        if _ > 0 then
-          _ = csvall[_]
-          CSV_id, CSV_nickname, CSV_otvet, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+)")
-          imgui.Selectable(CSV_id)
-          imgui.NextColumn()
-          imgui.Selectable(CSV_nickname)
-          imgui.NextColumn()
-          imgui.Selectable(CSV_dateandtime)
-          imgui.NextColumn()
-          imgui.Selectable(CSV_unix)
-          imgui.NextColumn()
-        end
-      end
       imgui.Columns(1)
+    --  imgui.EndChild()
+      if csvall[date] ~= nil then
+        imgui.BeginChild("##scrollingregion", imgui.ImVec2(0, 120))
+        imgui.Columns(6)
+        imgui.Separator()
+        for _ = 1, #csvall[date] do
+          if _ > 0 then
+            _ = csvall[date][_]
+            CSV_id, CSV_nickname, CSV_vopros, CSV_otvet, CSV_respondtime, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+),(.+),(.+)")
+            imgui.Selectable(CSV_id)
+            imgui.SetColumnWidth(-1, 50)
+            imgui.NextColumn()
+            imgui.SetColumnWidth(-1, 135)
+            imgui.Selectable(CSV_nickname)
+            imgui.NextColumn()
+            imgui.SetColumnWidth(-1, 190)
+            imgui.TextWrapped(CSV_vopros)
+            imgui.NextColumn()
+            imgui.SetColumnWidth(-1, 190)
+            imgui.TextWrapped(CSV_otvet)
+            imgui.NextColumn()
+            imgui.SetColumnWidth(-1, 40)
+            imgui.Selectable(CSV_respondtime)
+            imgui.NextColumn()
+            imgui.SetColumnWidth(-1, 140)
+            imgui.Selectable(CSV_dateandtime)
+            imgui.NextColumn()
+            imgui.Separator()
+          end
+        end
+        imgui.Columns(1)
+        imgui.EndChild()
+      end
     end
-    if imgui.CollapsingHeader(u8"Статистика", imgui.TreeNodeFlags.DefaultOpen) then
+    if imgui.CollapsingHeader(u8"Статистика ответов", imgui.TreeNodeFlags.DefaultOpen) then
       imgui.PushItemWidth(100)
       imgui.Combo(u8"Год", iYear, iYears)
       imgui.PopItemWidth()
       imgui.SameLine()
       imgui.SliderInt(u8"Месяц", iMonth, 1, 12)
       getMonthStats(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4))
-      imgui.PlotHistogram("##Статистика", month_histogram, 0, u8:encode(iMonths[iMonth.v].." "..iYears[iYear.v + 1]), 0, math.max(unpack(month_histogram)) + math.max(unpack(month_histogram)) * 0.15, imgui.ImVec2(500, 160))
+      imgui.PlotHistogram("##Статистика", month_histogram, 0, u8:encode(iMonths[iMonth.v].." "..iYears[iYear.v + 1]), 0, math.max(unpack(month_histogram)) + math.max(unpack(month_histogram)) * 0.15, imgui.ImVec2(790, 160))
     end
     if imgui.CollapsingHeader(u8"Настройки") then
       if imgui.Checkbox("##ReplaceQuestionColorCheck", iReplaceQuestionColor) then
