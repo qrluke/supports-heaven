@@ -15,6 +15,7 @@ local inspect = require 'inspect'
 local month_histogram = {}
 local key = require 'vkeys'
 local selected = 1
+local select = -1
 local encoding = require 'encoding'
 encoding.default = 'CP1251'
 u8 = encoding.UTF8
@@ -25,6 +26,8 @@ local cfg = inicfg.load({
   {
     ReplaceQuestionColor = true,
     ReplaceAnswerColor = false,
+    ShowQuestion = true,
+    ShowAnswer = true,
   },
   colors =
   {
@@ -32,10 +35,14 @@ local cfg = inicfg.load({
     AnswerColor = imgui.ImColor(255, 255, 255):GetU32()
   }
 }, 'support')
+local players = {}
 local iYear = imgui.ImInt(0)
 local iReplaceQuestionColor = imgui.ImBool(cfg.options.ReplaceQuestionColor)
 local iReplaceAnswerColor = imgui.ImBool(cfg.options.ReplaceAnswerColor)
+local iShowQuestion = imgui.ImBool(cfg.options.ShowQuestion)
+local iShowAnswer = imgui.ImBool(cfg.options.ShowAnswer)
 local iYears = {}
+local AllQuestions = {}
 local Qcolor = imgui.ImFloat4(imgui.ImColor(cfg.colors.QuestionColor):GetFloat4())
 local Acolor = imgui.ImFloat4(imgui.ImColor(cfg.colors.AnswerColor):GetFloat4())
 local iMonth = imgui.ImInt(tonumber(os.date("%m")))
@@ -95,19 +102,84 @@ end
 --заменяем цвет
 function sampev.onServerMessage(color, text)
   if color == -5963521 then
-    sampAddChatMessage(text, cfg.colors.QuestionColor)
-    return false
+    if text:find("->Вопрос", true) then
+      parseQuestion(text)
+      if iShowQuestion.v then
+        if iReplaceQuestionColor.v then
+          sampAddChatMessage(text, Qcolor_HEX)
+        else
+          --do nothing
+        end
+      else
+        return false
+      end
+    end
+    if text:find("<-", true) and text:find("to", true) then
+      if iShowAnswer.v then
+        if iReplaceAnswerColor.v then
+          sampAddChatMessage(text, Acolor_HEX)
+        else
+          --do nothing
+        end
+      else
+        return false
+      end
+    end
   end
 end
 --считаем активность саппорта
 function sampev.onSendCommand(text)
   if string.find(text, '/pm') then
-    id, text = string.match(text, "(%d+) (.+)")
-    if id ~= nil and tonumber(id) ~= nil and tonumber(id) <= sampGetMaxPlayerId() and sampIsPlayerConnected(id) and sampGetPlayerNickname(id) ~= nil then
-      string = string.format("%s,%s,%s,%s,%s,%s,%s", getid(), sampGetPlayerNickname(id), "QUESTION",
-      string.gsub(text, "[\"\', ]", ""), "TIME", os.date('%Y - %m - %d %X'), os.time())
-      file_write(file, string)
-    end
+    parseHostAnswer()
+  end
+end
+
+function parseQuestion(text)
+  ClientNick, ClientID, ClientText = string.match(text, "->Вопрос (.+)%[(%d+)%]: (.+)")
+  table.insert(AllQuestions[#AllQuestions], {"Nick" == ClientNick, "ID" == ClientID, "Question" == ClientText})
+end
+
+function parseAllAnswer()
+
+end
+
+--[[ Набросок мессенджера
+iMessanger = {}
+function q(text)
+  ClientNick, ClientID, ClientText =  string.match(text, "->Вопрос (.+)%[(%d+)%]: (.+)")
+  if iMessanger[ClientNick] == nil then
+    iMessanger[ClientNick] = {}
+    iMessanger[ClientNick]["A"] = {}
+    iMessanger[ClientNick]["Q"] = {Nick = ClientNick, ID = ClientID, Question = ClientText, time = os.time()}
+  end
+  table.insert(iMessanger[ClientNick]["Q"], {Nick = ClientNick, ID = ClientID, Question = ClientText, time = os.time()})
+end
+
+function a(text)
+  SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<-(%a.+)%[(%d+)%] to (.+)%[(%d+)%]: (.+)")
+  if iMessanger[ClientNick] == nil then
+    iMessanger[ClientNick] = {}
+    iMessanger[ClientNick]["A"] = {From = SupportNick, FromID = SupportID, To = ClientNick, ToID = ClientID, Answer = Answer, time = os.time()}
+    iMessanger[ClientNick]["Q"] = {}
+  end
+  table.insert(iMessanger[ClientNick]["A"], {From = SupportNick, FromID = SupportID, To = ClientNick, ToID = ClientID, Answer = Answer, time = os.time()})
+end
+
+a("<-User_Script[228] to Alex_Peep[79]: 140")
+q("->Вопрос Alex_Peep[79]: Какой уровень такси нужен для новой машины?")
+a("<-User_Script[228] to Alex_Peep[79]: 140")
+q("->Вопрос Alex_Peep[79]: Сколько А в Б?")
+a("<-User_Script[228] to Alex_Peep[79]: А хуй его знает.")
+q("->Вопрос Alex_Peep[79]: Кто убил кенни?")
+a("<-User_Script[228] to Alex_Peep[79]: Злобный сценарист!")
+]]
+
+function parseHostAnswer(text)
+  id, text = string.match(text, "(%d+) (.+)")
+  if id ~= nil and tonumber(id) ~= nil and tonumber(id) <= sampGetMaxPlayerId() and sampIsPlayerConnected(id) and sampGetPlayerNickname(id) ~= nil then
+    string = string.format("%s,%s,%s,%s,%s,%s,%s", getid(), sampGetPlayerNickname(id), "QUESTION",
+    string.gsub(text, "[\"\', ]", ""), "TIME", os.date('%Y - %m - %d %X'), os.time())
+    file_write(file, string)
   end
 end
 --------------------------------------------------------------------------------
@@ -299,7 +371,79 @@ function imgui.OnDrawFrame()
     imgui.SetNextWindowPos(imgui.ImVec2(80, 310), imgui.Cond.FirstUseEver)
     imgui.SetNextWindowSize(imgui.ImVec2(800, 400), imgui.Cond.FirstUseEver)
     imgui.Begin("Support Assistant v"..thisScript().version, main_window_state, imgui.WindowFlags.NoCollapse)
-    if imgui.CollapsingHeader(u8"Лог ответов", imgui.TreeNodeFlags.DefaultOpen) then
+    if imgui.CollapsingHeader(u8"Мессенжер") then
+      local c, cm = 0, 0
+      local push = false
+      imgui.Columns(2)
+      imgui.SetColumnWidth(-1, 180)
+      imgui.BeginChild("##players", imgui.ImVec2(172, 366))
+      for k, v in pairs(players) do
+        c = c + 1
+        local pName = sampGetPlayerNickname(k)
+        if k == select then
+          imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(68, 154, 240, 113):GetVec4())
+          push = true
+        end
+        if imgui.Button(u8(pName .. "[" .. k .. "]"), imgui.ImVec2(-0.0001, 30)) then
+          select = k
+          S2B = true
+        end
+        if push then
+          imgui.PopStyleColor()
+          push = false
+        end
+      end
+      if c == 0 then
+        imgui.Text(u8"Список пуст ...")
+      end
+      imgui.EndChild()
+      imgui.NextColumn()
+      imgui.BeginChild("##smsMsg", imgui.ImVec2(413, 345))
+      if tonumber(select) >= 0 then
+        for k, v in ipairs(players[select].messages) do
+          cm = cm + 1
+          local msg = u8(string.format("%s\n%s", v.text, v.time))
+          local size = imgui.GetFont():CalcTextSizeA(imgui.GetFont().FontSize, 350.0, 346.0, msg)
+          local x = size.x > 350 and 350 or size.x + imgui.GetStyle().ItemSpacing.x
+          if v.type == "me" then
+            imgui.NewLine()
+            imgui.SameLine(413 - x - imgui.GetStyle().WindowPadding.x - (imgui.GetScrollMaxY() == 0 and 0 or imgui.GetStyle().ScrollbarSize))
+          end
+          imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(48, 134, 210, v.type == "me" and 113 or 90):GetVec4())
+          imgui.PushStyleVar(imgui.StyleVar.WindowPadding, imgui.ImVec2(4.0, 2.0))
+          imgui.BeginChild("##msg" .. k, imgui.ImVec2(x + 8.0, size.y + 4.0), false, imgui.WindowFlags.AlwaysUseWindowPadding + imgui.WindowFlags.NoScrollbar + imgui.WindowFlags.NoScrollWithMouse)
+          imgui.TextWrapped(msg)
+          imgui.EndChild()
+          imgui.PopStyleVar()
+          imgui.PopStyleColor()
+        end
+      end
+      if S2B then
+        imgui.SetScrollHere()
+        S2B = false
+      end
+      imgui.EndChild()
+      if cm == 0 then
+        imgui.SetCursorPos(imgui.ImVec2(280, 185))
+        imgui.Text(u8"Выберите диалог или напишите смс ...")
+      else
+        imgui.PushItemWidth(341)
+        if F2I then
+          imgui.SetKeyboardFocusHere()
+          F2I = false
+        end
+        if imgui.InputText("##toSms", toSms, imgui.InputTextFlags.EnterReturnsTrue) or
+        imgui.SameLine() or imgui.Button(u8"Отправить") then
+          sampSendChat("/sms " .. select .. " " .. u8:decode(toSms.v))
+          toSms.v = ''
+          F2I = true
+        end
+        imgui.PopItemWidth()
+      end
+      imgui.Columns(1)
+
+    end
+    if imgui.CollapsingHeader(u8"Лог ответов") then
       imgui.PushItemWidth(100)
       imgui.Combo(u8"Год", iYear, iYears)
       imgui.PopItemWidth()
@@ -334,7 +478,7 @@ function imgui.OnDrawFrame()
       imgui.NextColumn()
       imgui.Separator()
       imgui.Columns(1)
-    --  imgui.EndChild()
+      --  imgui.EndChild()
       if csvall[date] ~= nil then
         imgui.BeginChild("##scrollingregion", imgui.ImVec2(0, 120))
         imgui.Columns(6)
@@ -350,10 +494,10 @@ function imgui.OnDrawFrame()
             imgui.Selectable(CSV_nickname)
             imgui.NextColumn()
             imgui.SetColumnWidth(-1, 190)
-            imgui.TextWrapped(CSV_vopros)
+            imgui.TextWrapped(u8:encode(CSV_vopros))
             imgui.NextColumn()
             imgui.SetColumnWidth(-1, 190)
-            imgui.TextWrapped(CSV_otvet)
+            imgui.TextWrapped(u8:encode(CSV_otvet))
             imgui.NextColumn()
             imgui.SetColumnWidth(-1, 40)
             imgui.Selectable(CSV_respondtime)
@@ -368,7 +512,7 @@ function imgui.OnDrawFrame()
         imgui.EndChild()
       end
     end
-    if imgui.CollapsingHeader(u8"Статистика ответов", imgui.TreeNodeFlags.DefaultOpen) then
+    if imgui.CollapsingHeader(u8"Статистика ответов") then
       imgui.PushItemWidth(100)
       imgui.Combo(u8"Год", iYear, iYears)
       imgui.PopItemWidth()
@@ -378,6 +522,18 @@ function imgui.OnDrawFrame()
       imgui.PlotHistogram("##Статистика", month_histogram, 0, u8:encode(iMonths[iMonth.v].." "..iYears[iYear.v + 1]), 0, math.max(unpack(month_histogram)) + math.max(unpack(month_histogram)) * 0.15, imgui.ImVec2(790, 160))
     end
     if imgui.CollapsingHeader(u8"Настройки") then
+      if imgui.Checkbox("##HideQuestionCheck", iShowQuestion) then
+        cfg.options.iShowQuestion = iShowQuestion.v
+        inicfg.save(cfg, "support")
+      end
+      imgui.SameLine()
+      if iShowQuestion.v then imgui.Text(u8("Показывать вопросы в чате?")) else imgui.TextDisabled(u8"Показывать вопросы в чате?") end
+      if imgui.Checkbox("##HideAnswerCheck", iShowAnswer) then
+        cfg.options.iShowAnswer = iShowAnswer.v
+        inicfg.save(cfg, "support")
+      end
+      imgui.SameLine()
+      if iShowAnswer.v then imgui.Text(u8("Показывать ответы в чате?")) else imgui.TextDisabled(u8"Показывать ответы в чате?") end
       if imgui.Checkbox("##ReplaceQuestionColorCheck", iReplaceQuestionColor) then
         cfg.options.ReplaceQuestionColor = iReplaceQuestionColor.v
         inicfg.save(cfg, "support")
@@ -406,6 +562,7 @@ function imgui.OnDrawFrame()
         Acolor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
         inicfg.save(cfg, "support")
       end
+
     end
     imgui.End()
   end
