@@ -33,6 +33,7 @@ local cfg = inicfg.load({
   },
   log = {
     active = true,
+    logger = true,
     height = 120,
   },
   stats = {
@@ -54,7 +55,9 @@ local cfg = inicfg.load({
   },
   messanger =
   {
-    active = true,
+    activesduty = true,
+    activesms = true,
+    mode = 1,
     Height = 300,
     QuestionColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
     AnswerColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
@@ -104,7 +107,9 @@ local iShowA2 = imgui.ImBool(cfg.messanger.iShowA2)
 local iChangeScroll = imgui.ImBool(cfg.messanger.iChangeScroll)
 local iSetKeyboard = imgui.ImBool(cfg.messanger.iSetKeyboard)
 local iNotepadActive = imgui.ImBool(cfg.notepad.active)
-local iMessangerActive = imgui.ImBool(cfg.messanger.active)
+local iMessangerActiveSDUTY = imgui.ImBool(cfg.messanger.activesduty)
+local iMessangerActiveSMS = imgui.ImBool(cfg.messanger.activesms)
+local iLogBool = imgui.ImBool(cfg.log.logger)
 local iLogActive = imgui.ImBool(cfg.log.active)
 local iStatsActive = imgui.ImBool(cfg.stats.active)
 local iShowSHOWOFFLINE = imgui.ImBool(cfg.messanger.iShowSHOWOFFLINE)
@@ -166,6 +171,7 @@ local toAnswer = imgui.ImBuffer(150)
 local text = imgui.ImBuffer(65536)
 text.v = string.gsub(string.gsub(u8:encode(cfg.notepad.text), "\\n", "\n"), "\\t", "\t")
 local LASTID = 0
+local countall = 0
 local S2B = false
 LASTNICK = " "
 PLAYA = false
@@ -207,7 +213,7 @@ function main()
     end
     if wasKeyPressed(key.VK_Z) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() or First then
       First = false
-      if not main_window_state.v then
+      if not main_window_state.v and cfg.log.logger then
         local a = os.clock()
         updateStats()
         if iShowTimeToUpdateCSV.v then
@@ -224,19 +230,19 @@ function main()
       end
     end
     if PLAYA1 then
-			 PLAYA1 = false
-			  a2 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerOthersNumber.v..[[.mp3]])
-				if getAudioStreamState(a2) ~= as_action.PLAY then
-	        setAudioStreamState(a2, as_action.PLAY)
-	      end
-			 end
+      PLAYA1 = false
+      a2 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerOthersNumber.v..[[.mp3]])
+      if getAudioStreamState(a2) ~= as_action.PLAY then
+        setAudioStreamState(a2, as_action.PLAY)
+      end
+    end
     if PLAYA then
-			PLAYA = false
-			a3 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerNumber.v..[[.mp3]])
-			if getAudioStreamState(a3) ~= as_action.PLAY then
-				setAudioStreamState(a3, as_action.PLAY)
-			end
-		end
+      PLAYA = false
+      a3 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerNumber.v..[[.mp3]])
+      if getAudioStreamState(a3) ~= as_action.PLAY then
+        setAudioStreamState(a3, as_action.PLAY)
+      end
+    end
     imgui.Process = main_window_state.v
   end
 end
@@ -261,6 +267,7 @@ function simulateSupport(text)
     end
   end
 end
+
 function sampev.onServerMessage(color, text)
   simulateSupport(text)
   if color == -5963521 then
@@ -279,7 +286,7 @@ function sampev.onServerMessage(color, text)
     end
     if text:find("<-", true) and text:find("to", true) then
       AddA(text)
-      SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "^<%-(%a.+)%[(%d+)%] to (.+)%[(%d+)%]: (.+)")
+      SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<%-(%a.+)%[(%d+)%] to ([%a_]+)%[(%d+)%]: (.+)")
       asdsadasads, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
       if SupportNick == sampGetPlayerNickname(myid) then
         if iSoundAnswer.v then PLAYA = true end
@@ -337,7 +344,7 @@ function FastChatRespond()
 end
 
 function AddQ(text)
-  ClientNick, ClientID, Question = string.match(text, "^->Вопрос (.+)%[(%d+)%]: (.+)")
+  ClientNick, ClientID, Question = string.match(text, "->Вопрос ([%a_]+)%[(%d+)%]: (.+)")
   if ClientNick ~= nil and ClientID ~= nil and Question ~= nil then
     LASTID = ClientID
     LASTNICK = ClientNick
@@ -355,7 +362,7 @@ function AddQ(text)
 end
 
 function AddA(text)
-  SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "^<%-(%a.+)%[(%d+)%] to (.+)%[(%d+)%]: (.+)")
+  SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<%-(%a.+)%[(%d+)%] to ([%a_]+)%[(%d+)%]: (.+)")
   if SupportNick ~= nil and SupportID ~= nil and ClientNick ~= nil and Answer ~= nil then
     if iMessanger[ClientNick] == nil then
       iMessanger[ClientNick] = {}
@@ -371,13 +378,16 @@ function AddA(text)
 end
 
 function parseHostAnswer(text)
-  id, text = string.match(text, "(%d+) (.+)")
-  if id ~= nil and tonumber(id) ~= nil and tonumber(id) <= sampGetMaxPlayerId() and sampIsPlayerConnected(id) and sampGetPlayerNickname(id) ~= nil then
-    string = string.format("%s,%s,%s,%s,%s,%s,%s", getid(), sampGetPlayerNickname(id), getLastQuestion(sampGetPlayerNickname(id)),
-    string.gsub(text, "[\"\', ]", ""), getRespondTime(sampGetPlayerNickname(id), os.time()), os.date('%Y - %m - %d %X'), os.time())
-    file_write(file, string)
+  if iLogBool.v then
+    id, text = string.match(text, "(%d+) (.+)")
+    if id ~= nil and tonumber(id) ~= nil and tonumber(id) <= sampGetMaxPlayerId() and sampIsPlayerConnected(id) and sampGetPlayerNickname(id) ~= nil then
+      string = string.format("%s,%s,%s,%s,%s,%s,%s", getid(), sampGetPlayerNickname(id), getLastQuestion(sampGetPlayerNickname(id)),
+      string.gsub(text, "[\"\', ]", ""), getRespondTime(sampGetPlayerNickname(id), os.time()), os.date('%Y - %m - %d %X'), os.time())
+      file_write(file, string)
+    end
   end
 end
+
 function getLastQuestion(nick)
   if iMessanger[nick] ~= nil and iMessanger[nick]["Q"] ~= nil and iMessanger[nick]["Q"][#iMessanger[nick]["Q"]] ~= nil and iMessanger[nick]["Q"][#iMessanger[nick]["Q"]]["Question"] ~= nil then
     return iMessanger[nick]["Q"][#iMessanger[nick]["Q"]]["Question"]
@@ -403,32 +413,40 @@ function join_argb(a, r, g, b)
 end
 ------------------------------------STATS---------------------------------------
 function updateStats()
-  csv = {}
-  csvall = {}
-  for _ in io.lines(file) do
-    CSV_id, CSV_nickname, CSV_vopros, CSV_otvet, CSV_respondtime, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+),(.+),(.+)")
-    if tonumber(CSV_unix) ~= nil then
-      CSV_unix = tonumber(CSV_unix)
-      CSV_year = os.date("%Y", CSV_unix)
-      if os.date('%H', CSV_unix) == "00" or os.date('%H', CSV_unix) == "01" or os.date('%H', CSV_unix) == '02' or os.date('%H', CSV_unix) == "03" or os.date('%H', CSV_unix) == "04" then
-        date = os.date("%x", CSV_unix - (tonumber(os.date("%H", CSV_unix) + 1) * 3600))
-      else
-        date = os.date("%x", CSV_unix)
-      end
-      if csv[date] == nil then csv[date] = 0 end
-      csv[date] = csv[date] + 1
-      if csvall[date] == nil then csvall[date] = {} end
-      table.insert(csvall[date], _)
-      checkyear = false
-      for i = 0, #iYears do
-        if CSV_year == iYears[i] then checkyear = true end
-      end
-      if checkyear == false then
-        table.insert(iYears, CSV_year)
+  if not doesFileExist(file) then
+    f = io.open(file, "wb+")
+    f:write("")
+    f:close()
+  else
+    csv = {}
+    csvall = {}
+    countall = 0
+    for _ in io.lines(file) do
+      CSV_id, CSV_nickname, CSV_vopros, CSV_otvet, CSV_respondtime, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+),(.+),(.+)")
+      if tonumber(CSV_unix) ~= nil then
+        countall = countall + 1
+        CSV_unix = tonumber(CSV_unix)
+        CSV_year = os.date("%Y", CSV_unix)
+        if os.date('%H', CSV_unix) == "00" or os.date('%H', CSV_unix) == "01" or os.date('%H', CSV_unix) == '02' or os.date('%H', CSV_unix) == "03" or os.date('%H', CSV_unix) == "04" then
+          date = os.date("%x", CSV_unix - (tonumber(os.date("%H", CSV_unix) + 1) * 3600))
+        else
+          date = os.date("%x", CSV_unix)
+        end
+        if csv[date] == nil then csv[date] = 0 end
+        csv[date] = csv[date] + 1
+        if csvall[date] == nil then csvall[date] = {} end
+        table.insert(csvall[date], _)
+        checkyear = false
+        for i = 0, #iYears do
+          if CSV_year == iYears[i] then checkyear = true end
+        end
+        if checkyear == false then
+          table.insert(iYears, CSV_year)
+        end
       end
     end
+    table.sort(iYears, function(a, b) return a > b end)
   end
-  table.sort(iYears, function(a, b) return a > b end)
 end
 
 function getMonthStats(month, year)
@@ -467,7 +485,7 @@ end
 function file_write(file, string)
   if not doesFileExist(file) then
     f = io.open(file, "wb+")
-    f:write("id,nickname,vopros,otvet,sec,date and time,unix time\n")
+    f:write("")
     f:close()
     file_write(file, string)
   else
@@ -485,7 +503,7 @@ function imgui.OnDrawFrame()
     imgui.SetNextWindowSize(imgui.ImVec2(cfg.menuwindow.Width, cfg.menuwindow.Height))
     imgui.Begin("Support Assistant v"..thisScript().version, main_window_state, imgui.WindowFlags.NoCollapse)
     imgui_saveposandsize()
-    if cfg.messanger.active then imgui_messanger() end
+    if cfg.messanger.activesduty or cfg.messanger.activesms then imgui_messanger() end
     if cfg.notepad.active then imgui_notepad() end
     if cfg.log.active then imgui_log() end
     if cfg.stats.active then imgui_stats() end
@@ -617,18 +635,27 @@ function imgui_messanger()
   if imgui.CollapsingHeader(u8"Мессенджер") then
     imgui.Columns(2, nil, false)
     imgui.SetColumnWidth(-1, 200)
-    imgui_messanger_sup_settings()
-    imgui_messanger_sup_player_list()
+    if cfg.messanger.mode == 1 then imgui_messanger_sup_settings() end
+    if cfg.messanger.mode == 2 then imgui_messanger_sms_settings() end
+    if cfg.messanger.mode == 1 then imgui_messanger_sup_player_list() end
+    if cfg.messanger.mode == 2 then imgui_messanger_sms_player_list() end
+    if cfg.messanger.activesduty and cfg.messanger.activesms then imgui_messanger_switchmode() end
     imgui.NextColumn()
-    imgui_messanger_sup_header()
-    imgui_messanger_sup_dialog()
-    imgui_messanger_sup_keyboard()
+    if cfg.messanger.mode == 1 then imgui_messanger_sup_header() end
+    if cfg.messanger.mode == 2 then imgui_messanger_sms_header() end
+    if cfg.messanger.mode == 1 then imgui_messanger_sup_dialog() end
+    if cfg.messanger.mode == 2 then imgui_messanger_sms_dialog() end
+    if cfg.messanger.mode == 1 then imgui_messanger_sup_keyboard() end
+    if cfg.messanger.mode == 2 then imgui_messanger_sms_keyboard() end
   end
   imgui.Columns(1)
 end
 
 function imgui_messanger_sup_settings()
   imgui.BeginChild("##settings", imgui.ImVec2(192, 35), true)
+  imgui.SameLine(6)
+  imgui.Text("")
+  imgui.SameLine()
   if imgui.Checkbox("##ShowSHOWOFFLINE", iShowSHOWOFFLINE) then
     cfg.messanger.iShowSHOWOFFLINE = iShowSHOWOFFLINE.v
     inicfg.save(cfg, "support")
@@ -687,8 +714,32 @@ function imgui_messanger_sup_settings()
   imgui.EndChild()
 end
 
+
+function imgui_messanger_sms_settings()
+  imgui.BeginChild("##settings", imgui.ImVec2(192, 35), true)
+  imgui.Text(u8"Тут под смски")
+  imgui.EndChild()
+end
+
+
+function imgui_messanger_sms_player_list()
+	if cfg.messanger.activesduty and cfg.messanger.activesms then
+		 playerlistY = iMessangerHeight.v - 74
+	else
+		 playerlistY = iMessangerHeight.v - 35
+	end
+  imgui.BeginChild("список ников", imgui.ImVec2(192, playerlistY), true)
+  imgui.Text(u8'Тут под смски')
+  imgui.EndChild()
+end
+
 function imgui_messanger_sup_player_list()
-  imgui.BeginChild("список ников", imgui.ImVec2(192, iMessangerHeight.v - 35), true)
+  if cfg.messanger.activesduty and cfg.messanger.activesms then
+     playerlistY = iMessangerHeight.v - 74
+  else
+     playerlistY = iMessangerHeight.v - 35
+  end
+  imgui.BeginChild("список ников", imgui.ImVec2(192, playerlistY), true)
   chatindex_V = {}
   chatindex_NV = {}
   chatindexNEW = {}
@@ -736,6 +787,30 @@ function imgui_messanger_sup_player_list()
   imgui.EndChild()
 end
 
+function imgui_messanger_switchmode()
+  imgui.BeginChild("Переключатель режимов", imgui.ImVec2(192, 35), true)
+  if cfg.messanger.mode == 1 then
+    imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 0, 0, 200):GetVec4())
+  else
+    imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.26, 0.59, 0.98, 0.40))
+  end
+  if imgui.Button(u8("SDUTY"), imgui.ImVec2(85, 20)) then
+    cfg.messanger.mode = 1
+  end
+  imgui.PopStyleColor()
+  if cfg.messanger.mode == 2 then
+    imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 0, 0, 200):GetVec4())
+  else
+    imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.26, 0.59, 0.98, 0.40))
+  end
+  imgui.SameLine()
+  if imgui.Button(u8("SMS"), imgui.ImVec2(85, 20)) then
+    cfg.messanger.mode = 2
+  end
+  imgui.PopStyleColor()
+  imgui.EndChild()
+end
+
 function imgui_messanger_sup_header()
   imgui.BeginChild("##header", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 35), true)
   if iMessanger[selecteddialog] ~= nil and iMessanger[selecteddialog]["Chat"] ~= nil and iMessanger[selecteddialog]["Q"] ~= nil then
@@ -753,6 +828,13 @@ function imgui_messanger_sup_header()
     end
     imgui.Text(u8:encode("["..online.."] Ник: "..selecteddialog..". ID: "..tonumber(sId)..". LVL: "..sampGetPlayerScore(tonumber(sId))..". Время: "..qtime.." сек."))
   end
+  imgui.EndChild()
+end
+
+
+function imgui_messanger_sms_header()
+  imgui.BeginChild("##header", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 35), true)
+  imgui.Text(u8"Тут под смски")
   imgui.EndChild()
 end
 
@@ -829,8 +911,14 @@ function imgui_messanger_sup_dialog()
   imgui.EndChild()
 end
 
-function imgui_messanger_sup_keyboard()
 
+function imgui_messanger_sms_dialog()
+  imgui.BeginChild("##middle", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), iMessangerHeight.v - 74), true)
+  imgui.Text(u8'Тут под смски')
+  imgui.EndChild()
+end
+
+function imgui_messanger_sup_keyboard()
   imgui.BeginChild("##keyboard", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 35), true)
   if iMessanger[selecteddialog] == nil then
 
@@ -875,6 +963,13 @@ function imgui_messanger_sup_keyboard()
   imgui.EndChild()
 end
 
+
+function imgui_messanger_sms_keyboard()
+  imgui.BeginChild("##keyboard", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 35), true)
+  imgui.Text(u8'Тут под смски')
+  imgui.EndChild()
+end
+
 function imgui_notepad()
   if imgui.CollapsingHeader(u8"Блокнот") then
     if imgui.InputTextMultiline("##notepad", text, imgui.ImVec2(-1, imgui.GetTextLineHeight() * cfg.notepad.lines), imgui.InputTextFlags.EnterReturnsTrue + imgui.InputTextFlags.AllowTabInput) then
@@ -893,102 +988,102 @@ end
 
 function imgui_log()
   if imgui.CollapsingHeader(u8"Лог моих ответов") then
-    imgui.PushItemWidth(100)
-    imgui.Combo(u8"Год##", iYear, iYears)
-    imgui.PopItemWidth()
-    imgui.SameLine()
-    imgui.PushItemWidth(100)
-    imgui.SliderInt(u8"Месяц##", iMonth, 1, 12)
-    imgui.SameLine()
-    imgui.SliderInt(u8"День", iDay, 1, 31)
-    getDayLogs(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4), iDay.v)
-    imgui.Columns(6, "mycolumns")
-    imgui.Separator()
-    imgui.Text(u8"ID")
-    imgui.SetColumnWidth(-1, 50)
-    imgui.NextColumn()
-    imgui.SetColumnWidth(-1, 135)
-    imgui.Text(u8"Ник")
-    imgui.NextColumn()
-    if ((cfg.menuwindow.Width - 400) / 2) > 50 then
-      AQWidth = ((cfg.menuwindow.Width - 400) / 2)
-    else
-      AQWidth = 50
-    end
-    imgui.SetColumnWidth(-1, AQWidth)
-    imgui.Text(u8"Вопрос")
-    imgui.NextColumn()
-    imgui.SetColumnWidth(-1, AQWidth)
-    imgui.Text(u8"Ответ")
-    imgui.NextColumn()
-    imgui.SetColumnWidth(-1, 40)
-    imgui.Text(u8"Сек")
-    imgui.NextColumn()
-    imgui.SetColumnWidth(-1, 145)
-    imgui.Text(u8"Дата")
-    imgui.NextColumn()
-    imgui.Columns(1)
-    if csvall[date] ~= nil then
-      imgui.BeginChild("##scrollingregion", imgui.ImVec2(0, cfg.log.height))
-      imgui.Columns(6)
+    if #iYears ~= 0 then
+      imgui.PushItemWidth(100)
+      imgui.Combo(u8"Год##", iYear, iYears)
+      imgui.PopItemWidth()
+      imgui.SameLine()
+      imgui.PushItemWidth(100)
+      imgui.SliderInt(u8"Месяц##", iMonth, 1, 12)
+      imgui.SameLine()
+      imgui.SliderInt(u8"День", iDay, 1, 31)
+      getDayLogs(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4), iDay.v)
+
+      imgui.Columns(6, "mycolumns")
       imgui.Separator()
-      for _ = #csvall[date], 1, - 1 do
-        if _ > 0 then
-          _ = csvall[date][_]
-          CSV_id, CSV_nickname, CSV_vopros, CSV_otvet, CSV_respondtime, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+),(.+),(.+)")
-          imgui.Selectable(CSV_id)
-          imgui.SetColumnWidth(-1, 50)
-          imgui.NextColumn()
-          imgui.SetColumnWidth(-1, 135)
-          imgui.Selectable(CSV_nickname)
-          imgui.NextColumn()
-          imgui.SetColumnWidth(-1, AQWidth)
-          imgui.TextWrapped(u8:encode(CSV_vopros))
-          imgui.NextColumn()
-          imgui.SetColumnWidth(-1, AQWidth)
-          imgui.TextWrapped(u8:encode(CSV_otvet))
-          imgui.NextColumn()
-          imgui.SetColumnWidth(-1, 40)
-          imgui.Selectable(CSV_respondtime)
-          imgui.NextColumn()
-          imgui.SetColumnWidth(-1, 140)
-          imgui.Selectable(CSV_dateandtime)
-          imgui.NextColumn()
-          imgui.Separator()
-        end
+      imgui.Text(u8"ID")
+      imgui.SetColumnWidth(-1, 50)
+      imgui.NextColumn()
+      imgui.SetColumnWidth(-1, 135)
+      imgui.Text(u8"Ник")
+      imgui.NextColumn()
+      if ((cfg.menuwindow.Width - 400) / 2) > 50 then
+        AQWidth = ((cfg.menuwindow.Width - 400) / 2)
+      else
+        AQWidth = 50
       end
+      imgui.SetColumnWidth(-1, AQWidth)
+      imgui.Text(u8"Вопрос")
+      imgui.NextColumn()
+      imgui.SetColumnWidth(-1, AQWidth)
+      imgui.Text(u8"Ответ")
+      imgui.NextColumn()
+      imgui.SetColumnWidth(-1, 40)
+      imgui.Text(u8"Сек")
+      imgui.NextColumn()
+      imgui.SetColumnWidth(-1, 145)
+      imgui.Text(u8"Дата")
+      imgui.NextColumn()
       imgui.Columns(1)
-      imgui.EndChild()
+      if csvall[date] ~= nil then
+        imgui.BeginChild("##scrollingregion", imgui.ImVec2(0, cfg.log.height))
+        imgui.Columns(6)
+        imgui.Separator()
+        for _ = #csvall[date], 1, - 1 do
+          if _ > 0 then
+            _ = csvall[date][_]
+            CSV_id, CSV_nickname, CSV_vopros, CSV_otvet, CSV_respondtime, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+),(.+),(.+)")
+            imgui.Selectable(CSV_id)
+            imgui.SetColumnWidth(-1, 50)
+            imgui.NextColumn()
+            imgui.SetColumnWidth(-1, 135)
+            imgui.Selectable(CSV_nickname)
+            imgui.NextColumn()
+            imgui.SetColumnWidth(-1, AQWidth)
+            imgui.TextWrapped(u8:encode(CSV_vopros))
+            imgui.NextColumn()
+            imgui.SetColumnWidth(-1, AQWidth)
+            imgui.TextWrapped(u8:encode(CSV_otvet))
+            imgui.NextColumn()
+            imgui.SetColumnWidth(-1, 40)
+            imgui.Selectable(CSV_respondtime)
+            imgui.NextColumn()
+            imgui.SetColumnWidth(-1, 140)
+            imgui.Selectable(CSV_dateandtime)
+            imgui.NextColumn()
+            imgui.Separator()
+          end
+        end
+        imgui.Columns(1)
+        imgui.EndChild()
+      end
+    else
+      imgui.Text(u8"Ошибка: лог пуст или невалиден.")
     end
   end
 end
 
 function imgui_stats()
   if imgui.CollapsingHeader(u8"Гистограмма") then
-    imgui.PushItemWidth(100)
-    imgui.Combo(u8"Год", iYear, iYears)
-    imgui.PopItemWidth()
-    imgui.PushItemWidth(200)
-    imgui.SameLine()
-    imgui.SliderInt(u8"Месяц", iMonth, 1, 12)
-    getMonthStats(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4))
-    imgui.PlotHistogram("##Статистика", month_histogram, 0, u8:encode(iMonths[iMonth.v].." "..iYears[iYear.v + 1]), 0, math.max(unpack(month_histogram)) + math.max(unpack(month_histogram)) * 0.15, imgui.ImVec2(imgui.GetWindowContentRegionWidth(), cfg.stats.height))
+    if #iYears ~= 0 then
+      imgui.PushItemWidth(100)
+      imgui.Combo(u8"Год", iYear, iYears)
+      imgui.PopItemWidth()
+      imgui.PushItemWidth(200)
+      imgui.SameLine()
+      imgui.SliderInt(u8"Месяц", iMonth, 1, 12)
+      getMonthStats(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4))
+      imgui.PlotHistogram("##Статистика", month_histogram, 0, u8:encode(iMonths[iMonth.v].." "..iYears[iYear.v + 1]), 0, math.max(unpack(month_histogram)) + math.max(unpack(month_histogram)) * 0.15, imgui.ImVec2(imgui.GetWindowContentRegionWidth(), cfg.stats.height))
+    else
+      imgui.Text(u8"Ошибка: лог пуст или невалиден.")
+    end
   end
 end
 
 function imgui_settings()
   if imgui.CollapsingHeader(u8"Настройки") then
 
-    if imgui.Checkbox("##ShowTimeToUpdateCSV", iShowTimeToUpdateCSV) then
-      cfg.options.ShowTimeToUpdateCSV = iShowTimeToUpdateCSV.v
-      inicfg.save(cfg, "support")
-    end
-    imgui.SameLine()
-    if iShowTimeToUpdateCSV.v then
-      imgui.Text(u8("Показывать время обработки csv?"))
-    else
-      imgui.TextDisabled(u8"Показывать время обработки csv?")
-    end
+
 
     if imgui.Checkbox("##HideQuestionCheck", iHideQuestion) then
       cfg.options.HideQuestion = iHideQuestion.v
@@ -1030,6 +1125,8 @@ function imgui_settings()
     imgui.SameLine()
     if iReplaceQuestionColor.v then
       imgui.Text(u8("Цвет вопросов в чате изменяется на: "))
+      imgui.SameLine(287)
+      imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##Qcolor", Qcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
         cfg.colors.QuestionColor = imgui.ImColor.FromFloat4(Qcolor.v[1], Qcolor.v[2], Qcolor.v[3], Qcolor.v[4]):GetU32()
@@ -1049,6 +1146,8 @@ function imgui_settings()
     imgui.SameLine()
     if iReplaceAnswerColor.v then
       imgui.Text(u8("Цвет ваших ответов в чате изменяется на: "))
+      imgui.SameLine(287)
+      imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##Acolor", Acolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
         cfg.colors.AnswerColor = imgui.ImColor.FromFloat4(Acolor.v[1], Acolor.v[2], Acolor.v[3], Acolor.v[4]):GetU32()
@@ -1066,6 +1165,8 @@ function imgui_settings()
     imgui.SameLine()
     if iReplaceAnswerOthersColor.v then
       imgui.Text(u8("Цвет чужих ответов в чате изменяется на: "))
+      imgui.SameLine(287)
+      imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##Acolor1", Acolor1, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
         cfg.colors.AnswerColor = imgui.ImColor.FromFloat4(Acolor1.v[1], Acolor1.v[2], Acolor1.v[3], Acolor1.v[4]):GetU32()
@@ -1076,20 +1177,29 @@ function imgui_settings()
     else imgui.TextDisabled(u8"Изменять цвет чужих ответов в чате?")
     end
 
-    if imgui.Checkbox("##включить мессенджер", iMessangerActive) then
-      cfg.messanger.active = iMessangerActive.v
+    if imgui.Checkbox("##включить мессенджер", iMessangerActiveSDUTY) then
+      if iMessangerActiveSDUTY.v then
+        cfg.messanger.mode = 1
+			else
+				if cfg.messanger.activesms then
+	        cfg.messanger.mode = 2
+				end
+      end
+      cfg.messanger.activesduty = iMessangerActiveSDUTY.v
       inicfg.save(cfg, "support")
     end
-    if iMessangerActive.v then
+    if iMessangerActiveSDUTY.v then
       imgui.SameLine()
       imgui.Text(u8("Мессенджер sduty активирован!"))
-      imgui.PushItemWidth(300)
+      imgui.PushItemWidth(325)
       imgui.SliderInt(u8"Высота мессенджера", iMessangerHeight, 100, 1000)
       if iMessangerHeight.v ~= cfg.messanger.Height then
-        cfg.messanger.Height = iStatsHeight.v
+        cfg.messanger.Height = iMessangerHeight.v
         inicfg.save(cfg, "support")
       end
       imgui.Text(u8("Цвета вопросов в диалогах:"))
+      imgui.SameLine(203)
+      imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4(u8"Цвет вопросов", iQcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
         cfg.messanger.QuestionColor = imgui.ImColor.FromFloat4(iQcolor.v[1], iQcolor.v[2], iQcolor.v[3], iQcolor.v[4]):GetU32()
@@ -1114,6 +1224,8 @@ function imgui_settings()
       end
 
       imgui.Text(u8("Цвета ваших ответов в диалогах:"))
+      imgui.SameLine(203)
+      imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4(u8"Цвет ваших ответов", iAcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
         cfg.messanger.AnswerColor = imgui.ImColor.FromFloat4(iAcolor.v[1], iAcolor.v[2], iAcolor.v[3], iAcolor.v[4]):GetU32()
@@ -1139,6 +1251,8 @@ function imgui_settings()
       end
 
       imgui.Text(u8("Цвета чужих ответов в диалогах:"))
+      imgui.SameLine(203)
+      imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4(u8"Цвет ответов других саппортов", iAcolor1, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
         cfg.messanger.AnswerColorOthers = imgui.ImColor.FromFloat4(iAcolor1.v[1], iAcolor1.v[2], iAcolor1.v[3], iAcolor1.v[4]):GetU32()
@@ -1165,7 +1279,33 @@ function imgui_settings()
       end
     else
       imgui.SameLine()
-      imgui.TextDisabled(u8"Включить мессенджер sduty?")
+      imgui.TextDisabled(u8"Включить sduty мессенджер?")
+    end
+
+    if imgui.Checkbox("##включить sms мессенджер", iMessangerActiveSMS) then
+      if iMessangerActiveSMS.v then
+        cfg.messanger.mode = 2
+			else
+				if cfg.messanger.activesduty then
+					cfg.messanger.mode = 1
+					print('mode')
+				end
+      end
+      cfg.messanger.activesms = iMessangerActiveSMS.v
+      inicfg.save(cfg, "support")
+    end
+    if iMessangerActiveSMS.v then
+      imgui.SameLine()
+      imgui.Text(u8("Мессенджер sms активирован!"))
+      imgui.PushItemWidth(325)
+      imgui.SliderInt(u8"Высота мессенджера##1", iMessangerHeight, 100, 1000)
+      if iMessangerHeight.v ~= cfg.messanger.Height then
+        cfg.messanger.Height = iMessangerHeight.v
+        inicfg.save(cfg, "support")
+      end
+    else
+      imgui.SameLine()
+      imgui.TextDisabled(u8"Включить sms мессенджер?")
     end
 
     if imgui.Checkbox("##включить блокнот", iNotepadActive) then
@@ -1175,7 +1315,7 @@ function imgui_settings()
     if iNotepadActive.v then
       imgui.SameLine()
       imgui.Text(u8"Блокнот активирован!")
-      imgui.PushItemWidth(300)
+      imgui.PushItemWidth(325)
       imgui.SliderInt(u8"Количество строк блокнота", iNotepadLines, 1, 50)
       if iNotepadLines.v ~= cfg.notepad.lines then
         cfg.notepad.lines = iNotepadLines.v
@@ -1186,6 +1326,35 @@ function imgui_settings()
       imgui.TextDisabled(u8"Включить блокнот?")
     end
 
+    if imgui.Checkbox("##включить логгер", iLogBool) then
+      if cfg.log.logger == false then updateStats() end
+      cfg.log.logger = iLogBool.v
+      inicfg.save(cfg, "support")
+    end
+    if iLogBool.v then
+      imgui.SameLine()
+      imgui.Text(u8:encode("Ответы пишутся в support.csv! Записей в логе: "..countall.."."))
+    else
+      imgui.SameLine()
+      imgui.TextDisabled(u8"Включить запись ответов в лог?")
+
+      if doesFileExist(file) then
+        imgui.SameLine()
+        if imgui.Button(u8("Удалить лог")) then
+          os.remove(file)
+        end
+      end
+    end
+    if imgui.Checkbox("##ShowTimeToUpdateCSV", iShowTimeToUpdateCSV) then
+      cfg.options.ShowTimeToUpdateCSV = iShowTimeToUpdateCSV.v
+      inicfg.save(cfg, "support")
+    end
+    imgui.SameLine()
+    if iShowTimeToUpdateCSV.v and cfg.log.logger then
+      imgui.Text(u8("Показывать время обработки лога?"))
+    else
+      imgui.TextDisabled(u8"Показывать время обработки лога?")
+    end
     if imgui.Checkbox("##включить лог", iLogActive) then
       cfg.log.active = iLogActive.v
       inicfg.save(cfg, "support")
@@ -1193,7 +1362,7 @@ function imgui_settings()
     if iLogActive.v then
       imgui.SameLine()
       imgui.Text(u8"Лог ответов активирован!")
-      imgui.PushItemWidth(300)
+      imgui.PushItemWidth(325)
       imgui.SliderInt(u8"Высота лога", iLogHeight, 1, 500)
       if iLogHeight.v ~= cfg.log.height then
         cfg.log.height = iLogHeight.v
@@ -1211,7 +1380,7 @@ function imgui_settings()
     if iStatsActive.v then
       imgui.SameLine()
       imgui.Text(u8"Гистограмма активирована!")
-      imgui.PushItemWidth(300)
+      imgui.PushItemWidth(325)
       imgui.SliderInt(u8"Высота гистограммы", iStatsHeight, 1, 500)
       if iStatsHeight.v ~= cfg.stats.height then
         cfg.stats.height = iStatsHeight.v
@@ -1222,7 +1391,6 @@ function imgui_settings()
       imgui.TextDisabled(u8"Включить гистограмму?")
     end
 
-    --iStatsActive iLogActive
     if imgui.Checkbox("##SoundQuestion", iSoundQuestion) then
       cfg.options.SoundQuestion = iSoundQuestion.v
       inicfg.save(cfg, "support")
@@ -1276,11 +1444,6 @@ function imgui_settings()
       imgui.SameLine()
       imgui.TextDisabled(u8"Включить уведомление при ответе другого саппорта?")
     end
-
-
-
-
-
   end
 end
 --style
