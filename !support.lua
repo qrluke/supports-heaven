@@ -168,6 +168,9 @@ text.v = string.gsub(string.gsub(u8:encode(cfg.notepad.text), "\\n", "\n"), "\\t
 local LASTID = 0
 local S2B = false
 LASTNICK = " "
+PLAYA = false
+PLAYQ = false
+PLAYA1 = false
 math.randomseed(os.time())
 -------------------------------------MAIN---------------------------------------
 function main()
@@ -213,9 +216,27 @@ function main()
       end
       main_window_state.v = not main_window_state.v
     end
-    if wasKeyPressed(key.VK_C) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
-      print(inspect(iMessanger))
+    if PLAYQ then
+      PLAYQ = false
+      a1 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundQuestionNumber.v..[[.mp3]])
+      if getAudioStreamState(a1) ~= as_action.PLAY then
+        setAudioStreamState(a1, as_action.PLAY)
+      end
     end
+    if PLAYA1 then
+			 PLAYA1 = false
+			  a2 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerOthersNumber.v..[[.mp3]])
+				if getAudioStreamState(a2) ~= as_action.PLAY then
+	        setAudioStreamState(a2, as_action.PLAY)
+	      end
+			 end
+    if PLAYA then
+			PLAYA = false
+			a3 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerNumber.v..[[.mp3]])
+			if getAudioStreamState(a3) ~= as_action.PLAY then
+				setAudioStreamState(a3, as_action.PLAY)
+			end
+		end
     imgui.Process = main_window_state.v
   end
 end
@@ -226,12 +247,12 @@ function simulateSupport(text)
     tempid = math.random(1, 10)
     if sampIsPlayerConnected(tempid) then
       if math.random(1, 10) ~= 1 then
-				if iSoundQuestion.v then setAudioStreamState(loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundQuestionNumber.v..[[.mp3]]), as_action.PLAY) end
+        if iSoundQuestion.v then PLAYQ = true end
         text = "->Вопрос "..sampGetPlayerNickname(tempid).."["..tempid.."]: "..text
         sampAddChatMessage(text, Qcolor_HEX)
         AddQ(text)
       else
-				  if iSoundAnswerOthers.v then setAudioStreamState(loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerOthersNumber.v..[[.mp3]]), as_action.PLAY) end
+        if iSoundAnswerOthers.v then PLAYA1 = true end
         text = "<-FutureAdmin[228] to "..LASTNICK.."["..LASTID.."]: "..text
         sampAddChatMessage(text, Acolor1_HEX)
         AddA(text)
@@ -245,7 +266,7 @@ function sampev.onServerMessage(color, text)
   if color == -5963521 then
     if text:find("->Вопрос", true) then
       AddQ(text)
-      if iSoundQuestion.v then setAudioStreamState(loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundQuestionNumber.v..[[.mp3]]), as_action.PLAY) end
+      if iSoundQuestion.v then PLAYQ = true end
       if iHideQuestion.v then
         if iReplaceQuestionColor.v then
           sampAddChatMessage(text, Qcolor_HEX)
@@ -261,7 +282,7 @@ function sampev.onServerMessage(color, text)
       SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "^<%-(%a.+)%[(%d+)%] to (.+)%[(%d+)%]: (.+)")
       asdsadasads, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
       if SupportNick == sampGetPlayerNickname(myid) then
-        if iSoundAnswer.v then setAudioStreamState(loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerNumber.v..[[.mp3]]), as_action.PLAY) end
+        if iSoundAnswer.v then PLAYA = true end
         if not iHideAnswer.v then
           if iReplaceAnswerColor.v then
             sampAddChatMessage(text, Acolor_HEX)
@@ -272,7 +293,7 @@ function sampev.onServerMessage(color, text)
           return false
         end
       else
-        if iSoundAnswerOthers.v then setAudioStreamState(loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerOthersNumber.v..[[.mp3]]), as_action.PLAY) end
+        if iSoundAnswerOthers.v then PLAYA1 = true end
         if not iHideAnswerOthers.v then
           if iReplaceAnswerOthersColor.v then
             sampAddChatMessage(text, Acolor1_HEX)
@@ -291,7 +312,7 @@ end
 function sampev.onSendCommand(text)
   if string.find(text, '/pm') then
     parseHostAnswer(text)
-		if iSoundAnswer.v then setAudioStreamState(loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerNumber.v..[[.mp3]]), as_action.PLAY) end
+    lua_thread.create(function() if iSoundAnswer.v then PLAYA = true end end)
     id, text = string.match(text, "(%d+) (.+)")
     if sampIsPlayerConnected(id) then
       local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
@@ -730,7 +751,7 @@ function imgui_messanger_sup_header()
     else
       qtime = "-"
     end
-    imgui.Text(u8:encode("["..online.."] Ник: "..selecteddialog..". ID: "..sId..". LVL: "..sampGetPlayerScore(sId)..". Время: "..qtime.." сек."))
+    imgui.Text(u8:encode("["..online.."] Ник: "..selecteddialog..". ID: "..tonumber(sId)..". LVL: "..sampGetPlayerScore(tonumber(sId))..". Время: "..qtime.." сек."))
   end
   imgui.EndChild()
 end
@@ -1211,7 +1232,7 @@ function imgui_settings()
       imgui.PushItemWidth(300)
       imgui.SliderInt(u8"Звук вопроса", iSoundQuestionNumber, 1, 27)
       if iSoundQuestionNumber.v ~= cfg.options.SoundQuestionNumber then
-        setAudioStreamState(loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundQuestionNumber.v..[[.mp3]]), as_action.PLAY)
+        PLAYQ = true
         cfg.options.SoundQuestionNumber = iSoundQuestionNumber.v
         inicfg.save(cfg, "support")
       end
@@ -1229,7 +1250,7 @@ function imgui_settings()
       imgui.PushItemWidth(300)
       imgui.SliderInt(u8"Звук ответа другого саппорта", iSoundAnswerOthersNumber, 1, 27)
       if iSoundAnswerOthersNumber.v ~= cfg.options.SoundAnswerOthersNumber then
-        setAudioStreamState(loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerOthersNumber.v..[[.mp3]]), as_action.PLAY)
+        PLAYA1 = true
         cfg.options.SoundAnswerOthersNumber = iSoundAnswerOthersNumber.v
         inicfg.save(cfg, "support")
       end
@@ -1247,7 +1268,7 @@ function imgui_settings()
       imgui.PushItemWidth(300)
       imgui.SliderInt(u8"Звук ответа", iSoundAnswerNumber, 1, 27)
       if iSoundAnswerNumber.v ~= cfg.options.SoundAnswerNumber then
-        setAudioStreamState(loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerNumber.v..[[.mp3]]), as_action.PLAY)
+        PLAYA = true
         cfg.options.SoundAnswerNumber = iSoundAnswerNumber.v
         inicfg.save(cfg, "support")
       end
