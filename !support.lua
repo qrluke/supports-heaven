@@ -226,7 +226,7 @@ function main()
   if not doesDirectoryExist(getGameDirectory().."\\moonloader\\resource\\sup") then
     createDirectory(getGameDirectory().."\\moonloader\\resource\\sup")
   end
-  for i = 1, 27 do
+  for i = 1, 100 do
     local file = getGameDirectory().."\\moonloader\\resource\\sup\\"..i..".mp3"
     if not doesFileExist(file) then
       downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support's%20heaven/resource/sup/"..i..".mp3", file)
@@ -351,7 +351,7 @@ function sampev.onPlaySound(sound)
     return false
   end
 end
-
+--говно
 function sampev.onServerMessage(color, text)
   if DEV then simulateSupport(text) end
 
@@ -410,7 +410,19 @@ function sampev.onServerMessage(color, text)
 			end
     end
   end
-  if text == " Сообщение доставлено" and iHideSmsReceived.v then return false end
+  if text == " Сообщение доставлено" then
+		if iHideSmsReceived.v then return false end
+		if not iHideSmsReceived.v then
+			if iReplaceSmsReceivedColor.v then
+				sampAddChatMessage(text, SmsReceivedColor_HEX)
+				return false
+			else
+				--do nothing
+			end
+		else
+			return false
+		end
+	end
   if color == -5963521 then
     if text:find("->Вопрос", true) then
       AddQ(text)
@@ -418,7 +430,7 @@ function sampev.onServerMessage(color, text)
 			if not iHideSmsReceived.v then
 				if iReplaceSmsReceivedColor.v then
 					sampAddChatMessage(text, SmsReceivedColor_HEX)
-					return false
+					return false -- ИСПРАВИТЬ
 				else
 					--do nothing
 				end
@@ -1826,7 +1838,7 @@ function imgui_settings_2_sms_hideandcol()
   end
 
   if not cfg.options.HideSmsReceived then
-    if imgui.Checkbox("##ReplaceAnswerOthersColorCheck", iReplaceSmsReceivedColor) then
+    if imgui.Checkbox("##iReplaceSmsReceivedColor", iReplaceSmsReceivedColor) then
       cfg.options.ReplaceSmsReceivedColor = iReplaceSmsReceivedColor.v
       inicfg.save(cfg, "support")
     end
@@ -2102,7 +2114,7 @@ function imgui_settings_9_sup_sounds()
   if iSoundQuestion.v then
     imgui.SameLine()
     imgui.PushItemWidth(300)
-    imgui.SliderInt(u8"Звук вопроса", iSoundQuestionNumber, 1, 27)
+    imgui.SliderInt(u8"Звук вопроса", iSoundQuestionNumber, 1, 100)
     if iSoundQuestionNumber.v ~= cfg.options.SoundQuestionNumber then
       PLAYQ = true
       cfg.options.SoundQuestionNumber = iSoundQuestionNumber.v
@@ -2119,7 +2131,7 @@ function imgui_settings_9_sup_sounds()
   if iSoundAnswer.v then
     imgui.SameLine()
     imgui.PushItemWidth(300)
-    imgui.SliderInt(u8"Звук ответа", iSoundAnswerNumber, 1, 27)
+    imgui.SliderInt(u8"Звук ответа", iSoundAnswerNumber, 1, 100)
     if iSoundAnswerNumber.v ~= cfg.options.SoundAnswerNumber then
       PLAYA = true
       cfg.options.SoundAnswerNumber = iSoundAnswerNumber.v
@@ -2136,7 +2148,7 @@ function imgui_settings_9_sup_sounds()
   if iSoundAnswerOthers.v then
     imgui.SameLine()
     imgui.PushItemWidth(300)
-    imgui.SliderInt(u8"Звук чужого ответа", iSoundAnswerOthersNumber, 1, 27)
+    imgui.SliderInt(u8"Звук чужого ответа", iSoundAnswerOthersNumber, 1, 100)
     if iSoundAnswerOthersNumber.v ~= cfg.options.SoundAnswerOthersNumber then
       PLAYA1 = true
       cfg.options.SoundAnswerOthersNumber = iSoundAnswerOthersNumber.v
@@ -2156,7 +2168,7 @@ function imgui_settings_10_sms_sounds()
   if iSoundSmsIn.v then
     imgui.SameLine()
     imgui.PushItemWidth(300)
-    imgui.SliderInt(u8"Звук входящего сообщения", iSoundSmsInNumber, 1, 27)
+    imgui.SliderInt(u8"Звук входящего сообщения", iSoundSmsInNumber, 1, 100)
     if iSoundSmsInNumber.v ~= cfg.options.SoundSmsInNumber then
       PLAYSMSIN = true
       cfg.options.SoundSmsInNumber = iSoundSmsInNumber.v
@@ -2174,7 +2186,7 @@ function imgui_settings_10_sms_sounds()
   if iSoundSmsOut.v then
     imgui.SameLine()
     imgui.PushItemWidth(300)
-    imgui.SliderInt(u8"Звук исходящего сообщения", iSoundSmsOutNumber, 1, 27)
+    imgui.SliderInt(u8"Звук исходящего сообщения", iSoundSmsOutNumber, 1, 100)
     if iSoundSmsOutNumber.v ~= cfg.options.SoundSmsOutNumber then
       PLAYSMSOUT = true
       cfg.options.SoundSmsOutNumber = iSoundSmsOutNumber.v
