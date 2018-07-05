@@ -20,16 +20,26 @@ local cfg = inicfg.load({
     ReplaceQuestionColor = true,
     ReplaceAnswerColor = false,
     ReplaceAnswerOthersColor = false,
+    ReplaceSmsInColor = true,
+    ReplaceSmsOutColor = false,
+    ReplaceSmsReceivedColor = false,
     ShowTimeToUpdateCSV = false,
     HideQuestion = false,
     HideAnswer = false,
     HideAnswerOthers = false,
+    HideSmsIn = false,
+    HideSmsOut = false,
+    HideSmsReceived = false,
     SoundQuestion = true,
     SoundQuestionNumber = 1,
     SoundAnswerOthers = true,
     SoundAnswerOthersNumber = 22,
     SoundAnswer = true,
     SoundAnswerNumber = 15,
+    SoundSmsIn = true,
+    SoundSmsInNumber = 22,
+    SoundSmsOut = true,
+    SoundSmsOutNumber = 15,
   },
   log = {
     active = true,
@@ -45,6 +55,9 @@ local cfg = inicfg.load({
     QuestionColor = imgui.ImColor(255, 255, 255):GetU32(),
     AnswerColor = imgui.ImColor(255, 255, 255):GetU32(),
     AnswerColorOthers = imgui.ImColor(255, 255, 255):GetU32(),
+    SmsInColor = imgui.ImColor(255, 255, 255):GetU32(),
+    SmsOutColor = imgui.ImColor(255, 255, 255):GetU32(),
+    SmsReceivedColor = imgui.ImColor(255, 255, 255):GetU32(),
   },
   menuwindow =
   {
@@ -55,7 +68,9 @@ local cfg = inicfg.load({
   },
   messanger =
   {
+    storesms = true,
     activesduty = true,
+    iSMSfilterBool = false,
     activesms = true,
     mode = 1,
     Height = 300,
@@ -77,7 +92,8 @@ local cfg = inicfg.load({
     iShowA2 = true,
     iChangeScroll = true,
     iSetKeyboard = true,
-    iShowSHOWOFFLINE = true,
+    iShowSHOWOFFLINESDUTY = true,
+    iShowSHOWOFFLINESMS = true,
   },
   notepad =
   {
@@ -89,7 +105,7 @@ local cfg = inicfg.load({
 local file = getGameDirectory()..'\\moonloader\\support.csv'
 local color = 0xffa500
 local selected = 1
-local selecteddialog = ""
+local selecteddialogSDUTY = ""
 local month_histogram = {}
 local players = {}
 local iYears = {}
@@ -97,9 +113,15 @@ local iMessanger = {}
 local iReplaceQuestionColor = imgui.ImBool(cfg.options.ReplaceQuestionColor)
 local iReplaceAnswerColor = imgui.ImBool(cfg.options.ReplaceAnswerColor)
 local iReplaceAnswerOthersColor = imgui.ImBool(cfg.options.ReplaceAnswerOthersColor)
+local iReplaceSmsInColor = imgui.ImBool(cfg.options.ReplaceSmsInColor)
+local iReplaceSmsOutColor = imgui.ImBool(cfg.options.ReplaceSmsOutColor)
+local iReplaceSmsReceivedColor = imgui.ImBool(cfg.options.ReplaceSmsReceivedColor)
 local iHideQuestion = imgui.ImBool(cfg.options.HideQuestion)
 local iHideAnswer = imgui.ImBool(cfg.options.HideAnswer)
 local iHideAnswerOthers = imgui.ImBool(cfg.options.HideAnswerOthers)
+local iHideSmsIn = imgui.ImBool(cfg.options.HideSmsIn)
+local iHideSmsOut = imgui.ImBool(cfg.options.HideSmsOut)
+local iHideSmsReceived = imgui.ImBool(cfg.options.HideSmsReceived)
 local iShowUA1 = imgui.ImBool(cfg.messanger.iShowUA1)
 local iShowUA2 = imgui.ImBool(cfg.messanger.iShowUA2)
 local iShowA1 = imgui.ImBool(cfg.messanger.iShowA1)
@@ -112,13 +134,16 @@ local iMessangerActiveSMS = imgui.ImBool(cfg.messanger.activesms)
 local iLogBool = imgui.ImBool(cfg.log.logger)
 local iLogActive = imgui.ImBool(cfg.log.active)
 local iStatsActive = imgui.ImBool(cfg.stats.active)
-local iShowSHOWOFFLINE = imgui.ImBool(cfg.messanger.iShowSHOWOFFLINE)
+local iShowSHOWOFFLINESDUTY = imgui.ImBool(cfg.messanger.iShowSHOWOFFLINESDUTY)
+local iShowSHOWOFFLINESMS = imgui.ImBool(cfg.messanger.iShowSHOWOFFLINESMS)
 local iShowTimeToUpdateCSV = imgui.ImBool(cfg.options.ShowTimeToUpdateCSV)
 local iSoundQuestion = imgui.ImBool(cfg.options.SoundQuestion)
 local iSoundAnswerOthers = imgui.ImBool(cfg.options.SoundAnswerOthers)
 local iSoundAnswer = imgui.ImBool(cfg.options.SoundAnswer)
-
-
+local iSoundSmsIn = imgui.ImBool(cfg.options.SoundSmsIn)
+local iSoundSmsOut = imgui.ImBool(cfg.options.SoundSmsOut)
+local iStoreSMS = imgui.ImBool(cfg.messanger.storesms)
+local iSMSfilterBool = imgui.ImBool(cfg.messanger.iSMSfilterBool)
 local main_window_state = imgui.ImBool(false)
 local iStats = imgui.ImBool(true)
 
@@ -143,9 +168,16 @@ local iAnswerTextOthersColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.Answer
 local Qcolor = imgui.ImFloat4(imgui.ImColor(cfg.colors.QuestionColor):GetFloat4())
 local Acolor = imgui.ImFloat4(imgui.ImColor(cfg.colors.AnswerColor):GetFloat4())
 local Acolor1 = imgui.ImFloat4(imgui.ImColor(cfg.colors.AnswerColorOthers):GetFloat4())
+
+local SmsInColor = imgui.ImFloat4(imgui.ImColor(cfg.colors.SmsInColor):GetFloat4())
+local SmsOutColor = imgui.ImFloat4(imgui.ImColor(cfg.colors.SmsOutColor):GetFloat4())
+local SmsReceivedColor = imgui.ImFloat4(imgui.ImColor(cfg.colors.SmsReceivedColor):GetFloat4())
+
 local iSoundQuestionNumber = imgui.ImInt(cfg.options.SoundQuestionNumber)
 local iSoundAnswerOthersNumber = imgui.ImInt(cfg.options.SoundAnswerOthersNumber)
 local iSoundAnswerNumber = imgui.ImInt(cfg.options.SoundAnswerNumber)
+local iSoundSmsInNumber = imgui.ImInt(cfg.options.SoundSmsInNumber)
+local iSoundSmsOutNumber = imgui.ImInt(cfg.options.SoundSmsOutNumber)
 local iNotepadLines = imgui.ImInt(cfg.notepad.lines)
 local iLogHeight = imgui.ImInt(cfg.log.height)
 local iStatsHeight = imgui.ImInt(cfg.stats.height)
@@ -167,16 +199,25 @@ local iMonths = {
   [11] = "Ноябрь",
   [12] = "Декабрь"
 }
-local toAnswer = imgui.ImBuffer(150)
-local text = imgui.ImBuffer(65536)
-text.v = string.gsub(string.gsub(u8:encode(cfg.notepad.text), "\\n", "\n"), "\\t", "\t")
+local toAnswerSDUTY = imgui.ImBuffer(150)
+local toAnswerSMS = imgui.ImBuffer(150)
+local iSMSfilter = imgui.ImBuffer(64)
+local iSMSAddDialog = imgui.ImBuffer(64)
+local textNotepad = imgui.ImBuffer(65536)
+textNotepad.v = string.gsub(string.gsub(u8:encode(cfg.notepad.text), "\\n", "\n"), "\\t", "\t")
 local LASTID = 0
 local countall = 0
-local S2B = false
+local ScrollToDialogSDUTY = false
+local ScrollToDialogSMS = false
 LASTNICK = " "
 PLAYA = false
+iAddSMS = false
 PLAYQ = false
 PLAYA1 = false
+PLAYSMSIN = false
+PLAYSMSOUT = false
+SSDB_trigger = false
+DEV = false
 math.randomseed(os.time())
 -------------------------------------MAIN---------------------------------------
 function main()
@@ -191,6 +232,11 @@ function main()
       downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support's%20heaven/resource/sup/"..i..".mp3", file)
     end
   end
+  if not doesDirectoryExist(getGameDirectory().."\\moonloader\\config\\smsmessanger\\") then
+    createDirectory(getGameDirectory().."\\moonloader\\config\\smsmessanger\\")
+  end
+  smsfile = getGameDirectory()..'\\moonloader\\config\\smsmessanger\\'..sampGetCurrentServerAddress().."-"..sampGetPlayerNickname(myid)..'.sms'
+  imgui_messanger_sms_loadDB()
   inicfg.save(cfg, "support")
   _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
   local r, g, b, a = imgui.ImColor.FromFloat4(Qcolor.v[1], Qcolor.v[2], Qcolor.v[3], Qcolor.v[4]):GetRGBA()
@@ -202,14 +248,28 @@ function main()
   local r, g, b, a = imgui.ImColor.FromFloat4(Acolor1.v[1], Acolor1.v[2], Acolor1.v[3], Acolor1.v[4]):GetRGBA()
   Acolor1_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
 
+  local r, g, b, a = imgui.ImColor.FromFloat4(SmsInColor.v[1], SmsInColor.v[2], SmsInColor.v[3], SmsInColor.v[4]):GetRGBA()
+  SmsInColor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
+
+  local r, g, b, a = imgui.ImColor.FromFloat4(SmsOutColor.v[1], SmsOutColor.v[2], SmsOutColor.v[3], SmsOutColor.v[4]):GetRGBA()
+  SmsOutColor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
+
+  local r, g, b, a = imgui.ImColor.FromFloat4(SmsReceivedColor.v[1], SmsReceivedColor.v[2], SmsReceivedColor.v[3], SmsReceivedColor.v[4]):GetRGBA()
+  SmsReceivedColor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
+
   -- вырезать тут, если хочешь отключить сообщение при входе в игру
   sampAddChatMessage(("SUPPORT v"..thisScript().version.." successfully loaded! Команды: /supstats и /supcolor! Author: rubbishman.ru"), color)
   -- вырезать тут, если хочешь отключить сообщение при входе в игру
   First = true
   while true do
     wait(0)
+    if SSDB_trigger == true then if DEV then sampAddChatMessage("сохраняем", color) end imgui_messanger_sms_saveDB() SSDB_trigger = false end
     if wasKeyPressed(key.VK_B) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
       FastChatRespond()
+    end
+    if wasKeyPressed(key.VK_C) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+      print(inspect(sms))
+      table.save(sms, getGameDirectory()..'\\moonloader\\config\\smsmessanger\\'..sampGetCurrentServerAddress().."-"..sampGetPlayerNickname(myid)..'.sms')
     end
     if wasKeyPressed(key.VK_Z) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() or First then
       First = false
@@ -243,6 +303,20 @@ function main()
         setAudioStreamState(a3, as_action.PLAY)
       end
     end
+    if PLAYSMSIN then
+      PLAYSMSIN = false
+      a4 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundSmsInNumber.v..[[.mp3]])
+      if getAudioStreamState(a4) ~= as_action.PLAY then
+        setAudioStreamState(a4, as_action.PLAY)
+      end
+    end
+    if PLAYSMSOUT then
+      PLAYSMSOUT = false
+      a5 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundSmsOutNumber.v..[[.mp3]])
+      if getAudioStreamState(a5) ~= as_action.PLAY then
+        setAudioStreamState(a5, as_action.PLAY)
+      end
+    end
     imgui.Process = main_window_state.v
   end
 end
@@ -263,26 +337,94 @@ function simulateSupport(text)
         sampAddChatMessage(text, Acolor1_HEX)
         AddA(text)
       end
-      if selecteddialog == LASTNICK or selecteddialog == sampGetPlayerNickname(tempid) then S2B = true end
+      if selecteddialogSDUTY == LASTNICK or selecteddialogSDUTY == sampGetPlayerNickname(tempid) then ScrollToDialogSDUTY = true end
     end
   end
 end
 
+function simulateSupportAnswer(text)
+  sampAddChatMessage(text, Acolor_HEX)
+end
+
+function sampev.onPlaySound(sound)
+  if sound == 1052 and iSoundSmsOut.v then
+    return false
+  end
+end
+
 function sampev.onServerMessage(color, text)
-  simulateSupport(text)
-  if color == -5963521 then
-    if text:find("->Вопрос", true) then
-      AddQ(text)
-      if iSoundQuestion.v then PLAYQ = true end
-      if iHideQuestion.v then
-        if iReplaceQuestionColor.v then
-          sampAddChatMessage(text, Qcolor_HEX)
+  if DEV then simulateSupport(text) end
+
+  if text:find("SMS") then
+    text = string.gsub(text, "{FFFF00}", "")
+    text = string.gsub(text, "{FF8000}", "")
+    local smsText, smsNick, smsId = string.match(text, "^ SMS%: (.*)%. Отправитель%: (.*)%[(%d+)%]")
+    if smsText and smsNick and smsId then
+      if iSoundSmsIn.v then PLAYSMSIN = true end
+      if sms[smsNick] and sms[smsNick].Chat then
+
+      else
+        sms[smsNick] = {}
+        sms[smsNick]["Chat"] = {}
+        sms[smsNick]["Checked"] = 0
+        sms[smsNick]["Pinned"] = 0
+      end
+      table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = smsNick, type = "FROM", time = os.time()})
+      if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
+      SSDB_trigger = true
+      if not iHideSmsIn.v then
+        if iReplaceSmsInColor.v then
+          sampAddChatMessage(text, SmsInColor_HEX)
+					return false
         else
           --do nothing
         end
       else
         return false
       end
+    end
+    local smsText, smsNick, smsId = string.match(text, "^ SMS%: (.*)%. Получатель%: (.*)%[(%d+)%]")
+    if smsText and smsNick and smsId then
+      if iSoundSmsOut.v then PLAYSMSOUT = true end
+      local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+      if sms[smsNick] and sms[smsNick].Chat then
+
+      else
+        sms[smsNick] = {}
+        sms[smsNick]["Chat"] = {}
+        sms[smsNick]["Checked"] = 0
+        sms[smsNick]["Pinned"] = 0
+      end
+      table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = sampGetPlayerNickname(myid), type = "TO", time = os.time()})
+      if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
+      SSDB_trigger = true
+			if not iHideSmsOut.v then
+				if iReplaceSmsOutColor.v then
+					sampAddChatMessage(text, SmsOutColor_HEX)
+					return false
+				else
+					--do nothing
+				end
+			else
+				return false
+			end
+    end
+  end
+  if text == " Сообщение доставлено" and iHideSmsReceived.v then return false end
+  if color == -5963521 then
+    if text:find("->Вопрос", true) then
+      AddQ(text)
+      if iSoundQuestion.v then PLAYQ = true end
+			if not iHideSmsReceived.v then
+				if iReplaceSmsReceivedColor.v then
+					sampAddChatMessage(text, SmsReceivedColor_HEX)
+					return false
+				else
+					--do nothing
+				end
+			else
+				return false
+			end
     end
     if text:find("<-", true) and text:find("to", true) then
       AddA(text)
@@ -293,6 +435,7 @@ function sampev.onServerMessage(color, text)
         if not iHideAnswer.v then
           if iReplaceAnswerColor.v then
             sampAddChatMessage(text, Acolor_HEX)
+						return false
           else
             --do nothing
           end
@@ -304,6 +447,7 @@ function sampev.onServerMessage(color, text)
         if not iHideAnswerOthers.v then
           if iReplaceAnswerOthersColor.v then
             sampAddChatMessage(text, Acolor1_HEX)
+						return false
           else
             --do nothing
           end
@@ -313,19 +457,19 @@ function sampev.onServerMessage(color, text)
       end
     end
   end
-  return false -- исправить
+  if DEV then return false end -- исправить
 end
 --считаем активность саппорта
 function sampev.onSendCommand(text)
   if string.find(text, '/pm') then
     parseHostAnswer(text)
-    lua_thread.create(function() if iSoundAnswer.v then PLAYA = true end end)
+    if iSoundAnswer.v then PLAYA = true end
     id, text = string.match(text, "(%d+) (.+)")
     if sampIsPlayerConnected(id) then
       local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
-      if selecteddialog == sampGetPlayerNickname(id) then S2B = true end
+      if selecteddialogSDUTY == sampGetPlayerNickname(id) then ScrollToDialogSDUTY = true end
       text = "<-"..sampGetPlayerNickname(myid).."["..myid.."]".." to "..sampGetPlayerNickname(id).."["..id.."]: "..text
-      sampAddChatMessage(text, Acolor_HEX)
+      if DEV then simulateSupportAnswer(text) end
       AddA(text)
     end
 
@@ -525,112 +669,6 @@ function imgui_saveposandsize()
   end
 end
 
-function imgui_dialogs(table, typ)
-  for _, v in ipairs(table) do
-    k = v
-    v = iMessanger[v]
-    if k ~= " " then
-      for id = 0, sampGetMaxPlayerId() do
-        if sampIsPlayerConnected(id) and sampGetPlayerNickname(id) == k then
-          pId = id
-          break
-        end
-      end
-      kolvo = 0
-      if #v["Chat"] ~= 0 then
-        for i, z in pairs(v["Chat"]) do
-          if z["type"] ~= "support" and z["time"] > v["Checked"] then
-            kolvo = kolvo + 1
-          end
-        end
-      end
-
-      if typ == "UnAnswered" then
-        imgui.PushID(1)
-        imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 0, 0, 113):GetVec4())
-        if kolvo > 0 then
-          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(0, 255, 0, 255):GetVec4())
-        else
-          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(255, 255, 255, 255):GetVec4())
-        end
-        if k == selecteddialog then
-          imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(54, 12, 42, 113):GetVec4())
-          iMessanger[selecteddialog]["Checked"] = os.time()
-          --  elseif #iMessanger[k]["A"] == 0 then
-        else
-          imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(255, 0, 0, 113):GetVec4())
-        end
-      end
-      if k == selecteddialog then
-        iMessanger[selecteddialog]["Checked"] = os.time()
-      end
-      if typ == "Answered" then
-        imgui.PushID(2)
-        imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 0, 0, 113):GetVec4())
-        if kolvo > 0 then
-          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(0, 255, 0, 255):GetVec4())
-        else
-          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(255, 255, 255, 255):GetVec4())
-        end
-        if k == selecteddialog then
-          imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(54, 12, 42, 113):GetVec4())
-          iMessanger[selecteddialog]["Checked"] = os.time()
-        else
-          imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.26, 0.59, 0.98, 0.40))
-        end
-      end
-      if scroll and iChangeScroll.v then
-        imgui.SetScrollHere()
-      end
-      if kolvo > 0 then
-        if pId ~= nil and sampIsPlayerConnected(pId) and sampGetPlayerNickname(pId) == k then
-          if imgui.Button(u8(k .. "[" .. pId .. "] - "..kolvo), imgui.ImVec2(-0.0001, 30)) then
-            selecteddialog = k
-            online = "Онлайн"
-            scroll = true
-            keyboard = true
-          end
-        elseif iShowSHOWOFFLINE.v then
-          if imgui.Button(u8(k .. "[-] - "..kolvo), imgui.ImVec2(-0.0001, 30)) then
-            selecteddialog = k
-            online = "Оффлайн"
-            scroll = true
-            keyboard = true
-          end
-        end
-      else
-        if pId ~= nil and sampIsPlayerConnected(pId) and sampGetPlayerNickname(pId) == k then
-          if imgui.Button(u8(k .. "[" .. pId .. "]"), imgui.ImVec2(-0.0001, 30)) then
-            selecteddialog = k
-            online = "Онлайн"
-            scroll = true
-            keyboard = true
-          end
-        elseif iShowSHOWOFFLINE.v then
-          if imgui.Button(u8(k .. "[-]"), imgui.ImVec2(-0.0001, 30)) then
-            selecteddialog = k
-            online = "Оффлайн"
-            scroll = true
-            keyboard = true
-          end
-        end
-      end
-      if imgui.IsItemHovered() and imgui.IsMouseClicked(1) then
-        iMessanger[k] = nil
-
-      end
-      if typ == "UnAnswered" then
-        imgui.PopStyleColor(3)
-        imgui.PopID()
-      end
-      if typ == "Answered" then
-        imgui.PopStyleColor(3)
-        imgui.PopID()
-      end
-    end
-  end
-end
-
 function imgui_messanger()
   if imgui.CollapsingHeader(u8"Мессенджер") then
     imgui.Columns(2, nil, false)
@@ -656,8 +694,8 @@ function imgui_messanger_sup_settings()
   imgui.SameLine(6)
   imgui.Text("")
   imgui.SameLine()
-  if imgui.Checkbox("##ShowSHOWOFFLINE", iShowSHOWOFFLINE) then
-    cfg.messanger.iShowSHOWOFFLINE = iShowSHOWOFFLINE.v
+  if imgui.Checkbox("##ShowSHOWOFFLINE", iShowSHOWOFFLINESDUTY) then
+    cfg.messanger.iShowSHOWOFFLINESDUTY = iShowSHOWOFFLINESDUTY.v
     inicfg.save(cfg, "support")
   end
   if imgui.IsItemHovered() then
@@ -714,30 +752,166 @@ function imgui_messanger_sup_settings()
   imgui.EndChild()
 end
 
-
 function imgui_messanger_sms_settings()
   imgui.BeginChild("##settings", imgui.ImVec2(192, 35), true)
-  imgui.Text(u8"Тут под смски")
+  imgui.SameLine(6)
+  imgui.Text("")
+  imgui.SameLine()
+  imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.16, 0.29, 0.48, 0.54))
+  if not iAddSMS then
+    if imgui.Checkbox("##ShowSHO2WOFFLINE", iShowSHOWOFFLINESMS) then
+      cfg.messanger.iShowSHOWOFFLINESMS = iShowSHOWOFFLINESMS.v
+      inicfg.save(cfg, "support")
+    end
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"Показывать оффлайн игроков?")
+    end
+    imgui.SameLine()
+    if imgui.Checkbox("##SMSFILTER", iSMSfilterBool) then
+      cfg.messanger.iSMSfilterBool = iSMSfilterBool.v
+      inicfg.save(cfg, "support")
+    end
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"Включить фильтр по нику?")
+    end
+    if iSMSfilterBool.v then
+      imgui.SameLine()
+      if imgui.InputText("##keyboardSMSFILTER", iSMSfilter) then
+        cfg.messanger.smsfiltertext = iSMSfilter.v
+        inicfg.save(cfg, "support")
+      end
+    end
+    if not iSMSfilterBool.v then
+      imgui.SameLine()
+      if imgui.Button(u8"Добавить", imgui.ImVec2(imgui.GetContentRegionAvailWidth() + 1, 20)) then
+        iAddSMS = true
+        KeyboardFocusResetForNewDialog = true
+      end
+    end
+  else
+    if imgui.InputText("##keyboardSMADD", iSMSAddDialog, imgui.InputTextFlags.EnterReturnsTrue) then
+      createnewdialognick = iSMSAddDialog.v
+      if iSMSAddDialog.v == "" then
+        iAddSMS = false
+      else
+        iSMSAddDialog.v = ""
+        for i = 0, sampGetMaxPlayerId() + 1 do
+          if sampIsPlayerConnected(i) and i == tonumber(createnewdialognick) or sampIsPlayerConnected(i) and string.find(string.lower(sampGetPlayerNickname(i)), string.lower(createnewdialognick)) then
+            if sms[sampGetPlayerNickname(i)] == nil then
+              sms[sampGetPlayerNickname(i)] = {}
+              sms[sampGetPlayerNickname(i)]["Chat"] = {}
+              sms[sampGetPlayerNickname(i)]["Checked"] = 0
+              sms[sampGetPlayerNickname(i)]["Pinned"] = 0
+              iAddSMS = false
+              table.insert(sms[sampGetPlayerNickname(i)]["Chat"], {text = "Вы создали диалог", Nick = "мессенджер", type = "TO", time = os.time()})
+              selecteddialogSMS = sampGetPlayerNickname(i)
+              SSDB_trigger = true
+              break
+            else
+              selecteddialogSMS = sampGetPlayerNickname(i)
+              iAddSMS = false
+              break
+            end
+          end
+        end
+      end
+    end
+    if KeyboardFocusResetForNewDialog then imgui.SetKeyboardFocusHere() KeyboardFocusResetForNewDialog = false end
+    if iSMSAddDialog.v ~= "" then
+      for i = 0, sampGetMaxPlayerId() do
+        if sampIsPlayerConnected(i) and i == tonumber(iSMSAddDialog.v) or sampIsPlayerConnected(i) and string.find(string.lower(sampGetPlayerNickname(i)), string.lower(iSMSAddDialog.v)) then
+          imgui.SetTooltip(u8:encode(sampGetPlayerNickname(i).."["..i.."]"))
+          break
+        end
+      end
+    end
+    imgui.SameLine()
+    if imgui.Button(u8"close", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 20)) then
+      iSMSAddDialog.v = ""
+      iAddSMS = false
+    end
+  end
+  imgui.PopStyleColor()
+  --if imgui.InputText("##keyboardSMSKA", toAnswerSMS, imgui.InputTextFlags.EnterReturnsTrue) then end
   imgui.EndChild()
 end
 
-
 function imgui_messanger_sms_player_list()
-	if cfg.messanger.activesduty and cfg.messanger.activesms then
-		 playerlistY = iMessangerHeight.v - 74
-	else
-		 playerlistY = iMessangerHeight.v - 35
-	end
+  if cfg.messanger.activesduty and cfg.messanger.activesms then
+    playerlistY = iMessangerHeight.v - 74
+  else
+    playerlistY = iMessangerHeight.v - 35
+  end
   imgui.BeginChild("список ников", imgui.ImVec2(192, playerlistY), true)
-  imgui.Text(u8'Тут под смски')
+
+  smsindex_PINNED = {}
+  smsindex_PINNEDVIEWED = {}
+  smsindex_NEW = {}
+  smsindex_NEWVIEWED = {}
+  for k in pairs(sms) do
+    if cfg.messanger.iSMSfilterBool and cfg.messanger.smsfiltertext ~= nil then
+      if cfg.messanger.smsfiltertext ~= "" then
+        if string.find(string.lower(k), string.lower(cfg.messanger.smsfiltertext)) ~= nil then
+          imgui_messanger_sms_player_list_filter(k)
+        end
+      else
+        imgui_messanger_sms_player_list_filter(k)
+      end
+    else
+      imgui_messanger_sms_player_list_filter(k)
+    end
+  end
+  table.sort(smsindex_PINNED, function(a, b) return sms[a]["Chat"][#sms[a]["Chat"]]["time"] > sms[b]["Chat"][#sms[b]["Chat"]]["time"] end)
+  table.sort(smsindex_PINNEDVIEWED, function(a, b) return sms[a]["Chat"][#sms[a]["Chat"]]["time"] > sms[b]["Chat"][#sms[b]["Chat"]]["time"] end)
+  table.sort(smsindex_NEW, function(a, b) return sms[a]["Chat"][#sms[a]["Chat"]]["time"] > sms[b]["Chat"][#sms[b]["Chat"]]["time"] end)
+  table.sort(smsindex_NEWVIEWED, function(a, b) return sms[a]["Chat"][#sms[a]["Chat"]]["time"] > sms[b]["Chat"][#sms[b]["Chat"]]["time"] end)
+  if iShowUA1.v then imgui_messanger_sms_showdialogs(smsindex_PINNED, "Pinned") end
+  if iShowUA2.v then imgui_messanger_sms_showdialogs(smsindex_PINNEDVIEWED, "Pinned") end
+  if iShowA1.v then imgui_messanger_sms_showdialogs(smsindex_NEW, "NotPinned") end
+  if iShowA2.v then imgui_messanger_sms_showdialogs(smsindex_NEWVIEWED, "NotPinned") end
+  if scroll then scroll = false end
   imgui.EndChild()
+end
+
+function imgui_messanger_sms_player_list_filter(k)
+  if sms[k]["Pinned"] ~= nil and sms[k]["Chat"] ~= nil and sms[k]["Checked"] then
+    if sms[k]["Pinned"] == 1 then
+      kolvo = 0
+      if #sms[k]["Chat"] ~= 0 then
+        for i, z in pairs(sms[k]["Chat"]) do
+          if z["type"] ~= "TO" and z["time"] > sms[k]["Checked"] then
+            kolvo = kolvo + 1
+          end
+        end
+      end
+      if kolvo > 0 then
+        table.insert(smsindex_PINNED, k)
+      else
+        table.insert(smsindex_PINNEDVIEWED, k)
+      end
+    else
+      kolvo = 0
+      if #sms[k]["Chat"] ~= 0 then
+        for i, z in pairs(sms[k]["Chat"]) do
+          if z["type"] == "FROM" and z["time"] > sms[k]["Checked"] then
+            kolvo = kolvo + 1
+          end
+        end
+      end
+      if kolvo > 0 then
+        table.insert(smsindex_NEW, k)
+      else
+        table.insert(smsindex_NEWVIEWED, k)
+      end
+    end
+  end
 end
 
 function imgui_messanger_sup_player_list()
   if cfg.messanger.activesduty and cfg.messanger.activesms then
-     playerlistY = iMessangerHeight.v - 74
+    playerlistY = iMessangerHeight.v - 74
   else
-     playerlistY = iMessangerHeight.v - 35
+    playerlistY = iMessangerHeight.v - 35
   end
   imgui.BeginChild("список ников", imgui.ImVec2(192, playerlistY), true)
   chatindex_V = {}
@@ -779,12 +953,264 @@ function imgui_messanger_sup_player_list()
   table.sort(chatindexNEW_V, function(a, b) return iMessanger[a]["Chat"][#iMessanger[a]["Chat"]]["time"] > iMessanger[b]["Chat"][#iMessanger[b]["Chat"]]["time"] end)
   table.sort(chatindex_V, function(a, b) return iMessanger[a]["Chat"][#iMessanger[a]["Chat"]]["time"] > iMessanger[b]["Chat"][#iMessanger[b]["Chat"]]["time"] end)
   table.sort(chatindex_NV, function(a, b) return iMessanger[a]["Chat"][#iMessanger[a]["Chat"]]["time"] > iMessanger[b]["Chat"][#iMessanger[b]["Chat"]]["time"] end)
-  if iShowUA1.v then imgui_dialogs(chatindexNEW, "UnAnswered") end
-  if iShowUA2.v then imgui_dialogs(chatindexNEW_V, "UnAnswered") end
-  if iShowA1.v then imgui_dialogs(chatindex_NV, "Answered") end
-  if iShowA2.v then imgui_dialogs(chatindex_V, "Answered") end
+  if iShowUA1.v then imgui_messanger_sup_showdialogs(chatindexNEW, "UnAnswered") end
+  if iShowUA2.v then imgui_messanger_sup_showdialogs(chatindexNEW_V, "UnAnswered") end
+  if iShowA1.v then imgui_messanger_sup_showdialogs(chatindex_NV, "Answered") end
+  if iShowA2.v then imgui_messanger_sup_showdialogs(chatindex_V, "Answered") end
   if scroll then scroll = false end
   imgui.EndChild()
+end
+
+function imgui_messanger_sms_showdialogs(table, typ)
+  for _, v in ipairs(table) do
+    k = v
+    v = sms[v]
+    if k ~= " " then
+      for id = 0, sampGetMaxPlayerId() do
+        if sampIsPlayerConnected(id) and sampGetPlayerNickname(id) == k then
+          pId = id
+          break
+        end
+      end
+      kolvo = 0
+      if #v["Chat"] ~= 0 then
+        for i, z in pairs(v["Chat"]) do
+          if z["type"] ~= "TO" and z["time"] > v["Checked"] then
+            kolvo = kolvo + 1
+          end
+        end
+      end
+
+      if typ == "Pinned" then
+        imgui.PushID(1)
+        imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 0, 0, 113):GetVec4())
+        if kolvo > 0 then
+          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(0, 255, 0, 255):GetVec4())
+        else
+          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(255, 255, 255, 255):GetVec4())
+        end
+        if k == selecteddialogSMS then
+          imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(54, 12, 42, 113):GetVec4())
+          sms[selecteddialogSMS]["Checked"] = os.time()
+
+          --  elseif #iMessanger[k]["A"] == 0 then
+        else
+          imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(255, 0, 0, 113):GetVec4())
+        end
+      end
+      if k == selecteddialogSMS then
+        sms[selecteddialogSMS]["Checked"] = os.time()
+
+      end
+      if typ == "NotPinned" then
+        imgui.PushID(2)
+        imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 0, 0, 113):GetVec4())
+        if kolvo > 0 then
+          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(0, 255, 0, 255):GetVec4())
+        else
+          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(255, 255, 255, 255):GetVec4())
+        end
+        if k == selecteddialogSMS then
+          imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(54, 12, 42, 113):GetVec4())
+          sms[selecteddialogSMS]["Checked"] = os.time()
+        else
+          imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.26, 0.59, 0.98, 0.40))
+        end
+      end
+      if scroll and iChangeScroll.v then
+        imgui.SetScrollHere()
+      end
+      if kolvo > 0 then
+        if pId ~= nil and sampIsPlayerConnected(pId) and sampGetPlayerNickname(pId) == k then
+          if imgui.Button(u8(k .. "[" .. pId .. "] - "..kolvo), imgui.ImVec2(-0.0001, 30)) then
+            selecteddialogSMS = k
+            ScrollToDialogSMS = true
+            online = "Онлайн"
+            scroll = true
+            keyboard = true
+            SSDB_trigger = true
+          end
+        elseif iShowSHOWOFFLINESMS.v then
+          if imgui.Button(u8(k .. "[-] - "..kolvo), imgui.ImVec2(-0.0001, 30)) then
+            selecteddialogSMS = k
+            ScrollToDialogSMS = true
+            online = "Оффлайн"
+            scroll = true
+            keyboard = true
+            SSDB_trigger = true
+          end
+        end
+      else
+        if pId ~= nil and sampIsPlayerConnected(pId) and sampGetPlayerNickname(pId) == k then
+          if imgui.Button(u8(k .. "[" .. pId .. "]"), imgui.ImVec2(-0.0001, 30)) then
+            selecteddialogSMS = k
+            ScrollToDialogSMS = true
+            online = "Онлайн"
+            scroll = true
+            keyboard = true
+            SSDB_trigger = true
+          end
+        elseif iShowSHOWOFFLINESMS.v then
+          if imgui.Button(u8(k .. "[-]"), imgui.ImVec2(-0.0001, 30)) then
+            selecteddialogSMS = k
+            ScrollToDialogSMS = true
+            online = "Оффлайн"
+            scroll = true
+            keyboard = true
+            SSDB_trigger = true
+          end
+        end
+      end
+      imgui_messanger_sms_player_list_contextmenu(k, typ)
+      if typ == "Pinned" then
+        imgui.PopStyleColor(3)
+        imgui.PopID()
+      end
+      if typ == "NotPinned" then
+        imgui.PopStyleColor(3)
+        imgui.PopID()
+      end
+    end
+  end
+end
+
+function imgui_messanger_sms_player_list_contextmenu(k, typ)
+  if imgui.BeginPopupContextItem("item context menu"..k) then
+    if typ == "NotPinned" then
+      if imgui.Selectable(u8"Закрепить") then sms[k]["Pinned"] = 1 SSDB_trigger = true end
+    else
+      if imgui.Selectable(u8"Открепить") then sms[k]["Pinned"] = 0 SSDB_trigger = true end
+    end
+    if sms[k]["Blocked"] ~= nil then
+      if imgui.Selectable(u8"Разблокировать") then sms[k]["Blocked"] = nil SSDB_trigger = true end
+    else
+      if imgui.Selectable(u8"Заблокировать") then sms[k]["Blocked"] = 1 SSDB_trigger = true end
+    end
+    if imgui.Selectable(u8"Очистить") then
+      ispinned = 0
+      if sms[k] and sms[k]["Pinned"] == 1 then
+        ispinned = sms[k]["Pinned"]
+      end
+      sms[k] = {}
+      sms[k]["Chat"] = {}
+      sms[k]["Checked"] = 0
+      sms[k]["Pinned"] = ispinned
+      sms[k]["Chat"][1] = {text = "Вы очистили диалог", Nick = "мессенджер", type = "TO", time = os.time()}
+      selecteddialogSMS = k
+      SSDB_trigger = true
+    end
+    if imgui.Selectable(u8"Удалить") then
+      sms[k] = nil
+      SSDB_trigger = true
+    end
+    imgui.EndPopup()
+  end
+end
+
+function imgui_messanger_sup_showdialogs(table, typ)
+  for _, v in ipairs(table) do
+    k = v
+    v = iMessanger[v]
+    if k ~= " " then
+      for id = 0, sampGetMaxPlayerId() do
+        if sampIsPlayerConnected(id) and sampGetPlayerNickname(id) == k then
+          pId = id
+          break
+        end
+      end
+      kolvo = 0
+      if #v["Chat"] ~= 0 then
+        for i, z in pairs(v["Chat"]) do
+          if z["type"] ~= "support" and z["time"] > v["Checked"] then
+            kolvo = kolvo + 1
+          end
+        end
+      end
+
+      if typ == "UnAnswered" then
+        imgui.PushID(1)
+        imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 0, 0, 113):GetVec4())
+        if kolvo > 0 then
+          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(0, 255, 0, 255):GetVec4())
+        else
+          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(255, 255, 255, 255):GetVec4())
+        end
+        if k == selecteddialogSDUTY then
+          imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(54, 12, 42, 113):GetVec4())
+          iMessanger[selecteddialogSDUTY]["Checked"] = os.time()
+          --  elseif #iMessanger[k]["A"] == 0 then
+        else
+          imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(255, 0, 0, 113):GetVec4())
+        end
+      end
+      if k == selecteddialogSDUTY then
+        iMessanger[selecteddialogSDUTY]["Checked"] = os.time()
+      end
+      if typ == "Answered" then
+        imgui.PushID(2)
+        imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 0, 0, 113):GetVec4())
+        if kolvo > 0 then
+          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(0, 255, 0, 255):GetVec4())
+        else
+          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(255, 255, 255, 255):GetVec4())
+        end
+        if k == selecteddialogSDUTY then
+          imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(54, 12, 42, 113):GetVec4())
+          iMessanger[selecteddialogSDUTY]["Checked"] = os.time()
+        else
+          imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.26, 0.59, 0.98, 0.40))
+        end
+      end
+      if scroll and iChangeScroll.v then
+        imgui.SetScrollHere()
+      end
+      if kolvo > 0 then
+        if pId ~= nil and sampIsPlayerConnected(pId) and sampGetPlayerNickname(pId) == k then
+          if imgui.Button(u8(k .. "[" .. pId .. "] - "..kolvo), imgui.ImVec2(-0.0001, 30)) then
+            selecteddialogSDUTY = k
+            online = "Онлайн"
+            scroll = true
+            keyboard = true
+          end
+        elseif iShowSHOWOFFLINESDUTY.v then
+          if imgui.Button(u8(k .. "[-] - "..kolvo), imgui.ImVec2(-0.0001, 30)) then
+            selecteddialogSDUTY = k
+            online = "Оффлайн"
+            scroll = true
+            keyboard = true
+          end
+        end
+      else
+        if pId ~= nil and sampIsPlayerConnected(pId) and sampGetPlayerNickname(pId) == k then
+          if imgui.Button(u8(k .. "[" .. pId .. "]"), imgui.ImVec2(-0.0001, 30)) then
+            selecteddialogSDUTY = k
+            online = "Онлайн"
+            scroll = true
+            keyboard = true
+          end
+        elseif iShowSHOWOFFLINESDUTY.v then
+          if imgui.Button(u8(k .. "[-]"), imgui.ImVec2(-0.0001, 30)) then
+            selecteddialogSDUTY = k
+            online = "Оффлайн"
+            scroll = true
+            keyboard = true
+          end
+        end
+      end
+      if imgui.IsItemHovered() and imgui.IsMouseClicked(1) then
+        iMessanger[k] = nil
+
+      end
+      if typ == "UnAnswered" then
+        imgui.PopStyleColor(3)
+        imgui.PopID()
+      end
+      if typ == "Answered" then
+        imgui.PopStyleColor(3)
+        imgui.PopID()
+      end
+    end
+  end
 end
 
 function imgui_messanger_switchmode()
@@ -796,6 +1222,7 @@ function imgui_messanger_switchmode()
   end
   if imgui.Button(u8("SDUTY"), imgui.ImVec2(85, 20)) then
     cfg.messanger.mode = 1
+    inicfg.save(cfg, "support")
   end
   imgui.PopStyleColor()
   if cfg.messanger.mode == 2 then
@@ -806,6 +1233,7 @@ function imgui_messanger_switchmode()
   imgui.SameLine()
   if imgui.Button(u8("SMS"), imgui.ImVec2(85, 20)) then
     cfg.messanger.mode = 2
+    inicfg.save(cfg, "support")
   end
   imgui.PopStyleColor()
   imgui.EndChild()
@@ -813,20 +1241,20 @@ end
 
 function imgui_messanger_sup_header()
   imgui.BeginChild("##header", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 35), true)
-  if iMessanger[selecteddialog] ~= nil and iMessanger[selecteddialog]["Chat"] ~= nil and iMessanger[selecteddialog]["Q"] ~= nil then
+  if iMessanger[selecteddialogSDUTY] ~= nil and iMessanger[selecteddialogSDUTY]["Chat"] ~= nil and iMessanger[selecteddialogSDUTY]["Q"] ~= nil then
     for id = 0, sampGetMaxPlayerId() do
-      if sampIsPlayerConnected(id) and sampGetPlayerNickname(id) == selecteddialog then
+      if sampIsPlayerConnected(id) and sampGetPlayerNickname(id) == selecteddialogSDUTY then
         sId = id
         break
         if id == sampGetMaxPlayerId() then sId = "-" end
       end
     end
-    if iMessanger[selecteddialog] ~= nil and iMessanger[selecteddialog]["Q"] ~= nil and iMessanger[selecteddialog]["Q"][#iMessanger[selecteddialog]["Q"]] ~= nil and iMessanger[selecteddialog]["Q"][#iMessanger[selecteddialog]["Q"]]["time"] ~= nil then
-      qtime = os.time() - iMessanger[selecteddialog]["Q"][#iMessanger[selecteddialog]["Q"]]["time"]
+    if iMessanger[selecteddialogSDUTY] ~= nil and iMessanger[selecteddialogSDUTY]["Q"] ~= nil and iMessanger[selecteddialogSDUTY]["Q"][#iMessanger[selecteddialogSDUTY]["Q"]] ~= nil and iMessanger[selecteddialogSDUTY]["Q"][#iMessanger[selecteddialogSDUTY]["Q"]]["time"] ~= nil then
+      qtime = os.time() - iMessanger[selecteddialogSDUTY]["Q"][#iMessanger[selecteddialogSDUTY]["Q"]]["time"]
     else
       qtime = "-"
     end
-    imgui.Text(u8:encode("["..online.."] Ник: "..selecteddialog..". ID: "..tonumber(sId)..". LVL: "..sampGetPlayerScore(tonumber(sId))..". Время: "..qtime.." сек."))
+    imgui.Text(u8:encode("["..online.."] Ник: "..selecteddialogSDUTY..". ID: "..tonumber(sId)..". LVL: "..sampGetPlayerScore(tonumber(sId))..". Время: "..qtime.." сек."))
   end
   imgui.EndChild()
 end
@@ -834,14 +1262,27 @@ end
 
 function imgui_messanger_sms_header()
   imgui.BeginChild("##header", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 35), true)
-  imgui.Text(u8"Тут под смски")
+  if sms[selecteddialogSMS] ~= nil and sms[selecteddialogSMS]["Chat"] ~= nil then
+    for id = 0, sampGetMaxPlayerId() + 1 do
+      if sampIsPlayerConnected(id) and sampGetPlayerNickname(id) == selecteddialogSMS then
+        shId = id
+        break
+      end
+      if id == sampGetMaxPlayerId() + 1 then shId = "-" end
+    end
+    if shId == "-" then
+      imgui.Text(u8:encode("[Оффлайн] Ник: "..tostring(selecteddialogSMS)..". Всего сообщений: "..tostring(#sms[selecteddialogSMS]["Chat"]).."."))
+    else
+      imgui.Text(u8:encode("[Онлайн] Ник: "..selecteddialogSMS..". ID: "..tostring(shId)..". LVL: "..tostring(sampGetPlayerScore(tonumber(shId)))..". Всего сообщений: "..tostring(#sms[selecteddialogSMS]["Chat"]).."."))
+    end
+  end
   imgui.EndChild()
 end
 
 function imgui_messanger_sup_dialog()
   imgui.BeginChild("##middle", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), iMessangerHeight.v - 74), true)
-  if selecteddialog ~= nil and iMessanger[selecteddialog] ~= nil and iMessanger[selecteddialog]["Chat"] ~= nil then
-    for k, v in ipairs(iMessanger[selecteddialog]["Chat"]) do
+  if selecteddialogSDUTY ~= nil and iMessanger[selecteddialogSDUTY] ~= nil and iMessanger[selecteddialogSDUTY]["Chat"] ~= nil then
+    for k, v in ipairs(iMessanger[selecteddialogSDUTY]["Chat"]) do
       local msg = string.format("%s", u8:encode(v.text))
       local size = imgui.GetFont():CalcTextSizeA(imgui.GetFont().FontSize, 350.0, 346.0, msg)
       local x = imgui.GetContentRegionAvailWidth() / 2 - 25
@@ -881,7 +1322,7 @@ function imgui_messanger_sup_dialog()
           imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), os.date("%X", v.time))
           imgui.SameLine()
           local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerHeaderColor):GetRGBA()
-          imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), u8:encode("<-Ответ от "..v.Nick))
+          imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), u8:encode("<-Отвеsт от "..v.Nick))
         else
           local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTextOthersColor):GetRGBA()
           imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
@@ -898,12 +1339,12 @@ function imgui_messanger_sup_dialog()
       imgui.PopStyleVar()
       imgui.PopStyleColor()
     end
-    if S2B then
+    if ScrollToDialogSDUTY then
       imgui.SetScrollHere()
-      S2B = false
+      ScrollToDialogSDUTY = false
     end
   else
-    if iMessanger[selecteddialog] == nil then
+    if iMessanger[selecteddialogSDUTY] == nil then
       imgui.SetCursorPos(imgui.ImVec2(imgui.GetContentRegionAvailWidth() / 3, (iMessangerHeight.v - 100) / 2))
       imgui.Text(u8"Выберите диалог.")
     end
@@ -911,37 +1352,88 @@ function imgui_messanger_sup_dialog()
   imgui.EndChild()
 end
 
-
 function imgui_messanger_sms_dialog()
   imgui.BeginChild("##middle", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), iMessangerHeight.v - 74), true)
-  imgui.Text(u8'Тут под смски')
+  if selecteddialogSMS ~= nil and sms[selecteddialogSMS] ~= nil and sms[selecteddialogSMS]["Chat"] ~= nil then
+    for k, v in ipairs(sms[selecteddialogSMS]["Chat"]) do
+      local msg = string.format("%s", u8:encode(v.text))
+      local size = imgui.GetFont():CalcTextSizeA(imgui.GetFont().FontSize, 350.0, 346.0, msg)
+      local x = imgui.GetContentRegionAvailWidth() / 2 - 25
+      if v.type == "TO" then
+        imgui.NewLine()
+        imgui.SameLine(imgui.GetContentRegionAvailWidth() - x - imgui.GetStyle().ScrollbarSize + 10)
+      end
+      if v.type == "FROM" then
+        local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionColor):GetRGBA()
+        imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
+      end
+      if v.type == "TO" then
+        local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerColor):GetRGBA()
+        imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
+      end
+      imgui.PushStyleVar(imgui.StyleVar.WindowPadding, imgui.ImVec2(4.0, 2.0))
+      imgui.BeginChild("##msg" .. k, imgui.ImVec2(x + 8.0, 50 + 6.0), false, imgui.WindowFlags.AlwaysUseWindowPadding + imgui.WindowFlags.NoScrollbar + imgui.WindowFlags.NoScrollWithMouse)
+      if v.type == "FROM" then
+        local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionTextColor):GetRGBA()
+        imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
+        local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionTimeColor):GetRGBA()
+        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), os.date("%X", v.time))
+        imgui.SameLine()
+        local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionHeaderColor):GetRGBA()
+        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), u8:encode("->SMS от "..v.Nick))
+      end
+      if v.type == "TO" then
+        local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTextColor):GetRGBA()
+        imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
+        local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTimeColor):GetRGBA()
+        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), os.date("%X", v.time))
+        imgui.SameLine()
+        local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerHeaderColor):GetRGBA()
+        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), u8:encode("<-SMS от "..v.Nick))
+      end
+      imgui.TextWrapped(msg)
+      imgui.PopStyleColor()
+      imgui.EndChild()
+      imgui.PopStyleVar()
+      imgui.PopStyleColor()
+    end
+    if ScrollToDialogSMS then
+      imgui.SetScrollHere()
+      ScrollToDialogSMS = false
+    end
+  else
+    if sms[selecteddialogSMS] == nil then
+      imgui.SetCursorPos(imgui.ImVec2(imgui.GetContentRegionAvailWidth() / 3, (iMessangerHeight.v - 100) / 2))
+      imgui.Text(u8"Выберите диалог.")
+    end
+  end
   imgui.EndChild()
 end
 
 function imgui_messanger_sup_keyboard()
   imgui.BeginChild("##keyboard", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 35), true)
-  if iMessanger[selecteddialog] == nil then
+  if iMessanger[selecteddialogSDUTY] == nil then
 
   else
-    if F2I then
+    if KeyboardFocusReset then
       imgui.SetKeyboardFocusHere()
-      F2I = false
+      KeyboardFocusReset = false
     end
-    imgui.PushItemWidth(imgui.GetContentRegionAvailWidth() - 70)
     if keyboard and iSetKeyboard.v then
       imgui.SetKeyboardFocusHere()
       keyboard = false
     end
-    if imgui.InputText("##keyboard", toAnswer, imgui.InputTextFlags.EnterReturnsTrue) then
+    imgui.PushItemWidth(imgui.GetContentRegionAvailWidth() - 70)
+    if imgui.InputText("##keyboard", toAnswerSDUTY, imgui.InputTextFlags.EnterReturnsTrue) then
       for i = 1, sampGetMaxPlayerId() do
-        if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialog then k = i break end
+        if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSDUTY then k = i break end
         if i == sampGetMaxPlayerId() then k = "-" end
       end
       if k ~= "-" then
-        sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswer.v))
-        toAnswer.v = ''
+        sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSDUTY.v))
+        toAnswerSDUTY.v = ''
       end
-      F2I = true
+      KeyboardFocusReset = true
     end
     if imgui.IsItemActive() then
       imgui.LockPlayer = true
@@ -950,30 +1442,93 @@ function imgui_messanger_sup_keyboard()
     end
     if imgui.SameLine() or imgui.Button(u8"Отправить") then
       for i = 1, sampGetMaxPlayerId() do
-        if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialog then k = i break end
+        if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSDUTY then k = i break end
         if i == sampGetMaxPlayerId() then k = "-" end
       end
       if k ~= "-" then
-        sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswer.v))
-        toAnswer.v = ''
+        sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSDUTY.v))
+        toAnswerSDUTY.v = ''
       end
-      F2I = true
+      KeyboardFocusReset = true
     end
   end
   imgui.EndChild()
 end
 
-
 function imgui_messanger_sms_keyboard()
-  imgui.BeginChild("##keyboard", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 35), true)
-  imgui.Text(u8'Тут под смски')
+  imgui.BeginChild("##keyboardSMS", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 35), true)
+  if sms[selecteddialogSMS] == nil then
+
+  else
+    if KeyboardFocusReset then
+      imgui.SetKeyboardFocusHere()
+      KeyboardFocusReset = false
+    end
+    if keyboard and iSetKeyboard.v then
+      imgui.SetKeyboardFocusHere()
+      keyboard = false
+    end
+    imgui.PushItemWidth(imgui.GetContentRegionAvailWidth() - 70)
+    if imgui.InputText("##keyboardSMSKA", toAnswerSMS, imgui.InputTextFlags.EnterReturnsTrue) then
+      for i = 1, sampGetMaxPlayerId() do
+        if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSMS then k = i break end
+        if i == sampGetMaxPlayerId() then k = "-" end
+      end
+      if k ~= "-" then
+        sampSendChat("/t " .. k .. " " .. u8:decode(toAnswerSMS.v))
+        toAnswerSMS.v = ''
+      end
+      KeyboardFocusReset = true
+    end
+    if imgui.IsItemActive() then
+      imgui.LockPlayer = true
+    else
+      imgui.LockPlayer = false
+    end
+    if imgui.SameLine() or imgui.Button(u8"Отправить") then
+      for i = 1, sampGetMaxPlayerId() do
+        if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSMS then k = i break end
+        if i == sampGetMaxPlayerId() then k = "-" end
+      end
+      if k ~= "-" then
+        sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSMS.v))
+        toAnswerSMS.v = ''
+      end
+      KeyboardFocusReset = true
+    end
+  end
   imgui.EndChild()
+end
+
+function imgui_messanger_sms_loadDB()
+  _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+  smsfile = getGameDirectory()..'\\moonloader\\config\\smsmessanger\\'..sampGetCurrentServerAddress().."-"..sampGetPlayerNickname(myid)..'.sms'
+  if cfg.messanger.storesms or ingamelaunch then
+    ingamelaunch = nil
+    if doesFileExist(smsfile) then
+      sms = table.load(smsfile)
+    else
+      if sms == nil then sms = {} end
+      table.save(sms, smsfile)
+      sms = table.load(smsfile)
+    end
+  else
+    sms = {}
+  end
+end
+
+function imgui_messanger_sms_saveDB()
+  if cfg.messanger.storesms then
+    if type(sms) == "table" and doesFileExist(smsfile) then
+      table.save(sms, smsfile)
+    end
+  end
 end
 
 function imgui_notepad()
   if imgui.CollapsingHeader(u8"Блокнот") then
-    if imgui.InputTextMultiline("##notepad", text, imgui.ImVec2(-1, imgui.GetTextLineHeight() * cfg.notepad.lines), imgui.InputTextFlags.EnterReturnsTrue + imgui.InputTextFlags.AllowTabInput) then
-      notepadtext = text.v
+    if imgui.InputTextMultiline("##notepad", textNotepad, imgui.ImVec2(-1, imgui.GetTextLineHeight() * cfg.notepad.lines), imgui.InputTextFlags.EnterReturnsTrue + imgui.InputTextFlags.AllowTabInput) then
+      notepadtext = textNotepad.v
       notepadtext = string.gsub(notepadtext, "\n", "\\n")
       notepadtext = string.gsub(notepadtext, "\t", "\\t")
       cfg.notepad.text = u8:decode(notepadtext)
@@ -1082,42 +1637,53 @@ end
 
 function imgui_settings()
   if imgui.CollapsingHeader(u8"Настройки") then
+    imgui_settings_1_sup_hideandcol()
+    imgui_settings_2_sms_hideandcol()
+    imgui_settings_3_sup_messanger()
+    imgui_settings_4_sms_messanger()
+    imgui_settings_5_notepad()
+    imgui_settings_6_logger()
+    imgui_settings_7_logviewer()
+    imgui_settings_8_histogram()
+    imgui_settings_9_sup_sounds()
+    imgui_settings_10_sms_sounds()
+  end
+end
 
+function imgui_settings_1_sup_hideandcol()
+  if imgui.Checkbox("##HideQuestionCheck", iHideQuestion) then
+    cfg.options.HideQuestion = iHideQuestion.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if iHideQuestion.v then
+    imgui.Text(u8("Скрывать вопросы в чате?"))
+  else
+    imgui.TextDisabled(u8"Скрывать вопросы в чате?")
+  end
 
+  if imgui.Checkbox("##HideAnswerCheck", iHideAnswer) then
+    cfg.options.HideAnswer = iHideAnswer.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if iHideAnswer.v then
+    imgui.Text(u8("Скрывать ваши ответы в чате?"))
+  else
+    imgui.TextDisabled(u8"Скрывать ваши ответы в чате?")
+  end
 
-    if imgui.Checkbox("##HideQuestionCheck", iHideQuestion) then
-      cfg.options.HideQuestion = iHideQuestion.v
-      inicfg.save(cfg, "support")
-    end
-    imgui.SameLine()
-    if iHideQuestion.v then
-      imgui.Text(u8("Скрывать вопросы в чате?"))
-    else
-      imgui.TextDisabled(u8"Скрывать вопросы в чате?")
-    end
-
-    if imgui.Checkbox("##HideAnswerCheck", iHideAnswer) then
-      cfg.options.HideAnswer = iHideAnswer.v
-      inicfg.save(cfg, "support")
-    end
-    imgui.SameLine()
-    if iHideAnswer.v then
-      imgui.Text(u8("Скрывать ваши ответы в чате?"))
-    else
-      imgui.TextDisabled(u8"Скрывать ваши ответы в чате?")
-    end
-
-    if imgui.Checkbox("##HideAnswerOthersCheck", iHideAnswerOthers) then
-      cfg.options.HideAnswerOthers = iHideAnswerOthers.v
-      inicfg.save(cfg, "support")
-    end
-    imgui.SameLine()
-    if iHideAnswerOthers.v then
-      imgui.Text(u8("Скрывать чужие ответы в чате?"))
-    else
-      imgui.TextDisabled(u8"Скрывать чужие ответы в чате?")
-    end
-
+  if imgui.Checkbox("##HideAnswerOthersCheck", iHideAnswerOthers) then
+    cfg.options.HideAnswerOthers = iHideAnswerOthers.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if iHideAnswerOthers.v then
+    imgui.Text(u8("Скрывать чужие ответы в чате?"))
+  else
+    imgui.TextDisabled(u8"Скрывать чужие ответы в чате?")
+  end
+  if not cfg.options.HideQuestion then
     if imgui.Checkbox("##ReplaceQuestionColorCheck", iReplaceQuestionColor) then
       cfg.options.ReplaceQuestionColor = iReplaceQuestionColor.v
       inicfg.save(cfg, "support")
@@ -1137,8 +1703,9 @@ function imgui_settings()
     else
       imgui.TextDisabled(u8"Изменять цвет вопросов в чате?")
     end
+  end
 
-    imgui.AlignTextToFramePadding()
+  if not cfg.options.HideAnswer then
     if imgui.Checkbox("##ReplaceAnswerColorCheck", iReplaceAnswerColor) then
       cfg.options.ReplaceAnswerColor = iReplaceAnswerColor.v
       inicfg.save(cfg, "support")
@@ -1157,7 +1724,9 @@ function imgui_settings()
       end
     else imgui.TextDisabled(u8"Изменять цвет ваших ответов в чате?")
     end
+  end
 
+  if not cfg.options.HideAnswerOthers then
     if imgui.Checkbox("##ReplaceAnswerOthersColorCheck", iReplaceAnswerOthersColor) then
       cfg.options.ReplaceAnswerOthersColor = iReplaceAnswerOthersColor.v
       inicfg.save(cfg, "support")
@@ -1176,276 +1745,447 @@ function imgui_settings()
       end
     else imgui.TextDisabled(u8"Изменять цвет чужих ответов в чате?")
     end
+  end
+end
 
-    if imgui.Checkbox("##включить мессенджер", iMessangerActiveSDUTY) then
-      if iMessangerActiveSDUTY.v then
-        cfg.messanger.mode = 1
-			else
-				if cfg.messanger.activesms then
-	        cfg.messanger.mode = 2
-				end
-      end
-      cfg.messanger.activesduty = iMessangerActiveSDUTY.v
-      inicfg.save(cfg, "support")
-    end
-    if iMessangerActiveSDUTY.v then
-      imgui.SameLine()
-      imgui.Text(u8("Мессенджер sduty активирован!"))
-      imgui.PushItemWidth(325)
-      imgui.SliderInt(u8"Высота мессенджера", iMessangerHeight, 100, 1000)
-      if iMessangerHeight.v ~= cfg.messanger.Height then
-        cfg.messanger.Height = iMessangerHeight.v
-        inicfg.save(cfg, "support")
-      end
-      imgui.Text(u8("Цвета вопросов в диалогах:"))
-      imgui.SameLine(203)
-      imgui.Text("")
-      imgui.SameLine()
-      if imgui.ColorEdit4(u8"Цвет вопросов", iQcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
-        cfg.messanger.QuestionColor = imgui.ImColor.FromFloat4(iQcolor.v[1], iQcolor.v[2], iQcolor.v[3], iQcolor.v[4]):GetU32()
-        inicfg.save(cfg, "support")
-      end
-      imgui.SameLine()
-      if imgui.ColorEdit4(u8"Цвет времени вопроса", iQuestionTimeColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
-        cfg.messanger.QuestionTimeColor = imgui.ImColor.FromFloat4(iQuestionTimeColor.v[1], iQuestionTimeColor.v[2], iQuestionTimeColor.v[3], iQuestionTimeColor.v[4]):GetU32()
-        inicfg.save(cfg, "support")
-      end
+function imgui_settings_2_sms_hideandcol()
+  if imgui.Checkbox("##HideSmsIn2", iHideSmsIn) then
+    cfg.options.HideSmsIn = iHideSmsIn.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if iHideSmsIn.v then
+    imgui.Text(u8("Скрывать входящие сообщения?"))
+  else
+    imgui.TextDisabled(u8"Скрывать входящие сообщения?")
+  end
 
-      imgui.SameLine()
-      if imgui.ColorEdit4(u8"Цвет заголовка вопроса", iQuestionHeaderColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
-        cfg.messanger.QuestionHeaderColor = imgui.ImColor.FromFloat4(iQuestionHeaderColor.v[1], iQuestionHeaderColor.v[2], iQuestionHeaderColor.v[3], iQuestionHeaderColor.v[4]):GetU32()
-        inicfg.save(cfg, "support")
-      end
+  if imgui.Checkbox("##HideSmsOut", iHideSmsOut) then
+    cfg.options.HideSmsOut = iHideSmsOut.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if iHideSmsOut.v then
+    imgui.Text(u8("Скрывать исходящие сообщения?"))
+  else
+    imgui.TextDisabled(u8"Скрывать исходящие сообщения?")
+  end
 
-      imgui.SameLine()
-      if imgui.ColorEdit4(u8"Цвет текста вопроса", iQuestionTextColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
-        cfg.messanger.QuestionTextColor = imgui.ImColor.FromFloat4(iQuestionTextColor.v[1], iQuestionTextColor.v[2], iQuestionTextColor.v[3], iQuestionTextColor.v[4]):GetU32()
-        inicfg.save(cfg, "support")
-      end
+  if imgui.Checkbox("##HideSmsReceived", iHideSmsReceived) then
+    cfg.options.HideSmsReceived = iHideSmsReceived.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if iHideSmsReceived.v then
+    imgui.Text(u8("Скрывать \"Сообщение доставлено\"?"))
+  else
+    imgui.TextDisabled(u8"Скрывать \"Сообщение доставлено\"?")
+  end
 
-      imgui.Text(u8("Цвета ваших ответов в диалогах:"))
-      imgui.SameLine(203)
-      imgui.Text("")
-      imgui.SameLine()
-      if imgui.ColorEdit4(u8"Цвет ваших ответов", iAcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
-        cfg.messanger.AnswerColor = imgui.ImColor.FromFloat4(iAcolor.v[1], iAcolor.v[2], iAcolor.v[3], iAcolor.v[4]):GetU32()
-        inicfg.save(cfg, "support")
-      end
-
-      imgui.SameLine()
-      if imgui.ColorEdit4(u8"Цвет времени ответа", iAnswerTimeColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
-        cfg.messanger.AnswerTimeColor = imgui.ImColor.FromFloat4(iAnswerTimeColor.v[1], iAnswerTimeColor.v[2], iAnswerTimeColor.v[3], iAnswerTimeColor.v[4]):GetU32()
-        inicfg.save(cfg, "support")
-      end
-
-      imgui.SameLine()
-      if imgui.ColorEdit4(u8"Цвет заголовка ответа", iAnswerHeaderColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
-        cfg.messanger.AnswerHeaderColor = imgui.ImColor.FromFloat4(iAnswerHeaderColor.v[1], iAnswerHeaderColor.v[2], iAnswerHeaderColor.v[3], iAnswerHeaderColor.v[4]):GetU32()
-        inicfg.save(cfg, "support")
-      end
-
-      imgui.SameLine()
-      if imgui.ColorEdit4(u8"Цвет текста ответа", iAnswerTextColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
-        cfg.messanger.AnswerTextColor = imgui.ImColor.FromFloat4(iAnswerTextColor.v[1], iAnswerTextColor.v[2], iAnswerTextColor.v[3], iAnswerTextColor.v[4]):GetU32()
-        inicfg.save(cfg, "support")
-      end
-
-      imgui.Text(u8("Цвета чужих ответов в диалогах:"))
-      imgui.SameLine(203)
-      imgui.Text("")
-      imgui.SameLine()
-      if imgui.ColorEdit4(u8"Цвет ответов других саппортов", iAcolor1, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
-        cfg.messanger.AnswerColorOthers = imgui.ImColor.FromFloat4(iAcolor1.v[1], iAcolor1.v[2], iAcolor1.v[3], iAcolor1.v[4]):GetU32()
-        inicfg.save(cfg, "support")
-      end
-
-      imgui.SameLine()
-      if imgui.ColorEdit4(u8"Цвет времени ответа других саппортов", iAnswerTimeOthersColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
-        cfg.messanger.AnswerTimeOthersColor = imgui.ImColor.FromFloat4(iAnswerTimeOthersColor.v[1], iAnswerTimeOthersColor.v[2], iAnswerTimeOthersColor.v[3], iAnswerTimeOthersColor.v[4]):GetU32()
-        inicfg.save(cfg, "support")
-      end
-
-      imgui.SameLine()
-      if imgui.ColorEdit4(u8"Цвет заголовка ответа других саппортов", iAnswerHeaderOthersColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
-        cfg.messanger.AnswerHeaderOthersColor = imgui.ImColor.FromFloat4(iAnswerHeaderOthersColor.v[1], iAnswerHeaderOthersColor.v[2], iAnswerHeaderOthersColor.v[3], iAnswerHeaderOthersColor.v[4]):GetU32()
-        inicfg.save(cfg, "support")
-      end
-
-      imgui.SameLine()
-      if imgui.ColorEdit4(u8"Цвет текста ответа других саппортов", iAnswerTextOthersColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
-        cfg.messanger.AnswerTextOthersColor = imgui.ImColor.FromFloat4(iAnswerTextOthersColor.v[1], iAnswerTextOthersColor.v[2], iAnswerTextOthersColor.v[3], iAnswerTextOthersColor.v[4]):GetU32()
-        inicfg.save(cfg, "support")
-
-      end
-    else
-      imgui.SameLine()
-      imgui.TextDisabled(u8"Включить sduty мессенджер?")
-    end
-
-    if imgui.Checkbox("##включить sms мессенджер", iMessangerActiveSMS) then
-      if iMessangerActiveSMS.v then
-        cfg.messanger.mode = 2
-			else
-				if cfg.messanger.activesduty then
-					cfg.messanger.mode = 1
-					print('mode')
-				end
-      end
-      cfg.messanger.activesms = iMessangerActiveSMS.v
-      inicfg.save(cfg, "support")
-    end
-    if iMessangerActiveSMS.v then
-      imgui.SameLine()
-      imgui.Text(u8("Мессенджер sms активирован!"))
-      imgui.PushItemWidth(325)
-      imgui.SliderInt(u8"Высота мессенджера##1", iMessangerHeight, 100, 1000)
-      if iMessangerHeight.v ~= cfg.messanger.Height then
-        cfg.messanger.Height = iMessangerHeight.v
-        inicfg.save(cfg, "support")
-      end
-    else
-      imgui.SameLine()
-      imgui.TextDisabled(u8"Включить sms мессенджер?")
-    end
-
-    if imgui.Checkbox("##включить блокнот", iNotepadActive) then
-      cfg.notepad.active = iNotepadActive.v
-      inicfg.save(cfg, "support")
-    end
-    if iNotepadActive.v then
-      imgui.SameLine()
-      imgui.Text(u8"Блокнот активирован!")
-      imgui.PushItemWidth(325)
-      imgui.SliderInt(u8"Количество строк блокнота", iNotepadLines, 1, 50)
-      if iNotepadLines.v ~= cfg.notepad.lines then
-        cfg.notepad.lines = iNotepadLines.v
-        inicfg.save(cfg, "support")
-      end
-    else
-      imgui.SameLine()
-      imgui.TextDisabled(u8"Включить блокнот?")
-    end
-
-    if imgui.Checkbox("##включить логгер", iLogBool) then
-      if cfg.log.logger == false then updateStats() end
-      cfg.log.logger = iLogBool.v
-      inicfg.save(cfg, "support")
-    end
-    if iLogBool.v then
-      imgui.SameLine()
-      imgui.Text(u8:encode("Ответы пишутся в support.csv! Записей в логе: "..countall.."."))
-    else
-      imgui.SameLine()
-      imgui.TextDisabled(u8"Включить запись ответов в лог?")
-
-      if doesFileExist(file) then
-        imgui.SameLine()
-        if imgui.Button(u8("Удалить лог")) then
-          os.remove(file)
-        end
-      end
-    end
-    if imgui.Checkbox("##ShowTimeToUpdateCSV", iShowTimeToUpdateCSV) then
-      cfg.options.ShowTimeToUpdateCSV = iShowTimeToUpdateCSV.v
+  if not cfg.options.HideSmsIn then
+    if imgui.Checkbox("##iReplaceSmsInColor", iReplaceSmsInColor) then
+      cfg.options.ReplaceSmsInColor = iReplaceSmsInColor.v
       inicfg.save(cfg, "support")
     end
     imgui.SameLine()
-    if iShowTimeToUpdateCSV.v and cfg.log.logger then
-      imgui.Text(u8("Показывать время обработки лога?"))
-    else
-      imgui.TextDisabled(u8"Показывать время обработки лога?")
-    end
-    if imgui.Checkbox("##включить лог", iLogActive) then
-      cfg.log.active = iLogActive.v
-      inicfg.save(cfg, "support")
-    end
-    if iLogActive.v then
+    if iReplaceSmsInColor.v then
+      imgui.Text(u8("Цвет входящих сообщений изменяется на: "))
+      imgui.SameLine(287)
+      imgui.Text("")
       imgui.SameLine()
-      imgui.Text(u8"Лог ответов активирован!")
-      imgui.PushItemWidth(325)
-      imgui.SliderInt(u8"Высота лога", iLogHeight, 1, 500)
-      if iLogHeight.v ~= cfg.log.height then
-        cfg.log.height = iLogHeight.v
+      if imgui.ColorEdit4("##SmsInColor", SmsInColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
+        cfg.colors.QuestionColor = imgui.ImColor.FromFloat4(SmsInColor.v[1], SmsInColor.v[2], SmsInColor.v[3], SmsInColor.v[4]):GetU32()
+        local r, g, b, a = imgui.ImColor.FromFloat4(SmsInColor.v[1], SmsInColor.v[2], SmsInColor.v[3], SmsInColor.v[4]):GetRGBA()
+        SmsInColor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
         inicfg.save(cfg, "support")
       end
     else
-      imgui.SameLine()
-      imgui.TextDisabled(u8"Включить лог ответов?")
+      imgui.TextDisabled(u8"Изменять цвет входящих сообщений?")
     end
+  end
 
-    if imgui.Checkbox("##включить Гистограмма", iStatsActive) then
-      cfg.stats.active = iStatsActive.v
+  if not cfg.options.HideSmsOut then
+    if imgui.Checkbox("##iReplaceSmsOutColor", iReplaceSmsOutColor) then
+      cfg.options.ReplaceSmsOutColor = iReplaceSmsOutColor.v
       inicfg.save(cfg, "support")
     end
-    if iStatsActive.v then
+    imgui.SameLine()
+    if iReplaceSmsOutColor.v then
+      imgui.Text(u8("Цвет исходящих сообщений изменяется на: "))
+      imgui.SameLine(287)
+      imgui.Text("")
       imgui.SameLine()
-      imgui.Text(u8"Гистограмма активирована!")
-      imgui.PushItemWidth(325)
-      imgui.SliderInt(u8"Высота гистограммы", iStatsHeight, 1, 500)
-      if iStatsHeight.v ~= cfg.stats.height then
-        cfg.stats.height = iStatsHeight.v
+      if imgui.ColorEdit4("##SmsOutColor", SmsOutColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
+        cfg.colors.AnswerColor = imgui.ImColor.FromFloat4(SmsOutColor.v[1], SmsOutColor.v[2], SmsOutColor.v[3], SmsOutColor.v[4]):GetU32()
+        local r, g, b, a = imgui.ImColor.FromFloat4(SmsOutColor.v[1], SmsOutColor.v[2], SmsOutColor.v[3], SmsOutColor.v[4]):GetRGBA()
+        SmsOutColor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
         inicfg.save(cfg, "support")
       end
-    else
-      imgui.SameLine()
-      imgui.TextDisabled(u8"Включить гистограмму?")
+    else imgui.TextDisabled(u8"Изменять цвет исходящих сообщений в чате?")
     end
+  end
 
-    if imgui.Checkbox("##SoundQuestion", iSoundQuestion) then
-      cfg.options.SoundQuestion = iSoundQuestion.v
+  if not cfg.options.HideSmsReceived then
+    if imgui.Checkbox("##ReplaceAnswerOthersColorCheck", iReplaceSmsReceivedColor) then
+      cfg.options.ReplaceSmsReceivedColor = iReplaceSmsReceivedColor.v
       inicfg.save(cfg, "support")
     end
-    if iSoundQuestion.v then
+    imgui.SameLine()
+    if iReplaceSmsReceivedColor.v then
+      imgui.Text(u8("Цвет \"SMS доставлено\" изменяется на: "))
+      imgui.SameLine(287)
+      imgui.Text("")
       imgui.SameLine()
-      imgui.PushItemWidth(300)
-      imgui.SliderInt(u8"Звук вопроса", iSoundQuestionNumber, 1, 27)
-      if iSoundQuestionNumber.v ~= cfg.options.SoundQuestionNumber then
-        PLAYQ = true
-        cfg.options.SoundQuestionNumber = iSoundQuestionNumber.v
+      if imgui.ColorEdit4("##SmsReceivedColor", SmsReceivedColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
+        cfg.colors.AnswerColor = imgui.ImColor.FromFloat4(SmsReceivedColor.v[1], SmsReceivedColor.v[2], SmsReceivedColor.v[3], SmsReceivedColor.v[4]):GetU32()
+        local r, g, b, a = imgui.ImColor.FromFloat4(SmsReceivedColor.v[1], SmsReceivedColor.v[2], SmsReceivedColor.v[3], SmsReceivedColor.v[4]):GetRGBA()
+        SmsReceivedColor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
         inicfg.save(cfg, "support")
       end
     else
-      imgui.SameLine()
-      imgui.TextDisabled(u8"Включить уведомление при вопросе?")
-    end
-
-    if imgui.Checkbox("##SoundAnswerOthers", iSoundAnswerOthers) then
-      cfg.options.SoundAnswerOthers = iSoundAnswerOthers.v
-      inicfg.save(cfg, "support")
-    end
-    if iSoundAnswerOthers.v then
-      imgui.SameLine()
-      imgui.PushItemWidth(300)
-      imgui.SliderInt(u8"Звук ответа другого саппорта", iSoundAnswerOthersNumber, 1, 27)
-      if iSoundAnswerOthersNumber.v ~= cfg.options.SoundAnswerOthersNumber then
-        PLAYA1 = true
-        cfg.options.SoundAnswerOthersNumber = iSoundAnswerOthersNumber.v
-        inicfg.save(cfg, "support")
-      end
-    else
-      imgui.SameLine()
-      imgui.TextDisabled(u8"Включить уведомление при ответе?")
-    end
-
-    if imgui.Checkbox("##SoundAnswer", iSoundAnswer) then
-      cfg.options.SoundAnswer = iSoundAnswer.v
-      inicfg.save(cfg, "support")
-    end
-    if iSoundAnswer.v then
-      imgui.SameLine()
-      imgui.PushItemWidth(300)
-      imgui.SliderInt(u8"Звук ответа", iSoundAnswerNumber, 1, 27)
-      if iSoundAnswerNumber.v ~= cfg.options.SoundAnswerNumber then
-        PLAYA = true
-        cfg.options.SoundAnswerNumber = iSoundAnswerNumber.v
-        inicfg.save(cfg, "support")
-      end
-    else
-      imgui.SameLine()
-      imgui.TextDisabled(u8"Включить уведомление при ответе другого саппорта?")
+      imgui.TextDisabled(u8"Изменять \"Сообщение доставлено\" в чате?")
     end
   end
 end
+
+function imgui_settings_3_sup_messanger()
+  if imgui.Checkbox("##включить мессенджер", iMessangerActiveSDUTY) then
+    if iMessangerActiveSDUTY.v then
+      cfg.messanger.mode = 1
+    else
+      if cfg.messanger.activesms then
+        cfg.messanger.mode = 2
+      end
+    end
+    cfg.messanger.activesduty = iMessangerActiveSDUTY.v
+    inicfg.save(cfg, "support")
+  end
+  if iMessangerActiveSDUTY.v then
+    imgui.SameLine()
+    imgui.Text(u8("Мессенджер sduty активирован!"))
+    imgui.PushItemWidth(325)
+    imgui.SliderInt(u8"Высота мессенджера", iMessangerHeight, 100, 1000)
+    if iMessangerHeight.v ~= cfg.messanger.Height then
+      cfg.messanger.Height = iMessangerHeight.v
+      inicfg.save(cfg, "support")
+    end
+    imgui.Text(u8("Цвета вопросов в диалогах:"))
+    imgui.SameLine(203)
+    imgui.Text("")
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"Цвет вопросов", iQcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.QuestionColor = imgui.ImColor.FromFloat4(iQcolor.v[1], iQcolor.v[2], iQcolor.v[3], iQcolor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"Цвет времени вопроса", iQuestionTimeColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.QuestionTimeColor = imgui.ImColor.FromFloat4(iQuestionTimeColor.v[1], iQuestionTimeColor.v[2], iQuestionTimeColor.v[3], iQuestionTimeColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"Цвет заголовка вопроса", iQuestionHeaderColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.QuestionHeaderColor = imgui.ImColor.FromFloat4(iQuestionHeaderColor.v[1], iQuestionHeaderColor.v[2], iQuestionHeaderColor.v[3], iQuestionHeaderColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"Цвет текста вопроса", iQuestionTextColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.QuestionTextColor = imgui.ImColor.FromFloat4(iQuestionTextColor.v[1], iQuestionTextColor.v[2], iQuestionTextColor.v[3], iQuestionTextColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.Text(u8("Цвета ваших ответов в диалогах:"))
+    imgui.SameLine(203)
+    imgui.Text("")
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"Цвет ваших ответов", iAcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.AnswerColor = imgui.ImColor.FromFloat4(iAcolor.v[1], iAcolor.v[2], iAcolor.v[3], iAcolor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"Цвет времени ответа", iAnswerTimeColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.AnswerTimeColor = imgui.ImColor.FromFloat4(iAnswerTimeColor.v[1], iAnswerTimeColor.v[2], iAnswerTimeColor.v[3], iAnswerTimeColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"Цвет заголовка ответа", iAnswerHeaderColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.AnswerHeaderColor = imgui.ImColor.FromFloat4(iAnswerHeaderColor.v[1], iAnswerHeaderColor.v[2], iAnswerHeaderColor.v[3], iAnswerHeaderColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"Цвет текста ответа", iAnswerTextColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.AnswerTextColor = imgui.ImColor.FromFloat4(iAnswerTextColor.v[1], iAnswerTextColor.v[2], iAnswerTextColor.v[3], iAnswerTextColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.Text(u8("Цвета чужих ответов в диалогах:"))
+    imgui.SameLine(203)
+    imgui.Text("")
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"Цвет ответов других саппортов", iAcolor1, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.AnswerColorOthers = imgui.ImColor.FromFloat4(iAcolor1.v[1], iAcolor1.v[2], iAcolor1.v[3], iAcolor1.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"Цвет времени ответа других саппортов", iAnswerTimeOthersColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.AnswerTimeOthersColor = imgui.ImColor.FromFloat4(iAnswerTimeOthersColor.v[1], iAnswerTimeOthersColor.v[2], iAnswerTimeOthersColor.v[3], iAnswerTimeOthersColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"Цвет заголовка ответа других саппортов", iAnswerHeaderOthersColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.AnswerHeaderOthersColor = imgui.ImColor.FromFloat4(iAnswerHeaderOthersColor.v[1], iAnswerHeaderOthersColor.v[2], iAnswerHeaderOthersColor.v[3], iAnswerHeaderOthersColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"Цвет текста ответа других саппортов", iAnswerTextOthersColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.AnswerTextOthersColor = imgui.ImColor.FromFloat4(iAnswerTextOthersColor.v[1], iAnswerTextOthersColor.v[2], iAnswerTextOthersColor.v[3], iAnswerTextOthersColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+
+    end
+  else
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Включить sduty мессенджер?")
+  end
+end
+
+function imgui_settings_4_sms_messanger()
+  if imgui.Checkbox("##включить sms мессенджер", iMessangerActiveSMS) then
+    if iMessangerActiveSMS.v then
+      cfg.messanger.mode = 2
+    else
+      if cfg.messanger.activesduty then
+        cfg.messanger.mode = 1
+        print('mode')
+      end
+    end
+    cfg.messanger.activesms = iMessangerActiveSMS.v
+    inicfg.save(cfg, "support")
+  end
+  if iMessangerActiveSMS.v then
+    imgui.SameLine()
+    imgui.Text(u8("Мессенджер sms активирован!"))
+    imgui.PushItemWidth(325)
+    imgui.SliderInt(u8"Высота мессенджера##1", iMessangerHeight, 100, 1000)
+    if iMessangerHeight.v ~= cfg.messanger.Height then
+      cfg.messanger.Height = iMessangerHeight.v
+      inicfg.save(cfg, "support")
+    end
+    if imgui.Checkbox("##включить сохранение бд смс", iStoreSMS) then
+      if cfg.messanger.storesms == false then ingamelaunch = true imgui_messanger_sms_loadDB() end
+      cfg.messanger.storesms = iStoreSMS.v
+      inicfg.save(cfg, "support")
+    end
+    if iStoreSMS.v then
+      imgui.SameLine()
+      imgui.Text(u8:encode("Сохранение в БД активно. Количество диалогов: "..#sms.."."))
+    else
+      imgui.SameLine()
+      imgui.TextDisabled(u8"Сохранять БД смс?")
+      --imgui_messanger_sms_loadDB()
+      if doesFileExist(smsfile) then
+        imgui.SameLine()
+        if imgui.Button(u8("Удалить БД")) then
+          os.remove(smsfile)
+        end
+      end
+    end
+  else
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Включить sms мессенджер?")
+  end
+end
+
+function imgui_settings_5_notepad()
+  if imgui.Checkbox("##включить блокнот", iNotepadActive) then
+    cfg.notepad.active = iNotepadActive.v
+    inicfg.save(cfg, "support")
+  end
+  if iNotepadActive.v then
+    imgui.SameLine()
+    imgui.Text(u8"Блокнот активирован!")
+    imgui.PushItemWidth(325)
+    imgui.SliderInt(u8"Количество строк блокнота", iNotepadLines, 1, 50)
+    if iNotepadLines.v ~= cfg.notepad.lines then
+      cfg.notepad.lines = iNotepadLines.v
+      inicfg.save(cfg, "support")
+    end
+  else
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Включить блокнот?")
+  end
+end
+
+function imgui_settings_6_logger()
+  if imgui.Checkbox("##включить логгер", iLogBool) then
+    if cfg.log.logger == false then updateStats() end
+    cfg.log.logger = iLogBool.v
+    inicfg.save(cfg, "support")
+  end
+  if iLogBool.v then
+    imgui.SameLine()
+    imgui.Text(u8:encode("Ответы пишутся в support.csv! Записей в логе: "..countall.."."))
+  else
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Включить запись ответов в лог?")
+
+    if doesFileExist(file) then
+      imgui.SameLine()
+      if imgui.Button(u8("Удалить лог")) then
+        os.remove(file)
+      end
+    end
+  end
+end
+
+function imgui_settings_7_logviewer()
+  if imgui.Checkbox("##ShowTimeToUpdateCSV", iShowTimeToUpdateCSV) then
+    cfg.options.ShowTimeToUpdateCSV = iShowTimeToUpdateCSV.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if iShowTimeToUpdateCSV.v and cfg.log.logger then
+    imgui.Text(u8("Показывать время обработки лога?"))
+  else
+    imgui.TextDisabled(u8"Показывать время обработки лога?")
+  end
+  if imgui.Checkbox("##включить лог", iLogActive) then
+    cfg.log.active = iLogActive.v
+    inicfg.save(cfg, "support")
+  end
+  if iLogActive.v then
+    imgui.SameLine()
+    imgui.Text(u8"Лог ответов активирован!")
+    imgui.PushItemWidth(325)
+    imgui.SliderInt(u8"Высота лога", iLogHeight, 1, 500)
+    if iLogHeight.v ~= cfg.log.height then
+      cfg.log.height = iLogHeight.v
+      inicfg.save(cfg, "support")
+    end
+  else
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Включить лог ответов?")
+  end
+end
+
+function imgui_settings_8_histogram()
+  if imgui.Checkbox("##включить Гистограмма", iStatsActive) then
+    cfg.stats.active = iStatsActive.v
+    inicfg.save(cfg, "support")
+  end
+  if iStatsActive.v then
+    imgui.SameLine()
+    imgui.Text(u8"Гистограмма активирована!")
+    imgui.PushItemWidth(325)
+    imgui.SliderInt(u8"Высота гистограммы", iStatsHeight, 1, 500)
+    if iStatsHeight.v ~= cfg.stats.height then
+      cfg.stats.height = iStatsHeight.v
+      inicfg.save(cfg, "support")
+    end
+  else
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Включить гистограмму?")
+  end
+end
+
+function imgui_settings_9_sup_sounds()
+  if imgui.Checkbox("##SoundQuestion", iSoundQuestion) then
+    cfg.options.SoundQuestion = iSoundQuestion.v
+    inicfg.save(cfg, "support")
+  end
+  if iSoundQuestion.v then
+    imgui.SameLine()
+    imgui.PushItemWidth(300)
+    imgui.SliderInt(u8"Звук вопроса", iSoundQuestionNumber, 1, 27)
+    if iSoundQuestionNumber.v ~= cfg.options.SoundQuestionNumber then
+      PLAYQ = true
+      cfg.options.SoundQuestionNumber = iSoundQuestionNumber.v
+      inicfg.save(cfg, "support")
+    end
+  else
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Включить уведомление о вопросе?")
+  end
+  if imgui.Checkbox("##SoundAnswer", iSoundAnswer) then
+    cfg.options.SoundAnswer = iSoundAnswer.v
+    inicfg.save(cfg, "support")
+  end
+  if iSoundAnswer.v then
+    imgui.SameLine()
+    imgui.PushItemWidth(300)
+    imgui.SliderInt(u8"Звук ответа", iSoundAnswerNumber, 1, 27)
+    if iSoundAnswerNumber.v ~= cfg.options.SoundAnswerNumber then
+      PLAYA = true
+      cfg.options.SoundAnswerNumber = iSoundAnswerNumber.v
+      inicfg.save(cfg, "support")
+    end
+  else
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Включить уведомление об ответе?")
+  end
+  if imgui.Checkbox("##SoundAnswerOthers", iSoundAnswerOthers) then
+    cfg.options.SoundAnswerOthers = iSoundAnswerOthers.v
+    inicfg.save(cfg, "support")
+  end
+  if iSoundAnswerOthers.v then
+    imgui.SameLine()
+    imgui.PushItemWidth(300)
+    imgui.SliderInt(u8"Звук чужого ответа", iSoundAnswerOthersNumber, 1, 27)
+    if iSoundAnswerOthersNumber.v ~= cfg.options.SoundAnswerOthersNumber then
+      PLAYA1 = true
+      cfg.options.SoundAnswerOthersNumber = iSoundAnswerOthersNumber.v
+      inicfg.save(cfg, "support")
+    end
+  else
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Включить уведомление о чужом ответе?")
+  end
+end
+
+function imgui_settings_10_sms_sounds()
+  if imgui.Checkbox("##SoundSmsIn", iSoundSmsIn) then
+    cfg.options.SoundSmsIn = iSoundSmsIn.v
+    inicfg.save(cfg, "support")
+  end
+  if iSoundSmsIn.v then
+    imgui.SameLine()
+    imgui.PushItemWidth(300)
+    imgui.SliderInt(u8"Звук входящего сообщения", iSoundSmsInNumber, 1, 27)
+    if iSoundSmsInNumber.v ~= cfg.options.SoundSmsInNumber then
+      PLAYSMSIN = true
+      cfg.options.SoundSmsInNumber = iSoundSmsInNumber.v
+      inicfg.save(cfg, "support")
+    end
+  else
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Включить уведомление о входящем сообщении?")
+  end
+
+  if imgui.Checkbox("##SoundSmsOut", iSoundSmsOut) then
+    cfg.options.SoundSmsOut = iSoundSmsOut.v
+    inicfg.save(cfg, "support")
+  end
+  if iSoundSmsOut.v then
+    imgui.SameLine()
+    imgui.PushItemWidth(300)
+    imgui.SliderInt(u8"Звук исходящего сообщения", iSoundSmsOutNumber, 1, 27)
+    if iSoundSmsOutNumber.v ~= cfg.options.SoundSmsOutNumber then
+      PLAYSMSOUT = true
+      cfg.options.SoundSmsOutNumber = iSoundSmsOutNumber.v
+      inicfg.save(cfg, "support")
+    end
+  else
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Включить уведомление об исходящем сообщении?")
+  end
+end
+
 --style
 function apply_custom_style()
   imgui.SwitchContext()
@@ -1506,4 +2246,108 @@ function apply_custom_style()
   colors[clr.TextSelectedBg] = ImVec4(0.26, 0.59, 0.98, 0.35)
   colors[clr.ModalWindowDarkening] = ImVec4(0.80, 0.80, 0.80, 0.35)
 end
+
 apply_custom_style()
+
+do
+  local function exportstring( s )
+    return string.format("%q", s)
+  end
+
+  --// The Save Function
+  function table.save( tbl, filename )
+    local charS, charE = "   ", "\n"
+    local file, err = io.open( filename, "wb" )
+    if err then return err end
+
+    -- initiate variables for save procedure
+    local tables, lookup = { tbl }, { [tbl] = 1 }
+    file:write( "return {"..charE )
+
+    for idx, t in ipairs( tables ) do
+      file:write( "-- Table: {"..idx.."}"..charE )
+      file:write( "{"..charE )
+      local thandled = {}
+
+      for i, v in ipairs( t ) do
+        thandled[i] = true
+        local stype = type( v )
+        -- only handle value
+        if stype == "table" then
+          if not lookup[v] then
+            table.insert( tables, v )
+            lookup[v] = #tables
+          end
+          file:write( charS.."{"..lookup[v].."},"..charE )
+        elseif stype == "string" then
+          file:write( charS..exportstring( v )..","..charE )
+        elseif stype == "number" then
+          file:write( charS..tostring( v )..","..charE )
+        end
+      end
+
+      for i, v in pairs( t ) do
+        -- escape handled values
+        if (not thandled[i]) then
+
+          local str = ""
+          local stype = type( i )
+          -- handle index
+          if stype == "table" then
+            if not lookup[i] then
+              table.insert( tables, i )
+              lookup[i] = #tables
+            end
+            str = charS.."[{"..lookup[i].."}]="
+          elseif stype == "string" then
+            str = charS.."["..exportstring( i ).."]="
+          elseif stype == "number" then
+            str = charS.."["..tostring( i ).."]="
+          end
+
+          if str ~= "" then
+            stype = type( v )
+            -- handle value
+            if stype == "table" then
+              if not lookup[v] then
+                table.insert( tables, v )
+                lookup[v] = #tables
+              end
+              file:write( str.."{"..lookup[v].."},"..charE )
+            elseif stype == "string" then
+              file:write( str..exportstring( v )..","..charE )
+            elseif stype == "number" then
+              file:write( str..tostring( v )..","..charE )
+            end
+          end
+        end
+      end
+      file:write( "},"..charE )
+    end
+    file:write( "}" )
+    file:close()
+  end
+
+  --// The Load Function
+  function table.load( sfile )
+    local ftables, err = loadfile( sfile )
+    if err then return _, err end
+    local tables = ftables()
+    for idx = 1, #tables do
+      local tolinki = {}
+      for i, v in pairs( tables[idx] ) do
+        if type( v ) == "table" then
+          tables[idx][i] = tables[v[1]]
+        end
+        if type( i ) == "table" and tables[i[1]] then
+          table.insert( tolinki, { i, tables[i[1]] } )
+        end
+      end
+      -- link indices
+      for _, v in ipairs( tolinki ) do
+        tables[idx][v[2]], tables[idx][v[1]] = tables[idx][v[1]], nil
+      end
+    end
+    return tables[1]
+  end
+end
