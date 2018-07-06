@@ -80,6 +80,14 @@ function var_cfg()
       mode = 1,
       HideOthersAnswers = false,
       Height = 300,
+      SmsInColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
+      SmsOutColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
+      SmsInTimeColor = imgui.ImColor(0, 0, 0):GetU32(),
+      SmsOutTimeColor = imgui.ImColor(0, 0, 0):GetU32(),
+      SmsInHeaderColor = imgui.ImColor(255, 255, 255):GetU32(),
+      SmsOutHeaderColor = imgui.ImColor(255, 255, 255):GetU32(),
+      SmsInTextColor = imgui.ImColor(255, 255, 255):GetU32(),
+      SmsOutTextColor = imgui.ImColor(255, 255, 255):GetU32(),
       QuestionColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
       AnswerColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
       AnswerColorOthers = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
@@ -154,6 +162,19 @@ function var_imgui_ImFloat4_ImColor()
   iQcolor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionColor):GetFloat4())
   iAcolor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerColor):GetFloat4())
   iAcolor1 = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerColorOthers):GetFloat4())
+
+  iINcolor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsInColor):GetFloat4())
+  iOUTcolor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsOutColor):GetFloat4())
+
+
+  iSmsInTimeColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsInTimeColor ):GetFloat4())
+  iSmsInHeaderColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsInHeaderColor):GetFloat4())
+  iSmsInTextColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsInTextColor):GetFloat4())
+
+
+  iSmsOutTimeColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsOutTimeColor ):GetFloat4())
+  iSmsOutTextColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsOutTextColor):GetFloat4())
+  iSmsOutHeaderColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsOutHeaderColor):GetFloat4())
 
   iQuestionTimeColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionTimeColor ):GetFloat4())
   iQuestionHeaderColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionHeaderColor):GetFloat4())
@@ -265,10 +286,11 @@ function main()
   if not doesDirectoryExist(getGameDirectory().."\\moonloader\\config\\smsmessanger\\") then
     createDirectory(getGameDirectory().."\\moonloader\\config\\smsmessanger\\")
   end
+
+  _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
   smsfile = getGameDirectory()..'\\moonloader\\config\\smsmessanger\\'..sampGetCurrentServerAddress().."-"..sampGetPlayerNickname(myid)..'.sms'
   imgui_messanger_sms_loadDB()
   inicfg.save(cfg, "support")
-  _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
   local r, g, b, a = imgui.ImColor.FromFloat4(Qcolor.v[1], Qcolor.v[2], Qcolor.v[3], Qcolor.v[4]):GetRGBA()
   Qcolor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
 
@@ -851,10 +873,12 @@ function imgui_messanger_sms_settings()
               table.insert(sms[sampGetPlayerNickname(i)]["Chat"], {text = "ƒиалог создан", Nick = "мессенджер", type = "service", time = os.time()})
               selecteddialogSMS = sampGetPlayerNickname(i)
               SSDB_trigger = true
+              ScrollToDialogSMS = true
               break
             else
               selecteddialogSMS = sampGetPlayerNickname(i)
               iAddSMS = false
+              ScrollToDialogSMS = true
               break
             end
           end
@@ -1125,12 +1149,14 @@ function imgui_messanger_sms_player_list_contextmenu(k, typ)
         sms[k]["Pinned"] = 1
         SSDB_trigger = true
         table.insert(sms[k]["Chat"], {text = "—обеседник закреплЄн", Nick = "мессенджер", type = "service", time = os.time()})
+        ScrollToDialogSMS = true
       end
     else
       if imgui.Selectable(u8"ќткрепить") then
         sms[k]["Pinned"] = 0
         SSDB_trigger = true
         table.insert(sms[k]["Chat"], {text = "—обеседник откреплЄн", Nick = "мессенджер", type = "service", time = os.time()})
+        ScrollToDialogSMS = true
       end
     end
     if sms[k]["Blocked"] ~= nil then
@@ -1138,12 +1164,14 @@ function imgui_messanger_sms_player_list_contextmenu(k, typ)
         sms[k]["Blocked"] = nil
         table.insert(sms[k]["Chat"], {text = "—обеседник разблокирован", Nick = "мессенджер", type = "service", time = os.time()})
         SSDB_trigger = true
+        ScrollToDialogSMS = true
       end
     else
       if imgui.Selectable(u8"«аблокировать") then
         sms[k]["Blocked"] = 1
         table.insert(sms[k]["Chat"], {text = "—обеседник заблокирован", Nick = "мессенджер", type = "service", time = os.time()})
         SSDB_trigger = true
+        ScrollToDialogSMS = true
       end
     end
     if imgui.Selectable(u8"ќчистить") then
@@ -1158,6 +1186,7 @@ function imgui_messanger_sms_player_list_contextmenu(k, typ)
       sms[k]["Chat"][1] = {text = "ƒиалог очищен", Nick = "мессенджер", type = "service", time = os.time()}
       selecteddialogSMS = k
       SSDB_trigger = true
+      ScrollToDialogSMS = true
     end
     if imgui.Selectable(u8"”далить") then
       sms[k] = nil
@@ -1475,12 +1504,12 @@ function imgui_messanger_sms_dialog()
       time = u8:encode(os.date("%x %X", v.time))
       if v.type == "FROM" then
         header = u8:encode("->SMS от "..v.Nick)
-        local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionColor):GetRGBA()
+        local r, g, b, a = imgui.ImColor(cfg.messanger.SmsInColor):GetRGBA()
         imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
       end
       if v.type == "TO" then
         header = u8:encode("<-SMS от "..v.Nick)
-        local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerColor):GetRGBA()
+        local r, g, b, a = imgui.ImColor(cfg.messanger.SmsOutColor):GetRGBA()
         imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
       end
       if v.type ~= "service" then
@@ -1508,7 +1537,7 @@ function imgui_messanger_sms_dialog()
         Y = imgui.CalcTextSize(time).y + 7 + (imgui.CalcTextSize(time).y + 5) * math.ceil((imgui.CalcTextSize(msg).x) / (X - 14))
         if anomaly then Y = Y + imgui.CalcTextSize(time).y + 3 end
       else
-        local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerColor):GetRGBA()
+        local r, g, b, a = imgui.ImColor(cfg.messanger.SmsOutColor):GetRGBA()
         imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
         X = imgui.CalcTextSize(msg).x + 9
         Y = imgui.CalcTextSize(msg).y + 5
@@ -1526,25 +1555,25 @@ function imgui_messanger_sms_dialog()
       imgui.PushStyleVar(imgui.StyleVar.WindowPadding, imgui.ImVec2(4.0, 2.0))
       imgui.BeginChild("##msg" .. k, imgui.ImVec2(X, Y), false, imgui.WindowFlags.AlwaysUseWindowPadding + imgui.WindowFlags.NoScrollbar + imgui.WindowFlags.NoScrollWithMouse)
       if v.type == "FROM" then
-        local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionTextColor):GetRGBA()
+        local r, g, b, a = imgui.ImColor(cfg.messanger.SmsInTextColor):GetRGBA()
         imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
-        local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionTimeColor):GetRGBA()
+        local r, g, b, a = imgui.ImColor(cfg.messanger.SmsInTimeColor):GetRGBA()
         imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), time)
         if not anomaly then imgui.SameLine() end
-        local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionHeaderColor):GetRGBA()
+        local r, g, b, a = imgui.ImColor(cfg.messanger.SmsInHeaderColor):GetRGBA()
         imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), header)
       end
       if v.type == "TO" then
-        local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTextColor):GetRGBA()
+        local r, g, b, a = imgui.ImColor(cfg.messanger.SmsOutTextColor):GetRGBA()
         imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
-        local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTimeColor):GetRGBA()
+        local r, g, b, a = imgui.ImColor(cfg.messanger.SmsOutTimeColor):GetRGBA()
         imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), time)
         if not anomaly then imgui.SameLine() end
-        local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerHeaderColor):GetRGBA()
+        local r, g, b, a = imgui.ImColor(cfg.messanger.SmsOutHeaderColor):GetRGBA()
         imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), header)
       end
       if v.type == "service" then
-        local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTextColor):GetRGBA()
+        local r, g, b, a = imgui.ImColor(cfg.messanger.SmsOutTextColor):GetRGBA()
         imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
       end
       imgui.TextWrapped(msg)
@@ -2051,7 +2080,7 @@ function imgui_settings_3_sup_messanger()
       inicfg.save(cfg, "support")
     end
     imgui.Text(u8("÷вета вопросов в диалогах:"))
-    imgui.SameLine(203)
+    imgui.SameLine(210)
     imgui.Text("")
     imgui.SameLine()
     if imgui.ColorEdit4(u8"÷вет вопросов", iQcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
@@ -2092,10 +2121,10 @@ function imgui_settings_3_sup_messanger()
     end
 
     imgui.Text(u8("÷вета ваших ответов в диалогах:"))
-    imgui.SameLine(203)
+    imgui.SameLine(210)
     imgui.Text("")
     imgui.SameLine()
-    if imgui.ColorEdit4(u8"÷вет ваших ответов", iAcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+    if imgui.ColorEdit4(u8"÷вет фона ваших ответов", iAcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
       cfg.messanger.AnswerColor = imgui.ImColor.FromFloat4(iAcolor.v[1], iAcolor.v[2], iAcolor.v[3], iAcolor.v[4]):GetU32()
       inicfg.save(cfg, "support")
     end
@@ -2134,10 +2163,10 @@ function imgui_settings_3_sup_messanger()
     end
     --
     imgui.Text(u8("÷вета чужих ответов в диалогах:"))
-    imgui.SameLine(203)
+    imgui.SameLine(210)
     imgui.Text("")
     imgui.SameLine()
-    if imgui.ColorEdit4(u8"÷вет ответов других саппортов", iAcolor1, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+    if imgui.ColorEdit4(u8"÷вет фона ответов других саппортов", iAcolor1, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
       cfg.messanger.AnswerColorOthers = imgui.ImColor.FromFloat4(iAcolor1.v[1], iAcolor1.v[2], iAcolor1.v[3], iAcolor1.v[4]):GetU32()
       inicfg.save(cfg, "support")
     end
@@ -2205,6 +2234,91 @@ function imgui_settings_4_sms_messanger()
       cfg.messanger.Height = iMessangerHeight.v
       inicfg.save(cfg, "support")
     end
+
+    imgui.Text(u8("÷вета вход€щих смс в диалогах:"))
+    imgui.SameLine(210)
+    imgui.Text("")
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"÷вет фона вход€щего смс", iINcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.SmsInColor = imgui.ImColor.FromFloat4(iINcolor.v[1], iINcolor.v[2], iINcolor.v[3], iINcolor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"÷вет времени вход€щего смс", iSmsInTimeColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.SmsInTimeColor = imgui.ImColor.FromFloat4(iSmsInTimeColor.v[1], iSmsInTimeColor.v[2], iSmsInTimeColor.v[3], iSmsInTimeColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"÷вет заголовка вход€щего смс", iSmsInHeaderColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.SmsInHeaderColor = imgui.ImColor.FromFloat4(iSmsInHeaderColor.v[1], iSmsInHeaderColor.v[2], iSmsInHeaderColor.v[3], iSmsInHeaderColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"÷вет текста вход€щего смс", iSmsInTextColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.SmsInTextColor = imgui.ImColor.FromFloat4(iSmsInTextColor.v[1], iSmsInTextColor.v[2], iSmsInTextColor.v[3], iSmsInTextColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    if cfg.messanger.SmsInColor ~= imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32() or cfg.messanger.SmsInTimeColor ~= imgui.ImColor(0, 0, 0):GetU32() or cfg.messanger.SmsInHeaderColor ~= imgui.ImColor(255, 255, 255):GetU32() or cfg.messanger.SmsInTextColor ~= imgui.ImColor(255, 255, 255):GetU32() then
+      imgui.SameLine()
+      if imgui.Button(u8"—брос") then
+        cfg.messanger.SmsInColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32()
+        cfg.messanger.SmsInTimeColor = imgui.ImColor(0, 0, 0):GetU32()
+        cfg.messanger.SmsInHeaderColor = imgui.ImColor(255, 255, 255):GetU32()
+        cfg.messanger.SmsInTextColor = imgui.ImColor(255, 255, 255):GetU32()
+        iINcolor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsInColor):GetFloat4())
+        iSmsInTimeColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsInTimeColor ):GetFloat4())
+        iSmsInHeaderColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsInHeaderColor):GetFloat4())
+        iSmsInTextColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsInTextColor):GetFloat4())
+        inicfg.save(cfg, "support")
+      end
+    end
+
+    imgui.Text(u8("÷вета исход€щих смс в диалогах:"))
+    imgui.SameLine(210)
+    imgui.Text("")
+    imgui.SameLine()
+
+
+    if imgui.ColorEdit4(u8"÷вет фона исход€щих смс", iOUTcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.SmsOutColor = imgui.ImColor.FromFloat4(iOUTcolor.v[1], iOUTcolor.v[2], iOUTcolor.v[3], iOUTcolor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"÷вет времени исход€щего смс", iSmsOutTimeColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.SmsOutTimeColor = imgui.ImColor.FromFloat4(iSmsOutTimeColor.v[1], iSmsOutTimeColor.v[2], iSmsOutTimeColor.v[3], iSmsOutTimeColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"÷вет заголовка исход€щего смс", iSmsOutHeaderColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.SmsOutHeaderColor = imgui.ImColor.FromFloat4(iSmsOutHeaderColor.v[1], iSmsOutHeaderColor.v[2], iSmsOutHeaderColor.v[3], iSmsOutHeaderColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+
+    imgui.SameLine()
+    if imgui.ColorEdit4(u8"÷вет текста исход€щего смс", iSmsOutTextColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
+      cfg.messanger.SmsOutTextColor = imgui.ImColor.FromFloat4(iSmsOutTextColor.v[1], iSmsOutTextColor.v[2], iSmsOutTextColor.v[3], iSmsOutTextColor.v[4]):GetU32()
+      inicfg.save(cfg, "support")
+    end
+    --
+    if cfg.messanger.SmsOutColor ~= imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32() or cfg.messanger.SmsOutTimeColor ~= imgui.ImColor(0, 0, 0):GetU32() or cfg.messanger.SmsOutHeaderColor ~= imgui.ImColor(255, 255, 255):GetU32() or cfg.messanger.SmsOutTextColor ~= imgui.ImColor(255, 255, 255):GetU32() then
+      imgui.SameLine()
+      if imgui.Button(u8"—брос") then
+        cfg.messanger.SmsOutColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32()
+        cfg.messanger.SmsOutTimeColor = imgui.ImColor(0, 0, 0):GetU32()
+        cfg.messanger.SmsOutHeaderColor = imgui.ImColor(255, 255, 255):GetU32()
+        cfg.messanger.SmsOutTextColor = imgui.ImColor(255, 255, 255):GetU32()
+        iOUTcolor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsOutColor):GetFloat4())
+        iSmsOutTimeColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsOutTimeColor ):GetFloat4())
+        iSmsOutHeaderColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsOutHeaderColor):GetFloat4())
+        iSmsOutTextColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.SmsOutTextColor):GetFloat4())
+        inicfg.save(cfg, "support")
+      end
+    end
     if imgui.Checkbox("##включить сохранение бд смс", iStoreSMS) then
       if cfg.messanger.storesms == false then ingamelaunch = true imgui_messanger_sms_loadDB() end
       cfg.messanger.storesms = iStoreSMS.v
@@ -2232,6 +2346,7 @@ function imgui_settings_4_sms_messanger()
         end
       end
     end
+    --
   else
     imgui.SameLine()
     imgui.TextDisabled(u8"¬ключить sms мессенджер?")
