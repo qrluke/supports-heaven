@@ -317,9 +317,11 @@ function main()
   -- вырезать тут, если хочешь отключить сообщение при входе в игру
   sampAddChatMessage(("SUPPORT v"..thisScript().version.." successfully loaded! Команды: /supstats и /supcolor! Author: rubbishman.ru"), color)
   -- вырезать тут, если хочешь отключить сообщение при входе в игру
+
   First = true
   sup_ParseHouseTxt_hh()
   sup_ParseVehicleTxt_hc()
+  sampRegisterChatCommand("test", function() lua_thread.create(test) end)
   lua_thread.create(imgui_messanger_sms_kostilsaveDB) -- костыль для сохранения времени проверки смс переписок по нажатию кнопки в gui
   while true do
     wait(0)
@@ -621,6 +623,59 @@ function sup_ParseVehicleTxt_hc()
     gethc = {}
     for line in io.lines(hcfile) do
       table.insert(gethc, line)
+    end
+  end
+end
+
+function test()
+  local UNANindex = {}
+  for k in pairs(iMessanger) do
+    if #iMessanger[k]["A"] == 0 then table.insert(UNANindex, k) end
+  end
+  table.sort(UNANindex, function(a, b) return iMessanger[a]["Chat"][#iMessanger[a]["Chat"]]["time"] < iMessanger[b]["Chat"][#iMessanger[b]["Chat"]]["time"] end)
+  UNANi = 1
+  UNANtext = ""
+  for k, v in pairs(UNANindex) do
+    for i = 1, sampGetMaxPlayerId() + 1 do
+      if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == v then
+        UNANsec = math.fmod(os.time() - iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["time"], 60)
+        if UNANsec < 10 then UNANsec = "0"..UNANsec end
+        UNANmin = math.floor((os.time() - iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["time"]) / 60)
+        UNANtext = UNANtext..string.format("{FFD700}%s {40E0D0}- {ADD8E6}[%s:%s] %s[%s]: {FF9D00}%s", UNANi, UNANmin, UNANsec, v, i, iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["text"]).."\n"
+        UNANi = UNANi + 1
+        break
+      else
+        if i == sampGetMaxPlayerId() + 1 then
+          break
+        end
+      end
+    end
+  end
+  if UNANtext == "" then
+    sampShowDialog(9899, "{D2D2D2}Вопросы без ответа", "Таких нет.", "Ясно.")
+  else
+    sampShowDialog(9899, "{D2D2D2}Вопросы без ответа (номер/номер ответ)", UNANtext, "Выбрать", "", 1)
+    while sampIsDialogActive() do wait(0) end
+    local result, button, list, input = sampHasDialogRespond(9899)
+    if button == 1 then
+      UNANanswer = sampGetCurrentDialogEditboxText(9899)
+      if string.find(UNANanswer, "(%d+) (.+)") then
+        UNID, UNANanswe = string.match(UNANanswer, "(%d+) (.+)")
+				UNANid = string.match(string.gsub(UNANtext, "{......}",""), "%[(%d+)%]")
+				UNANid = string.match(UNANtext, UNID.." - .+%[(%d+)%].+\n")
+        if UNANid ~= nil and sampIsPlayerConnected(UNANid) then
+					sampSendChat("/pm "..tonumber(UNANid).." "..UNANanswe)
+        end
+      else
+				if tonumber(UNANanswer) ~= nil then
+					UNANid = string.match(string.gsub(UNANtext, "{......}",""), "%[(%d+)%]")
+					UNANid = string.match(UNANtext, tonumber(UNANanswer).." - .+%[(%d+)%].+\n")
+	        if sampIsPlayerConnected(UNANid) then
+						sampSetChatInputEnabled(true)
+						sampSetChatInputText("/pm "..tonumber(UNANanswer).." ")
+	        end
+				 end
+      end
     end
   end
 end
