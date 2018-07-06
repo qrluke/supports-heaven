@@ -78,6 +78,7 @@ function var_cfg()
       iSMSfilterBool = false,
       activesms = true,
       mode = 1,
+      HideOthersAnswers = false,
       Height = 300,
       QuestionColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
       AnswerColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
@@ -137,6 +138,7 @@ function var_imgui_ImBool()
   iShowSHOWOFFLINESDUTY = imgui.ImBool(cfg.messanger.iShowSHOWOFFLINESDUTY)
   iShowSHOWOFFLINESMS = imgui.ImBool(cfg.messanger.iShowSHOWOFFLINESMS)
   iShowTimeToUpdateCSV = imgui.ImBool(cfg.options.ShowTimeToUpdateCSV)
+  iHideOtherAnswers = imgui.ImBool(cfg.messanger.HideOthersAnswers)
   iSoundQuestion = imgui.ImBool(cfg.options.SoundQuestion)
   iSoundAnswerOthers = imgui.ImBool(cfg.options.SoundAnswerOthers)
   iSoundAnswer = imgui.ImBool(cfg.options.SoundAnswer)
@@ -235,7 +237,7 @@ function var_main()
   PLAYSMSIN = false
   PLAYSMSOUT = false
   SSDB_trigger = false
-  DEV = false
+  DEV = true
   math.randomseed(os.time())
 end
 --varload
@@ -371,6 +373,7 @@ end
 
 function simulateSupportAnswer(text)
   sampAddChatMessage(text, Acolor_HEX)
+  AddA(text)
 end
 
 function sampev.onPlaySound(sound)
@@ -507,7 +510,7 @@ function sampev.onSendCommand(text)
     if sampIsPlayerConnected(id) then
       if selecteddialogSDUTY == sampGetPlayerNickname(id) then ScrollToDialogSDUTY = true end
       if DEV then
-				local _asdasd, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+        local _asdasd, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
         simulateSupportAnswer("<-"..sampGetPlayerNickname(myid).."["..myid.."]".." to "..sampGetPlayerNickname(id).."["..id.."]: "..text)
       end
       AddA(text)
@@ -842,7 +845,7 @@ function imgui_messanger_sms_settings()
               sms[sampGetPlayerNickname(i)]["Checked"] = 0
               sms[sampGetPlayerNickname(i)]["Pinned"] = 0
               iAddSMS = false
-              table.insert(sms[sampGetPlayerNickname(i)]["Chat"], {text = "Вы создали диалог", Nick = "мессенджер", type = "TO", time = os.time()})
+              table.insert(sms[sampGetPlayerNickname(i)]["Chat"], {text = "Диалог создан", Nick = "мессенджер", type = "service", time = os.time()})
               selecteddialogSMS = sampGetPlayerNickname(i)
               SSDB_trigger = true
               break
@@ -1115,14 +1118,30 @@ end
 function imgui_messanger_sms_player_list_contextmenu(k, typ)
   if imgui.BeginPopupContextItem("item context menu"..k) then
     if typ == "NotPinned" then
-      if imgui.Selectable(u8"Закрепить") then sms[k]["Pinned"] = 1 SSDB_trigger = true end
+      if imgui.Selectable(u8"Закрепить") then
+        sms[k]["Pinned"] = 1
+        SSDB_trigger = true
+        table.insert(sms[k]["Chat"], {text = "Собеседник закреплён", Nick = "мессенджер", type = "service", time = os.time()})
+      end
     else
-      if imgui.Selectable(u8"Открепить") then sms[k]["Pinned"] = 0 SSDB_trigger = true end
+      if imgui.Selectable(u8"Открепить") then
+        sms[k]["Pinned"] = 0
+        SSDB_trigger = true
+        table.insert(sms[k]["Chat"], {text = "Собеседник откреплён", Nick = "мессенджер", type = "service", time = os.time()})
+      end
     end
     if sms[k]["Blocked"] ~= nil then
-      if imgui.Selectable(u8"Разблокировать") then sms[k]["Blocked"] = nil SSDB_trigger = true end
+      if imgui.Selectable(u8"Разблокировать") then
+        sms[k]["Blocked"] = nil
+        table.insert(sms[k]["Chat"], {text = "Собеседник разблокирован", Nick = "мессенджер", type = "service", time = os.time()})
+        SSDB_trigger = true
+      end
     else
-      if imgui.Selectable(u8"Заблокировать") then sms[k]["Blocked"] = 1 SSDB_trigger = true end
+      if imgui.Selectable(u8"Заблокировать") then
+        sms[k]["Blocked"] = 1
+        table.insert(sms[k]["Chat"], {text = "Собеседник заблокирован", Nick = "мессенджер", type = "service", time = os.time()})
+        SSDB_trigger = true
+      end
     end
     if imgui.Selectable(u8"Очистить") then
       ispinned = 0
@@ -1133,7 +1152,7 @@ function imgui_messanger_sms_player_list_contextmenu(k, typ)
       sms[k]["Chat"] = {}
       sms[k]["Checked"] = 0
       sms[k]["Pinned"] = ispinned
-      sms[k]["Chat"][1] = {text = "Вы очистили диалог", Nick = "мессенджер", type = "TO", time = os.time()}
+      sms[k]["Chat"][1] = {text = "Диалог очищен", Nick = "мессенджер", type = "service", time = os.time()}
       selecteddialogSMS = k
       SSDB_trigger = true
     end
@@ -1293,10 +1312,17 @@ function imgui_messanger_sup_header()
       qtime = "-"
     end
     imgui.Text(u8:encode("["..online.."] Ник: "..selecteddialogSDUTY..". ID: "..tonumber(sId)..". LVL: "..sampGetPlayerScore(tonumber(sId))..". Время: "..qtime.." сек."))
+    imgui.SameLine(imgui.GetContentRegionAvailWidth() - 10)
+    if imgui.Checkbox("##iHideOtherAnswers", iHideOtherAnswers) then
+      cfg.messanger.HideOthersAnswers = iHideOtherAnswers.v
+      inicfg.save(cfg, "support")
+    end
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"Скрывать ответы других саппортов?")
+    end
   end
   imgui.EndChild()
 end
-
 
 function imgui_messanger_sms_header()
   imgui.BeginChild("##header", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 35), true)
@@ -1321,61 +1347,105 @@ function imgui_messanger_sup_dialog()
   imgui.BeginChild("##middle", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), iMessangerHeight.v - 74), true)
   if selecteddialogSDUTY ~= nil and iMessanger[selecteddialogSDUTY] ~= nil and iMessanger[selecteddialogSDUTY]["Chat"] ~= nil then
     for k, v in ipairs(iMessanger[selecteddialogSDUTY]["Chat"]) do
-      local msg = string.format("%s", u8:encode(v.text))
-      local size = imgui.GetFont():CalcTextSizeA(imgui.GetFont().FontSize, 350.0, 346.0, msg)
-      local x = imgui.GetContentRegionAvailWidth() / 2 - 25
-      if v.type == "support" and v.Nick == sampGetPlayerNickname(myid) then
-        imgui.NewLine()
-        imgui.SameLine(imgui.GetContentRegionAvailWidth() - x - imgui.GetStyle().ScrollbarSize + 10)
-      end
-      if v.type == "client" then
-        local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionColor):GetRGBA()
-        imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
-      end
-      if v.type == "support" then
-        if v.Nick == sampGetPlayerNickname(myid) then
-          local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerColor):GetRGBA()
-          imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
-        else
-          local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerColorOthers):GetRGBA()
+      _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+      if cfg.messanger.HideOthersAnswers and v.type == "support" and v.Nick ~= sampGetPlayerNickname(myid) then
+      else
+        msg = string.format("%s", u8:encode(v.text))
+        time = u8:encode(os.date("%X", v.time))
+        if v.type == "client" then
+          header = u8:encode("->Вопрос от "..v.Nick)
+          local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionColor):GetRGBA()
           imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
         end
-      end
-      imgui.PushStyleVar(imgui.StyleVar.WindowPadding, imgui.ImVec2(4.0, 2.0))
-      imgui.BeginChild("##msg" .. k, imgui.ImVec2(x + 8.0, 50 + 6.0), false, imgui.WindowFlags.AlwaysUseWindowPadding + imgui.WindowFlags.NoScrollbar + imgui.WindowFlags.NoScrollWithMouse)
-      if v.type == "client" then
-        local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionTextColor):GetRGBA()
-        imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
-        local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionTimeColor):GetRGBA()
-        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), os.date("%X", v.time))
-        imgui.SameLine()
-        local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionHeaderColor):GetRGBA()
-        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), u8:encode("->Вопрос от "..v.Nick))
-      end
-      if v.type == "support" then
-        if v.Nick == sampGetPlayerNickname(myid) then
-          local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTextColor):GetRGBA()
-          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
-          local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTimeColor):GetRGBA()
-          imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), os.date("%X", v.time))
-          imgui.SameLine()
-          local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerHeaderColor):GetRGBA()
-          imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), u8:encode("<-Отвеsт от "..v.Nick))
-        else
-          local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTextOthersColor):GetRGBA()
-          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
-          local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTimeOthersColor):GetRGBA()
-          imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), os.date("%X", v.time))
-          imgui.SameLine()
-          local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerHeaderOthersColor):GetRGBA()
-          imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), u8:encode("<-Ответ от "..v.Nick))
+        if v.type == "support" then
+          header = u8:encode("<-Ответ от "..v.Nick)
+          _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+          if v.Nick == sampGetPlayerNickname(myid) then
+            local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerColor):GetRGBA()
+            imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
+          else
+            local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerColorOthers):GetRGBA()
+            imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
+          end
         end
+
+        Xmin = imgui.CalcTextSize(time).x + imgui.CalcTextSize(header).x
+        Xmax = imgui.GetContentRegionAvailWidth() / 2 + imgui.GetContentRegionAvailWidth() / 4
+        Xmes = imgui.CalcTextSize(msg).x
+
+        if Xmin < Xmes then
+          if Xmes < Xmax then
+            X = Xmes + 15
+            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+          else
+            X = Xmax
+            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+          end
+        else
+          if (Xmin + 5) < Xmax then
+            X = Xmin + 15
+            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+          else
+            X = Xmax
+            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+          end
+        end
+        Y = imgui.CalcTextSize(time).y + 7 + (imgui.CalcTextSize(time).y + 7) * math.ceil((imgui.CalcTextSize(msg).x) / (X - 6))
+        if anomaly then Y = Y + imgui.CalcTextSize(time).y + 3 end
+
+        _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+        if v.type == "support" and v.Nick == sampGetPlayerNickname(myid) then
+          imgui.NewLine()
+          imgui.SameLine(imgui.GetContentRegionAvailWidth() - X + 20 - imgui.GetStyle().ScrollbarSize)
+        end
+        imgui.PushStyleVar(imgui.StyleVar.WindowPadding, imgui.ImVec2(4.0, 2.0))
+        imgui.BeginChild("##msg" .. k, imgui.ImVec2(X, Y), false, imgui.WindowFlags.AlwaysUseWindowPadding + imgui.WindowFlags.NoScrollbar + imgui.WindowFlags.NoScrollWithMouse)
+        if v.type == "client" then
+          local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionTimeColor):GetRGBA()
+          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
+          imgui.Text(time)
+          imgui.PopStyleColor()
+          if not anomaly then imgui.SameLine() end
+          local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionHeaderColor):GetRGBA()
+          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
+          imgui.Text(header)
+          imgui.PopStyleColor()
+          local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionTextColor):GetRGBA()
+          imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
+        end
+        if v.type == "support" then
+          if v.Nick == sampGetPlayerNickname(myid) then
+            local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTimeColor):GetRGBA()
+            imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
+            imgui.Text(time)
+            imgui.PopStyleColor()
+            if not anomaly then imgui.SameLine() end
+            local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerHeaderColor):GetRGBA()
+            imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
+            imgui.Text(header)
+            imgui.PopStyleColor()
+            local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTextColor):GetRGBA()
+            imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
+          else
+            local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTimeOthersColor):GetRGBA()
+            imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
+            imgui.Text(time)
+            imgui.PopStyleColor()
+            if not anomaly then imgui.SameLine() end
+            local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerHeaderOthersColor):GetRGBA()
+            imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
+            imgui.Text(header)
+            imgui.PopStyleColor()
+            local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTextOthersColor):GetRGBA()
+            imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
+          end
+        end
+        imgui.TextWrapped(msg)
+        imgui.PopStyleColor()
+        imgui.EndChild()
+        imgui.PopStyleVar()
+        imgui.PopStyleColor()
       end
-      imgui.TextWrapped(msg)
-      imgui.PopStyleColor()
-      imgui.EndChild()
-      imgui.PopStyleVar()
-      imgui.PopStyleColor()
     end
     if ScrollToDialogSDUTY then
       imgui.SetScrollHere()
@@ -1398,42 +1468,86 @@ function imgui_messanger_sms_dialog()
   imgui.BeginChild("##middle", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), iMessangerHeight.v - 74), true)
   if selecteddialogSMS ~= nil and sms[selecteddialogSMS] ~= nil and sms[selecteddialogSMS]["Chat"] ~= nil then
     for k, v in ipairs(sms[selecteddialogSMS]["Chat"]) do
-      local msg = string.format("%s", u8:encode(v.text))
-      local size = imgui.GetFont():CalcTextSizeA(imgui.GetFont().FontSize, 350.0, 346.0, msg)
-      local x = imgui.GetContentRegionAvailWidth() / 2 - 25
-      if v.type == "TO" then
-        imgui.NewLine()
-        imgui.SameLine(imgui.GetContentRegionAvailWidth() - x - imgui.GetStyle().ScrollbarSize + 10)
-      end
+      msg = string.format("%s", u8:encode(v.text))
+      time = u8:encode(os.date("%x %X", v.time))
       if v.type == "FROM" then
+        header = u8:encode("->SMS от "..v.Nick)
         local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionColor):GetRGBA()
         imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
       end
       if v.type == "TO" then
+        header = u8:encode("<-SMS от "..v.Nick)
         local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerColor):GetRGBA()
         imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
       end
+      if v.type ~= "service" then
+        Xmin = imgui.CalcTextSize(time).x + imgui.CalcTextSize(header).x
+        Xmax = imgui.GetContentRegionAvailWidth() / 2 + imgui.GetContentRegionAvailWidth() / 4
+        Xmes = imgui.CalcTextSize(msg).x
+
+        if Xmin < Xmes then
+          if Xmes < Xmax then
+            X = Xmes + 15
+            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+          else
+            X = Xmax
+            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+          end
+        else
+          if (Xmin + 5) < Xmax then
+            X = Xmin + 15
+            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+          else
+            X = Xmax
+            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+          end
+        end
+        Y = imgui.CalcTextSize(time).y + 7 + (imgui.CalcTextSize(time).y + 5) * math.ceil((imgui.CalcTextSize(msg).x) / (X - 14))
+        if anomaly then Y = Y + imgui.CalcTextSize(time).y + 3 end
+      else
+        local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerColor):GetRGBA()
+        imgui.PushStyleColor(imgui.Col.ChildWindowBg, imgui.ImColor(r, g, b, a):GetVec4())
+        X = imgui.CalcTextSize(msg).x + 9
+        Y = imgui.CalcTextSize(msg).y + 5
+      end
+      if v.type == "TO" then
+        imgui.NewLine()
+        imgui.SameLine(imgui.GetContentRegionAvailWidth() - X + 20 - imgui.GetStyle().ScrollbarSize)
+      end
+      if v.type == "service" then
+        imgui.NewLine()
+        local width = imgui.GetWindowWidth()
+        local calc = imgui.CalcTextSize(msg)
+        imgui.SameLine(width / 2 - calc.x / 2 - 3)
+      end
       imgui.PushStyleVar(imgui.StyleVar.WindowPadding, imgui.ImVec2(4.0, 2.0))
-      imgui.BeginChild("##msg" .. k, imgui.ImVec2(x + 8.0, 50 + 6.0), false, imgui.WindowFlags.AlwaysUseWindowPadding + imgui.WindowFlags.NoScrollbar + imgui.WindowFlags.NoScrollWithMouse)
+      imgui.BeginChild("##msg" .. k, imgui.ImVec2(X, Y), false, imgui.WindowFlags.AlwaysUseWindowPadding + imgui.WindowFlags.NoScrollbar + imgui.WindowFlags.NoScrollWithMouse)
       if v.type == "FROM" then
         local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionTextColor):GetRGBA()
         imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
         local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionTimeColor):GetRGBA()
-        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), os.date("%X", v.time))
-        imgui.SameLine()
+        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), time)
+        if not anomaly then imgui.SameLine() end
         local r, g, b, a = imgui.ImColor(cfg.messanger.QuestionHeaderColor):GetRGBA()
-        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), u8:encode("->SMS от "..v.Nick))
+        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), header)
       end
       if v.type == "TO" then
         local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTextColor):GetRGBA()
         imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
         local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTimeColor):GetRGBA()
-        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), os.date("%X", v.time))
-        imgui.SameLine()
+        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), time)
+        if not anomaly then imgui.SameLine() end
         local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerHeaderColor):GetRGBA()
-        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), u8:encode("<-SMS от "..v.Nick))
+        imgui.TextColored(imgui.ImColor(r, g, b, a):GetVec4(), header)
+      end
+      if v.type == "service" then
+        local r, g, b, a = imgui.ImColor(cfg.messanger.AnswerTextColor):GetRGBA()
+        imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(r, g, b, a):GetVec4())
       end
       imgui.TextWrapped(msg)
+      if v.type == "service" and imgui.IsItemHovered() then
+        imgui.SetTooltip(time)
+      end
       imgui.PopStyleColor()
       imgui.EndChild()
       imgui.PopStyleVar()
@@ -2000,7 +2114,6 @@ function imgui_settings_3_sup_messanger()
     if imgui.ColorEdit4(u8"Цвет текста ответа других саппортов", iAnswerTextOthersColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoOptions + imgui.ColorEditFlags.AlphaBar) then
       cfg.messanger.AnswerTextOthersColor = imgui.ImColor.FromFloat4(iAnswerTextOthersColor.v[1], iAnswerTextOthersColor.v[2], iAnswerTextOthersColor.v[3], iAnswerTextOthersColor.v[4]):GetU32()
       inicfg.save(cfg, "support")
-
     end
   else
     imgui.SameLine()
@@ -2037,7 +2150,14 @@ function imgui_settings_4_sms_messanger()
     end
     if iStoreSMS.v then
       imgui.SameLine()
-      imgui.Text(u8:encode("Сохранение в БД активно. Количество диалогов: "..#sms.."."))
+      kol = 0
+      for k, v in pairs(sms) do
+        kol = kol + 1
+      end
+      imgui.Text(u8:encode("СУБД активна. Количество диалогов: "..kol.."."))
+      imgui.NewLine()
+      imgui.SameLine(32)
+      imgui.Text(u8:encode("Путь к БД: "..smsfile))
     else
       imgui.SameLine()
       imgui.TextDisabled(u8"Сохранять БД смс?")
@@ -2046,6 +2166,7 @@ function imgui_settings_4_sms_messanger()
         imgui.SameLine()
         if imgui.Button(u8("Удалить БД")) then
           os.remove(smsfile)
+          sms = {}
         end
       end
     end
