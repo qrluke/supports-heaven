@@ -78,6 +78,8 @@ function var_cfg()
       iSMSfilterBool = false,
       activesms = true,
       mode = 1,
+      suphh = true,
+      suphc = true,
       HideOthersAnswers = false,
       Height = 300,
       SmsInColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
@@ -119,6 +121,7 @@ function var_cfg()
 end
 
 function var_imgui_ImBool()
+  imgui.LockPlayer = false
   iReplaceQuestionColor = imgui.ImBool(cfg.options.ReplaceQuestionColor)
   iReplaceAnswerColor = imgui.ImBool(cfg.options.ReplaceAnswerColor)
   iReplaceAnswerOthersColor = imgui.ImBool(cfg.options.ReplaceAnswerOthersColor)
@@ -135,6 +138,8 @@ function var_imgui_ImBool()
   iShowUA2 = imgui.ImBool(cfg.messanger.iShowUA2)
   iShowA1 = imgui.ImBool(cfg.messanger.iShowA1)
   iShowA2 = imgui.ImBool(cfg.messanger.iShowA2)
+  isuphh = imgui.ImBool(cfg.messanger.suphh)
+  isuphc = imgui.ImBool(cfg.messanger.suphc)
   iChangeScroll = imgui.ImBool(cfg.messanger.iChangeScroll)
   iSetKeyboard = imgui.ImBool(cfg.messanger.iSetKeyboard)
   iNotepadActive = imgui.ImBool(cfg.notepad.active)
@@ -313,7 +318,8 @@ function main()
   sampAddChatMessage(("SUPPORT v"..thisScript().version.." successfully loaded! Команды: /supstats и /supcolor! Author: rubbishman.ru"), color)
   -- вырезать тут, если хочешь отключить сообщение при входе в игру
   First = true
-
+  sup_ParseHouseTxt_hh()
+  sup_ParseVehicleTxt_hc()
   lua_thread.create(imgui_messanger_sms_kostilsaveDB) -- костыль для сохранения времени проверки смс переписок по нажатию кнопки в gui
   while true do
     wait(0)
@@ -595,6 +601,26 @@ function parseHostAnswer(text)
       string = string.format("%s,%s,%s,%s,%s,%s,%s", getid(), sampGetPlayerNickname(id), getLastQuestion(sampGetPlayerNickname(id)),
       string.gsub(text, "[\"\', ]", ""), getRespondTime(sampGetPlayerNickname(id), os.time()), os.date('%Y - %m - %d %X'), os.time())
       file_write(file, string)
+    end
+  end
+end
+
+function sup_ParseHouseTxt_hh()
+  local hhfile = getGameDirectory().."\\moonloader\\resource\\sup\\house.txt"
+  if doesFileExist(hhfile) then
+    gethh = {}
+    for line in io.lines(hhfile) do
+      table.insert(gethh, line)
+    end
+  end
+end
+
+function sup_ParseVehicleTxt_hc()
+  local hcfile = getGameDirectory().."\\moonloader\\resource\\sup\\vehicle.txt"
+  if doesFileExist(hcfile) then
+    gethc = {}
+    for line in io.lines(hcfile) do
+      table.insert(gethc, line)
     end
   end
 end
@@ -1617,34 +1643,147 @@ function imgui_messanger_sup_keyboard()
     end
     imgui.PushItemWidth(imgui.GetContentRegionAvailWidth() - 70)
     if imgui.InputText("##keyboard", toAnswerSDUTY, imgui.InputTextFlags.EnterReturnsTrue) then
-      for i = 1, sampGetMaxPlayerId() do
-        if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSDUTY then k = i break end
-        if i == sampGetMaxPlayerId() then k = "-" end
+      if gethh ~= nil and toAnswerSDUTY.v:find("/hh (%d+)") then
+        imgui_messanger_sup_keyboard_gethh(1)
+      elseif gethc ~= nil and toAnswerSDUTY.v:find("/hc (%d+)") then
+        imgui_messanger_sup_keyboard_gethc(1)
+      elseif gethc ~= nil and toAnswerSDUTY.v:find("/hc (%S+)") then
+        imgui_messanger_sup_keyboard_gethc(1)
+      else
+        for i = 1, sampGetMaxPlayerId() do
+          if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSDUTY then k = i break end
+          if i == sampGetMaxPlayerId() then k = "-" end
+        end
+        if k ~= "-" then
+          sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSDUTY.v))
+          toAnswerSDUTY.v = ''
+        end
+        KeyboardFocusReset = true
       end
-      if k ~= "-" then
-        sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSDUTY.v))
-        toAnswerSDUTY.v = ''
-      end
-      KeyboardFocusReset = true
     end
     if imgui.IsItemActive() then
-      imgui.LockPlayer = true
+      lockPlayerControl(true)
+      imgui_messanger_sup_keyboard_gethh(2)
+      imgui_messanger_sup_keyboard_gethc(2)
     else
-      imgui.LockPlayer = false
+      lockPlayerControl(false)
     end
     if imgui.SameLine() or imgui.Button(u8"Отправить") then
-      for i = 1, sampGetMaxPlayerId() do
-        if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSDUTY then k = i break end
-        if i == sampGetMaxPlayerId() then k = "-" end
+      if gethh ~= nil and toAnswerSDUTY.v:find("/hh (%d+)") then
+        imgui_messanger_sup_keyboard_gethh(1)
+      elseif gethc ~= nil and toAnswerSDUTY.v:find("/hc (%d+)") then
+        imgui_messanger_sup_keyboard_gethc(1)
+      elseif gethc ~= nil and toAnswerSDUTY.v:find("/hc (%S+)") then
+        imgui_messanger_sup_keyboard_gethc(1)
+      else
+        for i = 1, sampGetMaxPlayerId() do
+          if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSDUTY then k = i break end
+          if i == sampGetMaxPlayerId() then k = "-" end
+        end
+        if k ~= "-" then
+          sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSDUTY.v))
+          toAnswerSDUTY.v = ''
+        end
+        KeyboardFocusReset = true
       end
-      if k ~= "-" then
-        sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSDUTY.v))
-        toAnswerSDUTY.v = ''
-      end
-      KeyboardFocusReset = true
     end
   end
   imgui.EndChild()
+end
+
+function imgui_messanger_sup_keyboard_gethh(mode)
+  if cfg.messanger.suphh then
+    if mode == 1 then
+      if gethh ~= nil and toAnswerSDUTY.v:find("/hh (%d+)") then
+        gethhnumber = nil
+        gethhnumber = string.match(toAnswerSDUTY.v, "/hh (%d+)")
+        if gethhnumber ~= nil then
+          for i = 1, #gethh do
+            hh = string.match(gethh[i], "ID (%d+)")
+            if hh and hh == gethhnumber then
+              toAnswerSDUTY.v = string.gsub(toAnswerSDUTY.v, "/hh (%d+)", gethh[i])
+              break
+            end
+          end
+        end
+        KeyboardFocusReset = true
+      end
+    else
+      if gethh ~= nil and toAnswerSDUTY.v:find("/hh (%d+)") then
+        gethhnumber = nil
+        gethhnumber = string.match(toAnswerSDUTY.v, "/hh (%d+)")
+        if gethhnumber ~= nil then
+          for i = 1, #gethh do
+            hh = string.match(gethh[i], "ID (%d+)")
+            if hh and hh == gethhnumber then
+              imgui.SetTooltip(u8:encode(gethh[i]))
+              break
+            end
+          end
+        end
+      end
+    end
+  end
+end
+
+function imgui_messanger_sup_keyboard_gethc(mode)
+  if cfg.messanger.suphc then
+    if mode == 1 then
+      if gethc ~= nil then
+        if toAnswerSDUTY.v:find("/hc (%d+)") then
+          gethcnumber = nil
+          gethcnumber = string.match(toAnswerSDUTY.v, "/hc (%d+)")
+          if gethcnumber ~= nil then
+            for i = 1, #gethc do
+              hcid, hcname = string.match(gethc[i], "(%d+) | (%S+)")
+              if hcid and hcid == gethcnumber then
+                toAnswerSDUTY.v = string.gsub(toAnswerSDUTY.v, "/hc (%d+)", gethc[i])
+                break
+              end
+            end
+          end
+          KeyboardFocusReset = true
+        elseif toAnswerSDUTY.v:find("/hc (%S+)") then
+          gethcname = nil
+          gethcname = string.match(toAnswerSDUTY.v, "/hc (%S+)")
+          for i = 1, #gethc do
+            hcid, hcname = string.match(gethc[i], "(%d+) | (%S+)")
+            if hcname and string.find(string.lower(gethc[i]), string.lower(gethcname)) then
+              toAnswerSDUTY.v = string.gsub(toAnswerSDUTY.v, "/hc (%S+)", gethc[i])
+              break
+            end
+          end
+          KeyboardFocusReset = true
+        end
+      end
+    else
+      if gethc ~= nil then
+        if toAnswerSDUTY.v:find("/hc (%d+)") then
+          gethcnumber = nil
+          gethcnumber = string.match(toAnswerSDUTY.v, "/hc (%d+)")
+          if gethcnumber ~= nil then
+            for i = 1, #gethc do
+              hcid, hcname = string.match(gethc[i], "(%d+) | (%S+)")
+              if hcid and hcid == gethcnumber then
+                imgui.SetTooltip(u8:encode(gethc[i]))
+                break
+              end
+            end
+          end
+        elseif toAnswerSDUTY.v:find("/hc (%S+)") then
+          gethcname = nil
+          gethcname = string.match(toAnswerSDUTY.v, "/hc (%S+)")
+          for i = 1, #gethc do
+            hcid, hcname = string.match(gethc[i], "(%d+) | (%S+)")
+            if hcname and string.find(string.lower(gethc[i]), string.lower(gethcname)) then
+              imgui.SetTooltip(u8:encode(gethc[i]))
+              break
+            end
+          end
+        end
+      end
+    end
+  end
 end
 
 function imgui_messanger_sms_keyboard()
@@ -1673,9 +1812,11 @@ function imgui_messanger_sms_keyboard()
       KeyboardFocusReset = true
     end
     if imgui.IsItemActive() then
-      imgui.LockPlayer = true
+      lockPlayerControl(true)
+      imgui_messanger_sup_keyboard_gethh(2)
+      imgui_messanger_sup_keyboard_gethc(2)
     else
-      imgui.LockPlayer = false
+      lockPlayerControl(false)
     end
     if imgui.SameLine() or imgui.Button(u8"Отправить") then
       for i = 1, sampGetMaxPlayerId() do
@@ -1841,7 +1982,7 @@ end
 function imgui_settings()
   if imgui.CollapsingHeader(u8"Настройки") then
     imgui.PushItemWidth(imgui.GetContentRegionAvailWidth())
-    imgui.SliderInt(u8"Вкладка##выбор вкладки настроек", iSettingsTab, 1, 10)
+    imgui.SliderInt(u8"##выбор вкладки настроек", iSettingsTab, 1, 10)
     if iSettingsTab.v ~= cfg.options.settingstab then
       cfg.options.settingstab = iSettingsTab.v
       inicfg.save(cfg, "support")
@@ -2203,8 +2344,48 @@ function imgui_settings_3_sup_messanger()
         inicfg.save(cfg, "support")
       end
     end
-    --
-
+    if imgui.Checkbox("##включить suphh", isuphh) then
+      cfg.messanger.suphh = isuphh.v
+      inicfg.save(cfg, "support")
+    end
+    if isuphh.v then
+      imgui.SameLine()
+      imgui.Text(u8"/hh [номер дома] работает!")
+      imgui.SameLine()
+      imgui.TextDisabled("(?)")
+      if imgui.IsItemHovered() then
+        imgui.SetTooltip(u8"Берет из house.txt информацию. Работает в мессенджере.")
+      end
+    else
+      imgui.SameLine()
+      imgui.Text(u8"Включить /hh [номер дома]")
+      imgui.SameLine()
+      imgui.TextDisabled("(?)")
+      if imgui.IsItemHovered() then
+        imgui.SetTooltip(u8"Берет из house.txt информацию о домах. Работает в мессенджере.")
+      end
+    end
+    if imgui.Checkbox("##включить suphc", isuphc) then
+      cfg.messanger.suphc = isuphc.v
+      inicfg.save(cfg, "support")
+    end
+    if isuphc.v then
+      imgui.SameLine()
+      imgui.Text(u8"/hc [id] [name] работает!")
+      imgui.SameLine()
+      imgui.TextDisabled("(?)")
+      if imgui.IsItemHovered() then
+        imgui.SetTooltip(u8"Берет из vehicle.txt информацию о т/с. Работает в мессенджере.")
+      end
+    else
+      imgui.SameLine()
+      imgui.Text(u8"Включить /hc [id] [name]")
+      imgui.SameLine()
+      imgui.TextDisabled("(?)")
+      if imgui.IsItemHovered() then
+        imgui.SetTooltip(u8"Берет из vehicle.txt информацию. Работает в мессенджере.")
+      end
+    end
   else
 
     imgui.SameLine()
