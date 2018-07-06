@@ -18,94 +18,95 @@ function var_require()
 end
 
 function var_cfg()
-	cfg = inicfg.load({
-	  options =
-	  {
-	    ReplaceQuestionColor = true,
-	    ReplaceAnswerColor = false,
-	    ReplaceAnswerOthersColor = false,
-	    ReplaceSmsInColor = true,
-	    ReplaceSmsOutColor = false,
-	    ReplaceSmsReceivedColor = false,
-	    ShowTimeToUpdateCSV = false,
-	    HideQuestion = false,
-	    HideAnswer = false,
-	    HideAnswerOthers = false,
-	    HideSmsIn = false,
-	    HideSmsOut = false,
-	    HideSmsReceived = false,
-	    SoundQuestion = true,
-	    SoundQuestionNumber = 1,
-	    SoundAnswerOthers = true,
-	    SoundAnswerOthersNumber = 22,
-	    SoundAnswer = true,
-	    SoundAnswerNumber = 15,
-	    SoundSmsIn = true,
-	    SoundSmsInNumber = 22,
-	    SoundSmsOut = true,
-	    SoundSmsOutNumber = 15,
-	  },
-	  log = {
-	    active = true,
-	    logger = true,
-	    height = 120,
-	  },
-	  stats = {
-	    active = true,
-	    height = 160,
-	  },
-	  colors =
-	  {
-	    QuestionColor = imgui.ImColor(255, 255, 255):GetU32(),
-	    AnswerColor = imgui.ImColor(255, 255, 255):GetU32(),
-	    AnswerColorOthers = imgui.ImColor(255, 255, 255):GetU32(),
-	    SmsInColor = imgui.ImColor(255, 255, 255):GetU32(),
-	    SmsOutColor = imgui.ImColor(255, 255, 255):GetU32(),
-	    SmsReceivedColor = imgui.ImColor(255, 255, 255):GetU32(),
-	  },
-	  menuwindow =
-	  {
-	    Width = 800,
-	    Height = 400,
-	    PosX = 80,
-	    PosY = 310,
-	  },
-	  messanger =
-	  {
-	    storesms = true,
-	    activesduty = true,
-	    iSMSfilterBool = false,
-	    activesms = true,
-	    mode = 1,
-	    Height = 300,
-	    QuestionColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
-	    AnswerColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
-	    AnswerColorOthers = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
-	    QuestionTimeColor = imgui.ImColor(0, 0, 0):GetU32(),
-	    QuestionHeaderColor = imgui.ImColor(255, 255, 255):GetU32(),
-	    QuestionTextColor = imgui.ImColor(255, 255, 255):GetU32(),
-	    AnswerTimeColor = imgui.ImColor(0, 0, 0):GetU32(),
-	    AnswerHeaderColor = imgui.ImColor(255, 255, 255):GetU32(),
-	    AnswerTextColor = imgui.ImColor(255, 255, 255):GetU32(),
-	    AnswerTimeOthersColor = imgui.ImColor(0, 0, 0):GetU32(),
-	    AnswerHeaderOthersColor = imgui.ImColor(255, 255, 255):GetU32(),
-	    AnswerTextOthersColor = imgui.ImColor(255, 255, 255):GetU32(),
-	    iShowUA1 = true,
-	    iShowUA2 = true,
-	    iShowA1 = true,
-	    iShowA2 = true,
-	    iChangeScroll = true,
-	    iSetKeyboard = true,
-	    iShowSHOWOFFLINESDUTY = true,
-	    iShowSHOWOFFLINESMS = true,
-	  },
-	  notepad =
-	  {
-	    active = true,
-	    text = "Тут можно писать.\\nEnter - новая строка.\\nCtrl + Enter - сохранить текст.\\nESC - отменить изменения.\\nTAB - табуляция.",
-	    lines = 10,
-	  }
-	}, 'support')
+  cfg = inicfg.load({
+    options =
+    {
+      ReplaceQuestionColor = true,
+      ReplaceAnswerColor = false,
+      ReplaceAnswerOthersColor = false,
+      ReplaceSmsInColor = true,
+      ReplaceSmsOutColor = false,
+      ReplaceSmsReceivedColor = false,
+      ShowTimeToUpdateCSV = false,
+      HideQuestion = false,
+      HideAnswer = false,
+      HideAnswerOthers = false,
+      HideSmsIn = false,
+      HideSmsOut = false,
+      HideSmsReceived = false,
+      SoundQuestion = true,
+      SoundQuestionNumber = 1,
+      SoundAnswerOthers = true,
+      SoundAnswerOthersNumber = 22,
+      SoundAnswer = true,
+      SoundAnswerNumber = 15,
+      SoundSmsIn = true,
+      SoundSmsInNumber = 22,
+      SoundSmsOut = true,
+      SoundSmsOutNumber = 15,
+      settingstab = 1,
+    },
+    log = {
+      active = true,
+      logger = true,
+      height = 120,
+    },
+    stats = {
+      active = true,
+      height = 160,
+    },
+    colors =
+    {
+      QuestionColor = imgui.ImColor(255, 255, 255):GetU32(),
+      AnswerColor = imgui.ImColor(255, 255, 255):GetU32(),
+      AnswerColorOthers = imgui.ImColor(255, 255, 255):GetU32(),
+      SmsInColor = imgui.ImColor(255, 255, 255):GetU32(),
+      SmsOutColor = imgui.ImColor(255, 255, 255):GetU32(),
+      SmsReceivedColor = imgui.ImColor(255, 255, 255):GetU32(),
+    },
+    menuwindow =
+    {
+      Width = 800,
+      Height = 400,
+      PosX = 80,
+      PosY = 310,
+    },
+    messanger =
+    {
+      storesms = true,
+      activesduty = true,
+      iSMSfilterBool = false,
+      activesms = true,
+      mode = 1,
+      Height = 300,
+      QuestionColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
+      AnswerColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
+      AnswerColorOthers = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
+      QuestionTimeColor = imgui.ImColor(0, 0, 0):GetU32(),
+      QuestionHeaderColor = imgui.ImColor(255, 255, 255):GetU32(),
+      QuestionTextColor = imgui.ImColor(255, 255, 255):GetU32(),
+      AnswerTimeColor = imgui.ImColor(0, 0, 0):GetU32(),
+      AnswerHeaderColor = imgui.ImColor(255, 255, 255):GetU32(),
+      AnswerTextColor = imgui.ImColor(255, 255, 255):GetU32(),
+      AnswerTimeOthersColor = imgui.ImColor(0, 0, 0):GetU32(),
+      AnswerHeaderOthersColor = imgui.ImColor(255, 255, 255):GetU32(),
+      AnswerTextOthersColor = imgui.ImColor(255, 255, 255):GetU32(),
+      iShowUA1 = true,
+      iShowUA2 = true,
+      iShowA1 = true,
+      iShowA2 = true,
+      iChangeScroll = true,
+      iSetKeyboard = true,
+      iShowSHOWOFFLINESDUTY = true,
+      iShowSHOWOFFLINESMS = true,
+    },
+    notepad =
+    {
+      active = true,
+      text = "Тут можно писать.\\nEnter - новая строка.\\nCtrl + Enter - сохранить текст.\\nESC - отменить изменения.\\nTAB - табуляция.",
+      lines = 10,
+    }
+  }, 'support')
 end
 
 function var_imgui_ImBool()
@@ -184,6 +185,7 @@ function var_imgui_ImInt()
   iLogHeight = imgui.ImInt(cfg.log.height)
   iStatsHeight = imgui.ImInt(cfg.stats.height)
   iMessangerHeight = imgui.ImInt(cfg.messanger.Height)
+  iSettingsTab = imgui.ImInt(cfg.options.settingstab)
   iYear = imgui.ImInt(0)
   iDay = imgui.ImInt(tonumber(os.date("%d")))
   iMonth = imgui.ImInt(tonumber(os.date("%m")))
@@ -213,14 +215,14 @@ function var_main()
     [11] = "Ноябрь",
     [12] = "Декабрь"
   }
-	file = getGameDirectory()..'\\moonloader\\support.csv'
-	color = 0xffa500
-	selected = 1
-	selecteddialogSDUTY = ""
-	month_histogram = {}
-	players = {}
-	iYears = {}
-	iMessanger = {}
+  file = getGameDirectory()..'\\moonloader\\support.csv'
+  color = 0xffa500
+  selected = 1
+  selecteddialogSDUTY = ""
+  month_histogram = {}
+  players = {}
+  iYears = {}
+  iMessanger = {}
   LASTID = 0
   countall = 0
   ScrollToDialogSDUTY = false
@@ -869,7 +871,6 @@ function imgui_messanger_sms_settings()
     end
   end
   imgui.PopStyleColor()
-  --if imgui.InputText("##keyboardSMSKA", toAnswerSMS, imgui.InputTextFlags.EnterReturnsTrue) then end
   imgui.EndChild()
 end
 
@@ -1674,16 +1675,23 @@ end
 
 function imgui_settings()
   if imgui.CollapsingHeader(u8"Настройки") then
-    imgui_settings_1_sup_hideandcol()
-    imgui_settings_2_sms_hideandcol()
-    imgui_settings_3_sup_messanger()
-    imgui_settings_4_sms_messanger()
-    imgui_settings_5_notepad()
-    imgui_settings_6_logger()
-    imgui_settings_7_logviewer()
-    imgui_settings_8_histogram()
-    imgui_settings_9_sup_sounds()
-    imgui_settings_10_sms_sounds()
+    imgui.PushItemWidth(imgui.GetContentRegionAvailWidth())
+    imgui.SliderInt(u8"Вкладка##выбор вкладки настроек", iSettingsTab, 1, 10)
+    if iSettingsTab.v ~= cfg.options.settingstab then
+      cfg.options.settingstab = iSettingsTab.v
+      inicfg.save(cfg, "support")
+    end
+    imgui.Separator()
+    if iSettingsTab.v == 1 then imgui_settings_1_sup_hideandcol() end
+    if iSettingsTab.v == 2 then imgui_settings_2_sms_hideandcol() end
+    if iSettingsTab.v == 3 then imgui_settings_3_sup_messanger() end
+    if iSettingsTab.v == 4 then imgui_settings_4_sms_messanger() end
+    if iSettingsTab.v == 5 then imgui_settings_5_notepad() end
+    if iSettingsTab.v == 6 then imgui_settings_6_logger() end
+    if iSettingsTab.v == 7 then imgui_settings_7_logviewer() end
+    if iSettingsTab.v == 8 then imgui_settings_8_histogram() end
+    if iSettingsTab.v == 9 then imgui_settings_9_sup_sounds() end
+    if iSettingsTab.v == 10 then imgui_settings_10_sms_sounds() end
   end
 end
 
@@ -2079,9 +2087,6 @@ function imgui_settings_6_logger()
       end
     end
   end
-end
-
-function imgui_settings_7_logviewer()
   if imgui.Checkbox("##ShowTimeToUpdateCSV", iShowTimeToUpdateCSV) then
     cfg.options.ShowTimeToUpdateCSV = iShowTimeToUpdateCSV.v
     inicfg.save(cfg, "support")
@@ -2092,6 +2097,10 @@ function imgui_settings_7_logviewer()
   else
     imgui.TextDisabled(u8"Показывать время обработки лога?")
   end
+end
+
+function imgui_settings_7_logviewer()
+
   if imgui.Checkbox("##включить лог", iLogActive) then
     cfg.log.active = iLogActive.v
     inicfg.save(cfg, "support")
