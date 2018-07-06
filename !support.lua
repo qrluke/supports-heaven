@@ -1736,7 +1736,7 @@ function imgui_settings_1_sup_hideandcol()
     imgui.SameLine()
     if iReplaceQuestionColor.v then
       imgui.Text(u8("÷вет вопросов в чате измен€етс€ на: "))
-      imgui.SameLine(287)
+      imgui.SameLine(295)
       imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##Qcolor", Qcolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
@@ -1758,7 +1758,7 @@ function imgui_settings_1_sup_hideandcol()
     imgui.SameLine()
     if iReplaceAnswerColor.v then
       imgui.Text(u8("÷вет ваших ответов в чате измен€етс€ на: "))
-      imgui.SameLine(287)
+      imgui.SameLine(295)
       imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##Acolor", Acolor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
@@ -1779,7 +1779,7 @@ function imgui_settings_1_sup_hideandcol()
     imgui.SameLine()
     if iReplaceAnswerOthersColor.v then
       imgui.Text(u8("÷вет чужих ответов в чате измен€етс€ на: "))
-      imgui.SameLine(287)
+      imgui.SameLine(295)
       imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##Acolor1", Acolor1, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
@@ -1835,7 +1835,7 @@ function imgui_settings_2_sms_hideandcol()
     imgui.SameLine()
     if iReplaceSmsInColor.v then
       imgui.Text(u8("÷вет вход€щих сообщений измен€етс€ на: "))
-      imgui.SameLine(287)
+      imgui.SameLine(295)
       imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##SmsInColor", SmsInColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
@@ -1857,7 +1857,7 @@ function imgui_settings_2_sms_hideandcol()
     imgui.SameLine()
     if iReplaceSmsOutColor.v then
       imgui.Text(u8("÷вет исход€щих сообщений измен€етс€ на: "))
-      imgui.SameLine(287)
+      imgui.SameLine(295)
       imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##SmsOutColor", SmsOutColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
@@ -1878,7 +1878,7 @@ function imgui_settings_2_sms_hideandcol()
     imgui.SameLine()
     if iReplaceSmsReceivedColor.v then
       imgui.Text(u8("÷вет \"SMS доставлено\" измен€етс€ на: "))
-      imgui.SameLine(287)
+      imgui.SameLine(295)
       imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##SmsReceivedColor", SmsReceivedColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
