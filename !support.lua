@@ -4,221 +4,246 @@ script_author("rubbishman")
 script_version('0.01')
 script_dependencies('SAMPFUNCS', 'Dear imgui', 'SAMP.Lua')
 --------------------------------------VAR---------------------------------------
-local imgui = require 'imgui'
-local inicfg = require "inicfg"
-local dlstatus = require('moonloader').download_status
-local as_action = require('moonloader').audiostream_state
-local sampev = require 'lib.samp.events'
-local inspect = require 'inspect'
-local key = require 'vkeys'
-local encoding = require 'encoding'
-encoding.default = 'CP1251'
-u8 = encoding.UTF8
-local cfg = inicfg.load({
-  options =
-  {
-    ReplaceQuestionColor = true,
-    ReplaceAnswerColor = false,
-    ReplaceAnswerOthersColor = false,
-    ReplaceSmsInColor = true,
-    ReplaceSmsOutColor = false,
-    ReplaceSmsReceivedColor = false,
-    ShowTimeToUpdateCSV = false,
-    HideQuestion = false,
-    HideAnswer = false,
-    HideAnswerOthers = false,
-    HideSmsIn = false,
-    HideSmsOut = false,
-    HideSmsReceived = false,
-    SoundQuestion = true,
-    SoundQuestionNumber = 1,
-    SoundAnswerOthers = true,
-    SoundAnswerOthersNumber = 22,
-    SoundAnswer = true,
-    SoundAnswerNumber = 15,
-    SoundSmsIn = true,
-    SoundSmsInNumber = 22,
-    SoundSmsOut = true,
-    SoundSmsOutNumber = 15,
-  },
-  log = {
-    active = true,
-    logger = true,
-    height = 120,
-  },
-  stats = {
-    active = true,
-    height = 160,
-  },
-  colors =
-  {
-    QuestionColor = imgui.ImColor(255, 255, 255):GetU32(),
-    AnswerColor = imgui.ImColor(255, 255, 255):GetU32(),
-    AnswerColorOthers = imgui.ImColor(255, 255, 255):GetU32(),
-    SmsInColor = imgui.ImColor(255, 255, 255):GetU32(),
-    SmsOutColor = imgui.ImColor(255, 255, 255):GetU32(),
-    SmsReceivedColor = imgui.ImColor(255, 255, 255):GetU32(),
-  },
-  menuwindow =
-  {
-    Width = 800,
-    Height = 400,
-    PosX = 80,
-    PosY = 310,
-  },
-  messanger =
-  {
-    storesms = true,
-    activesduty = true,
-    iSMSfilterBool = false,
-    activesms = true,
-    mode = 1,
-    Height = 300,
-    QuestionColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
-    AnswerColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
-    AnswerColorOthers = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
-    QuestionTimeColor = imgui.ImColor(0, 0, 0):GetU32(),
-    QuestionHeaderColor = imgui.ImColor(255, 255, 255):GetU32(),
-    QuestionTextColor = imgui.ImColor(255, 255, 255):GetU32(),
-    AnswerTimeColor = imgui.ImColor(0, 0, 0):GetU32(),
-    AnswerHeaderColor = imgui.ImColor(255, 255, 255):GetU32(),
-    AnswerTextColor = imgui.ImColor(255, 255, 255):GetU32(),
-    AnswerTimeOthersColor = imgui.ImColor(0, 0, 0):GetU32(),
-    AnswerHeaderOthersColor = imgui.ImColor(255, 255, 255):GetU32(),
-    AnswerTextOthersColor = imgui.ImColor(255, 255, 255):GetU32(),
-    iShowUA1 = true,
-    iShowUA2 = true,
-    iShowA1 = true,
-    iShowA2 = true,
-    iChangeScroll = true,
-    iSetKeyboard = true,
-    iShowSHOWOFFLINESDUTY = true,
-    iShowSHOWOFFLINESMS = true,
-  },
-  notepad =
-  {
-    active = true,
-    text = "Тут можно писать.\\nEnter - новая строка.\\nCtrl + Enter - сохранить текст.\\nESC - отменить изменения.\\nTAB - табуляция.",
-    lines = 10,
+function var_require()
+  imgui = require 'imgui'
+  inicfg = require "inicfg"
+  dlstatus = require('moonloader').download_status
+  as_action = require('moonloader').audiostream_state
+  sampev = require 'lib.samp.events'
+  inspect = require 'inspect'
+  key = require 'vkeys'
+  encoding = require 'encoding'
+  encoding.default = 'CP1251'
+  u8 = encoding.UTF8
+end
+
+function var_cfg()
+	cfg = inicfg.load({
+	  options =
+	  {
+	    ReplaceQuestionColor = true,
+	    ReplaceAnswerColor = false,
+	    ReplaceAnswerOthersColor = false,
+	    ReplaceSmsInColor = true,
+	    ReplaceSmsOutColor = false,
+	    ReplaceSmsReceivedColor = false,
+	    ShowTimeToUpdateCSV = false,
+	    HideQuestion = false,
+	    HideAnswer = false,
+	    HideAnswerOthers = false,
+	    HideSmsIn = false,
+	    HideSmsOut = false,
+	    HideSmsReceived = false,
+	    SoundQuestion = true,
+	    SoundQuestionNumber = 1,
+	    SoundAnswerOthers = true,
+	    SoundAnswerOthersNumber = 22,
+	    SoundAnswer = true,
+	    SoundAnswerNumber = 15,
+	    SoundSmsIn = true,
+	    SoundSmsInNumber = 22,
+	    SoundSmsOut = true,
+	    SoundSmsOutNumber = 15,
+	  },
+	  log = {
+	    active = true,
+	    logger = true,
+	    height = 120,
+	  },
+	  stats = {
+	    active = true,
+	    height = 160,
+	  },
+	  colors =
+	  {
+	    QuestionColor = imgui.ImColor(255, 255, 255):GetU32(),
+	    AnswerColor = imgui.ImColor(255, 255, 255):GetU32(),
+	    AnswerColorOthers = imgui.ImColor(255, 255, 255):GetU32(),
+	    SmsInColor = imgui.ImColor(255, 255, 255):GetU32(),
+	    SmsOutColor = imgui.ImColor(255, 255, 255):GetU32(),
+	    SmsReceivedColor = imgui.ImColor(255, 255, 255):GetU32(),
+	  },
+	  menuwindow =
+	  {
+	    Width = 800,
+	    Height = 400,
+	    PosX = 80,
+	    PosY = 310,
+	  },
+	  messanger =
+	  {
+	    storesms = true,
+	    activesduty = true,
+	    iSMSfilterBool = false,
+	    activesms = true,
+	    mode = 1,
+	    Height = 300,
+	    QuestionColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
+	    AnswerColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
+	    AnswerColorOthers = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
+	    QuestionTimeColor = imgui.ImColor(0, 0, 0):GetU32(),
+	    QuestionHeaderColor = imgui.ImColor(255, 255, 255):GetU32(),
+	    QuestionTextColor = imgui.ImColor(255, 255, 255):GetU32(),
+	    AnswerTimeColor = imgui.ImColor(0, 0, 0):GetU32(),
+	    AnswerHeaderColor = imgui.ImColor(255, 255, 255):GetU32(),
+	    AnswerTextColor = imgui.ImColor(255, 255, 255):GetU32(),
+	    AnswerTimeOthersColor = imgui.ImColor(0, 0, 0):GetU32(),
+	    AnswerHeaderOthersColor = imgui.ImColor(255, 255, 255):GetU32(),
+	    AnswerTextOthersColor = imgui.ImColor(255, 255, 255):GetU32(),
+	    iShowUA1 = true,
+	    iShowUA2 = true,
+	    iShowA1 = true,
+	    iShowA2 = true,
+	    iChangeScroll = true,
+	    iSetKeyboard = true,
+	    iShowSHOWOFFLINESDUTY = true,
+	    iShowSHOWOFFLINESMS = true,
+	  },
+	  notepad =
+	  {
+	    active = true,
+	    text = "Тут можно писать.\\nEnter - новая строка.\\nCtrl + Enter - сохранить текст.\\nESC - отменить изменения.\\nTAB - табуляция.",
+	    lines = 10,
+	  }
+	}, 'support')
+end
+
+function var_imgui_ImBool()
+  iReplaceQuestionColor = imgui.ImBool(cfg.options.ReplaceQuestionColor)
+  iReplaceAnswerColor = imgui.ImBool(cfg.options.ReplaceAnswerColor)
+  iReplaceAnswerOthersColor = imgui.ImBool(cfg.options.ReplaceAnswerOthersColor)
+  iReplaceSmsInColor = imgui.ImBool(cfg.options.ReplaceSmsInColor)
+  iReplaceSmsOutColor = imgui.ImBool(cfg.options.ReplaceSmsOutColor)
+  iReplaceSmsReceivedColor = imgui.ImBool(cfg.options.ReplaceSmsReceivedColor)
+  iHideQuestion = imgui.ImBool(cfg.options.HideQuestion)
+  iHideAnswer = imgui.ImBool(cfg.options.HideAnswer)
+  iHideAnswerOthers = imgui.ImBool(cfg.options.HideAnswerOthers)
+  iHideSmsIn = imgui.ImBool(cfg.options.HideSmsIn)
+  iHideSmsOut = imgui.ImBool(cfg.options.HideSmsOut)
+  iHideSmsReceived = imgui.ImBool(cfg.options.HideSmsReceived)
+  iShowUA1 = imgui.ImBool(cfg.messanger.iShowUA1)
+  iShowUA2 = imgui.ImBool(cfg.messanger.iShowUA2)
+  iShowA1 = imgui.ImBool(cfg.messanger.iShowA1)
+  iShowA2 = imgui.ImBool(cfg.messanger.iShowA2)
+  iChangeScroll = imgui.ImBool(cfg.messanger.iChangeScroll)
+  iSetKeyboard = imgui.ImBool(cfg.messanger.iSetKeyboard)
+  iNotepadActive = imgui.ImBool(cfg.notepad.active)
+  iMessangerActiveSDUTY = imgui.ImBool(cfg.messanger.activesduty)
+  iMessangerActiveSMS = imgui.ImBool(cfg.messanger.activesms)
+  iLogBool = imgui.ImBool(cfg.log.logger)
+  iLogActive = imgui.ImBool(cfg.log.active)
+  iStatsActive = imgui.ImBool(cfg.stats.active)
+  iShowSHOWOFFLINESDUTY = imgui.ImBool(cfg.messanger.iShowSHOWOFFLINESDUTY)
+  iShowSHOWOFFLINESMS = imgui.ImBool(cfg.messanger.iShowSHOWOFFLINESMS)
+  iShowTimeToUpdateCSV = imgui.ImBool(cfg.options.ShowTimeToUpdateCSV)
+  iSoundQuestion = imgui.ImBool(cfg.options.SoundQuestion)
+  iSoundAnswerOthers = imgui.ImBool(cfg.options.SoundAnswerOthers)
+  iSoundAnswer = imgui.ImBool(cfg.options.SoundAnswer)
+  iSoundSmsIn = imgui.ImBool(cfg.options.SoundSmsIn)
+  iSoundSmsOut = imgui.ImBool(cfg.options.SoundSmsOut)
+  iStoreSMS = imgui.ImBool(cfg.messanger.storesms)
+  iSMSfilterBool = imgui.ImBool(cfg.messanger.iSMSfilterBool)
+  main_window_state = imgui.ImBool(false)
+  iStats = imgui.ImBool(true)
+end
+
+function var_imgui_ImFloat4_ImColor()
+  iQcolor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionColor):GetFloat4())
+  iAcolor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerColor):GetFloat4())
+  iAcolor1 = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerColorOthers):GetFloat4())
+
+  iQuestionTimeColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionTimeColor ):GetFloat4())
+  iQuestionHeaderColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionHeaderColor):GetFloat4())
+  iQuestionTextColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionTextColor):GetFloat4())
+
+  iAnswerTimeColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerTimeColor ):GetFloat4())
+  iAnswerTextColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerTextColor):GetFloat4())
+  iAnswerHeaderColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerHeaderColor):GetFloat4())
+
+  iAnswerTimeOthersColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerTimeOthersColor ):GetFloat4())
+  iAnswerHeaderOthersColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerHeaderOthersColor):GetFloat4())
+  iAnswerTextOthersColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerTextOthersColor):GetFloat4())
+
+
+  Qcolor = imgui.ImFloat4(imgui.ImColor(cfg.colors.QuestionColor):GetFloat4())
+  Acolor = imgui.ImFloat4(imgui.ImColor(cfg.colors.AnswerColor):GetFloat4())
+  Acolor1 = imgui.ImFloat4(imgui.ImColor(cfg.colors.AnswerColorOthers):GetFloat4())
+
+  SmsInColor = imgui.ImFloat4(imgui.ImColor(cfg.colors.SmsInColor):GetFloat4())
+  SmsOutColor = imgui.ImFloat4(imgui.ImColor(cfg.colors.SmsOutColor):GetFloat4())
+  SmsReceivedColor = imgui.ImFloat4(imgui.ImColor(cfg.colors.SmsReceivedColor):GetFloat4())
+end
+
+function var_imgui_ImInt()
+  iSoundQuestionNumber = imgui.ImInt(cfg.options.SoundQuestionNumber)
+  iSoundAnswerOthersNumber = imgui.ImInt(cfg.options.SoundAnswerOthersNumber)
+  iSoundAnswerNumber = imgui.ImInt(cfg.options.SoundAnswerNumber)
+  iSoundSmsInNumber = imgui.ImInt(cfg.options.SoundSmsInNumber)
+  iSoundSmsOutNumber = imgui.ImInt(cfg.options.SoundSmsOutNumber)
+  iNotepadLines = imgui.ImInt(cfg.notepad.lines)
+  iLogHeight = imgui.ImInt(cfg.log.height)
+  iStatsHeight = imgui.ImInt(cfg.stats.height)
+  iMessangerHeight = imgui.ImInt(cfg.messanger.Height)
+  iYear = imgui.ImInt(0)
+  iDay = imgui.ImInt(tonumber(os.date("%d")))
+  iMonth = imgui.ImInt(tonumber(os.date("%m")))
+end
+
+function var_imgui_ImBuffer()
+  toAnswerSDUTY = imgui.ImBuffer(150)
+  toAnswerSMS = imgui.ImBuffer(150)
+  iSMSfilter = imgui.ImBuffer(64)
+  iSMSAddDialog = imgui.ImBuffer(64)
+  textNotepad = imgui.ImBuffer(65536)
+  textNotepad.v = string.gsub(string.gsub(u8:encode(cfg.notepad.text), "\\n", "\n"), "\\t", "\t")
+end
+
+function var_main()
+  iMonths = {
+    [1] = "Январь",
+    [2] = "Февраль",
+    [3] = "Март",
+    [4] = "Апрель",
+    [5] = "Май",
+    [6] = "Июнь",
+    [7] = "Июль",
+    [8] = "Август",
+    [9] = "Сентябрь",
+    [10] = "Октябрь",
+    [11] = "Ноябрь",
+    [12] = "Декабрь"
   }
-}, 'support')
-local file = getGameDirectory()..'\\moonloader\\support.csv'
-local color = 0xffa500
-local selected = 1
-local selecteddialogSDUTY = ""
-local month_histogram = {}
-local players = {}
-local iYears = {}
-local iMessanger = {}
-local iReplaceQuestionColor = imgui.ImBool(cfg.options.ReplaceQuestionColor)
-local iReplaceAnswerColor = imgui.ImBool(cfg.options.ReplaceAnswerColor)
-local iReplaceAnswerOthersColor = imgui.ImBool(cfg.options.ReplaceAnswerOthersColor)
-local iReplaceSmsInColor = imgui.ImBool(cfg.options.ReplaceSmsInColor)
-local iReplaceSmsOutColor = imgui.ImBool(cfg.options.ReplaceSmsOutColor)
-local iReplaceSmsReceivedColor = imgui.ImBool(cfg.options.ReplaceSmsReceivedColor)
-local iHideQuestion = imgui.ImBool(cfg.options.HideQuestion)
-local iHideAnswer = imgui.ImBool(cfg.options.HideAnswer)
-local iHideAnswerOthers = imgui.ImBool(cfg.options.HideAnswerOthers)
-local iHideSmsIn = imgui.ImBool(cfg.options.HideSmsIn)
-local iHideSmsOut = imgui.ImBool(cfg.options.HideSmsOut)
-local iHideSmsReceived = imgui.ImBool(cfg.options.HideSmsReceived)
-local iShowUA1 = imgui.ImBool(cfg.messanger.iShowUA1)
-local iShowUA2 = imgui.ImBool(cfg.messanger.iShowUA2)
-local iShowA1 = imgui.ImBool(cfg.messanger.iShowA1)
-local iShowA2 = imgui.ImBool(cfg.messanger.iShowA2)
-local iChangeScroll = imgui.ImBool(cfg.messanger.iChangeScroll)
-local iSetKeyboard = imgui.ImBool(cfg.messanger.iSetKeyboard)
-local iNotepadActive = imgui.ImBool(cfg.notepad.active)
-local iMessangerActiveSDUTY = imgui.ImBool(cfg.messanger.activesduty)
-local iMessangerActiveSMS = imgui.ImBool(cfg.messanger.activesms)
-local iLogBool = imgui.ImBool(cfg.log.logger)
-local iLogActive = imgui.ImBool(cfg.log.active)
-local iStatsActive = imgui.ImBool(cfg.stats.active)
-local iShowSHOWOFFLINESDUTY = imgui.ImBool(cfg.messanger.iShowSHOWOFFLINESDUTY)
-local iShowSHOWOFFLINESMS = imgui.ImBool(cfg.messanger.iShowSHOWOFFLINESMS)
-local iShowTimeToUpdateCSV = imgui.ImBool(cfg.options.ShowTimeToUpdateCSV)
-local iSoundQuestion = imgui.ImBool(cfg.options.SoundQuestion)
-local iSoundAnswerOthers = imgui.ImBool(cfg.options.SoundAnswerOthers)
-local iSoundAnswer = imgui.ImBool(cfg.options.SoundAnswer)
-local iSoundSmsIn = imgui.ImBool(cfg.options.SoundSmsIn)
-local iSoundSmsOut = imgui.ImBool(cfg.options.SoundSmsOut)
-local iStoreSMS = imgui.ImBool(cfg.messanger.storesms)
-local iSMSfilterBool = imgui.ImBool(cfg.messanger.iSMSfilterBool)
-local main_window_state = imgui.ImBool(false)
-local iStats = imgui.ImBool(true)
-
-
-local iQcolor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionColor):GetFloat4())
-local iAcolor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerColor):GetFloat4())
-local iAcolor1 = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerColorOthers):GetFloat4())
-
-local iQuestionTimeColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionTimeColor ):GetFloat4())
-local iQuestionHeaderColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionHeaderColor):GetFloat4())
-local iQuestionTextColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionTextColor):GetFloat4())
-
-local iAnswerTimeColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerTimeColor ):GetFloat4())
-local iAnswerTextColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerTextColor):GetFloat4())
-local iAnswerHeaderColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerHeaderColor):GetFloat4())
-
-local iAnswerTimeOthersColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerTimeOthersColor ):GetFloat4())
-local iAnswerHeaderOthersColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerHeaderOthersColor):GetFloat4())
-local iAnswerTextOthersColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerTextOthersColor):GetFloat4())
-
-
-local Qcolor = imgui.ImFloat4(imgui.ImColor(cfg.colors.QuestionColor):GetFloat4())
-local Acolor = imgui.ImFloat4(imgui.ImColor(cfg.colors.AnswerColor):GetFloat4())
-local Acolor1 = imgui.ImFloat4(imgui.ImColor(cfg.colors.AnswerColorOthers):GetFloat4())
-
-local SmsInColor = imgui.ImFloat4(imgui.ImColor(cfg.colors.SmsInColor):GetFloat4())
-local SmsOutColor = imgui.ImFloat4(imgui.ImColor(cfg.colors.SmsOutColor):GetFloat4())
-local SmsReceivedColor = imgui.ImFloat4(imgui.ImColor(cfg.colors.SmsReceivedColor):GetFloat4())
-
-local iSoundQuestionNumber = imgui.ImInt(cfg.options.SoundQuestionNumber)
-local iSoundAnswerOthersNumber = imgui.ImInt(cfg.options.SoundAnswerOthersNumber)
-local iSoundAnswerNumber = imgui.ImInt(cfg.options.SoundAnswerNumber)
-local iSoundSmsInNumber = imgui.ImInt(cfg.options.SoundSmsInNumber)
-local iSoundSmsOutNumber = imgui.ImInt(cfg.options.SoundSmsOutNumber)
-local iNotepadLines = imgui.ImInt(cfg.notepad.lines)
-local iLogHeight = imgui.ImInt(cfg.log.height)
-local iStatsHeight = imgui.ImInt(cfg.stats.height)
-local iMessangerHeight = imgui.ImInt(cfg.messanger.Height)
-local iYear = imgui.ImInt(0)
-local iDay = imgui.ImInt(tonumber(os.date("%d")))
-local iMonth = imgui.ImInt(tonumber(os.date("%m")))
-local iMonths = {
-  [1] = "Январь",
-  [2] = "Февраль",
-  [3] = "Март",
-  [4] = "Апрель",
-  [5] = "Май",
-  [6] = "Июнь",
-  [7] = "Июль",
-  [8] = "Август",
-  [9] = "Сентябрь",
-  [10] = "Октябрь",
-  [11] = "Ноябрь",
-  [12] = "Декабрь"
-}
-local toAnswerSDUTY = imgui.ImBuffer(150)
-local toAnswerSMS = imgui.ImBuffer(150)
-local iSMSfilter = imgui.ImBuffer(64)
-local iSMSAddDialog = imgui.ImBuffer(64)
-local textNotepad = imgui.ImBuffer(65536)
-textNotepad.v = string.gsub(string.gsub(u8:encode(cfg.notepad.text), "\\n", "\n"), "\\t", "\t")
-local LASTID = 0
-local countall = 0
-local ScrollToDialogSDUTY = false
-local ScrollToDialogSMS = false
-LASTNICK = " "
-PLAYA = false
-iAddSMS = false
-PLAYQ = false
-PLAYA1 = false
-PLAYSMSIN = false
-PLAYSMSOUT = false
-SSDB_trigger = false
-DEV = false
-math.randomseed(os.time())
+	file = getGameDirectory()..'\\moonloader\\support.csv'
+	color = 0xffa500
+	selected = 1
+	selecteddialogSDUTY = ""
+	month_histogram = {}
+	players = {}
+	iYears = {}
+	iMessanger = {}
+  LASTID = 0
+  countall = 0
+  ScrollToDialogSDUTY = false
+  ScrollToDialogSMS = false
+  LASTNICK = " "
+  PLAYA = false
+  iAddSMS = false
+  PLAYQ = false
+  PLAYA1 = false
+  PLAYSMSIN = false
+  PLAYSMSOUT = false
+  SSDB_trigger = false
+  DEV = false
+  math.randomseed(os.time())
+end
+--varload
+var_require()
+var_cfg()
+var_imgui_ImBool()
+var_imgui_ImFloat4_ImColor()
+var_imgui_ImInt()
+var_imgui_ImBuffer()
+var_main()
 -------------------------------------MAIN---------------------------------------
 function main()
   if not isSampfuncsLoaded() or not isSampLoaded() then return end
@@ -375,7 +400,7 @@ function sampev.onServerMessage(color, text)
       if not iHideSmsIn.v then
         if iReplaceSmsInColor.v then
           sampAddChatMessage(text, SmsInColor_HEX)
-					return false
+          return false
         else
           --do nothing
         end
@@ -398,45 +423,45 @@ function sampev.onServerMessage(color, text)
       table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = sampGetPlayerNickname(myid), type = "TO", time = os.time()})
       if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
       SSDB_trigger = true
-			if not iHideSmsOut.v then
-				if iReplaceSmsOutColor.v then
-					sampAddChatMessage(text, SmsOutColor_HEX)
-					return false
-				else
-					--do nothing
-				end
-			else
-				return false
-			end
+      if not iHideSmsOut.v then
+        if iReplaceSmsOutColor.v then
+          sampAddChatMessage(text, SmsOutColor_HEX)
+          return false
+        else
+          --do nothing
+        end
+      else
+        return false
+      end
     end
   end
   if text == " Сообщение доставлено" then
-		if iHideSmsReceived.v then return false end
-		if not iHideSmsReceived.v then
-			if iReplaceSmsReceivedColor.v then
-				sampAddChatMessage(text, SmsReceivedColor_HEX)
-				return false
-			else
-				--do nothing
-			end
-		else
-			return false
-		end
-	end
+    if iHideSmsReceived.v then return false end
+    if not iHideSmsReceived.v then
+      if iReplaceSmsReceivedColor.v then
+        sampAddChatMessage(text, SmsReceivedColor_HEX)
+        return false
+      else
+        --do nothing
+      end
+    else
+      return false
+    end
+  end
   if color == -5963521 then
     if text:find("->Вопрос", true) then
       AddQ(text)
       if iSoundQuestion.v then PLAYQ = true end
-			if not iHideSmsReceived.v then
-				if iReplaceSmsReceivedColor.v then
-					sampAddChatMessage(text, SmsReceivedColor_HEX)
-					return false -- ИСПРАВИТЬ
-				else
-					--do nothing
-				end
-			else
-				return false
-			end
+      if not iHideSmsReceived.v then
+        if iReplaceSmsReceivedColor.v then
+          sampAddChatMessage(text, SmsReceivedColor_HEX)
+          return false -- ИСПРАВИТЬ
+        else
+          --do nothing
+        end
+      else
+        return false
+      end
     end
     if text:find("<-", true) and text:find("to", true) then
       AddA(text)
@@ -447,7 +472,7 @@ function sampev.onServerMessage(color, text)
         if not iHideAnswer.v then
           if iReplaceAnswerColor.v then
             sampAddChatMessage(text, Acolor_HEX)
-						return false
+            return false
           else
             --do nothing
           end
@@ -459,7 +484,7 @@ function sampev.onServerMessage(color, text)
         if not iHideAnswerOthers.v then
           if iReplaceAnswerOthersColor.v then
             sampAddChatMessage(text, Acolor1_HEX)
-						return false
+            return false
           else
             --do nothing
           end
