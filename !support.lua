@@ -237,6 +237,7 @@ function var_main()
   PLAYSMSIN = false
   PLAYSMSOUT = false
   SSDB_trigger = false
+  SSDB1_trigger = false
   DEV = true
   math.randomseed(os.time())
 end
@@ -290,6 +291,8 @@ function main()
   sampAddChatMessage(("SUPPORT v"..thisScript().version.." successfully loaded! Команды: /supstats и /supcolor! Author: rubbishman.ru"), color)
   -- вырезать тут, если хочешь отключить сообщение при входе в игру
   First = true
+
+  lua_thread.create(imgui_messanger_sms_kostilsaveDB) -- костыль для сохранения времени проверки смс переписок по нажатию кнопки в gui
   while true do
     wait(0)
     if SSDB_trigger == true then if DEV then sampAddChatMessage("сохраняем", color) end imgui_messanger_sms_saveDB() SSDB_trigger = false end
@@ -1069,7 +1072,7 @@ function imgui_messanger_sms_showdialogs(table, typ)
             online = "Онлайн"
             scroll = true
             keyboard = true
-            SSDB_trigger = true
+            SSDB1_trigger = true
           end
         elseif iShowSHOWOFFLINESMS.v then
           if imgui.Button(u8(k .. "[-] - "..kolvo), imgui.ImVec2(-0.0001, 30)) then
@@ -1078,7 +1081,7 @@ function imgui_messanger_sms_showdialogs(table, typ)
             online = "Оффлайн"
             scroll = true
             keyboard = true
-            SSDB_trigger = true
+            SSDB1_trigger = true
           end
         end
       else
@@ -1089,7 +1092,7 @@ function imgui_messanger_sms_showdialogs(table, typ)
             online = "Онлайн"
             scroll = true
             keyboard = true
-            SSDB_trigger = true
+            SSDB1_trigger = true
           end
         elseif iShowSHOWOFFLINESMS.v then
           if imgui.Button(u8(k .. "[-]"), imgui.ImVec2(-0.0001, 30)) then
@@ -1098,7 +1101,7 @@ function imgui_messanger_sms_showdialogs(table, typ)
             online = "Оффлайн"
             scroll = true
             keyboard = true
-            SSDB_trigger = true
+            SSDB1_trigger = true
           end
         end
       end
@@ -1376,18 +1379,18 @@ function imgui_messanger_sup_dialog()
         if Xmin < Xmes then
           if Xmes < Xmax then
             X = Xmes + 15
-            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+            if (Xmin + 5) > X then anomaly = true else anomaly = false end
           else
             X = Xmax
-            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+            if (Xmin + 5) > X then anomaly = true else anomaly = false end
           end
         else
           if (Xmin + 5) < Xmax then
             X = Xmin + 15
-            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+            if (Xmin + 5) > X then anomaly = true else anomaly = false end
           else
             X = Xmax
-            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+            if (Xmin + 5) > X then anomaly = true else anomaly = false end
           end
         end
         Y = imgui.CalcTextSize(time).y + 7 + (imgui.CalcTextSize(time).y + 7) * math.ceil((imgui.CalcTextSize(msg).x) / (X - 6))
@@ -1488,18 +1491,18 @@ function imgui_messanger_sms_dialog()
         if Xmin < Xmes then
           if Xmes < Xmax then
             X = Xmes + 15
-            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+            if (Xmin + 5) > X then anomaly = true else anomaly = false end
           else
             X = Xmax
-            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+            if (Xmin + 5) > X then anomaly = true else anomaly = false end
           end
         else
           if (Xmin + 5) < Xmax then
             X = Xmin + 15
-            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+            if (Xmin + 5) > X then anomaly = true else anomaly = false end
           else
             X = Xmax
-            if (Xmin + 5)  > X then anomaly = true else anomaly = false end
+            if (Xmin + 5) > X then anomaly = true else anomaly = false end
           end
         end
         Y = imgui.CalcTextSize(time).y + 7 + (imgui.CalcTextSize(time).y + 5) * math.ceil((imgui.CalcTextSize(msg).x) / (X - 14))
@@ -1681,6 +1684,17 @@ function imgui_messanger_sms_saveDB()
   if cfg.messanger.storesms then
     if type(sms) == "table" and doesFileExist(smsfile) then
       table.save(sms, smsfile)
+    end
+  end
+end
+
+function imgui_messanger_sms_kostilsaveDB()
+  while true do
+    wait(3000)
+    if SSDB1_trigger == true then
+      imgui_messanger_sms_saveDB()
+      SSDB1_trigger = false
+      wait(10000)
     end
   end
 end
@@ -2062,6 +2076,21 @@ function imgui_settings_3_sup_messanger()
       inicfg.save(cfg, "support")
     end
 
+    if cfg.messanger.QuestionColor ~= imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32() or cfg.messanger.QuestionTimeColor ~= imgui.ImColor(0, 0, 0):GetU32() or cfg.messanger.QuestionHeaderColor ~= imgui.ImColor(255, 255, 255):GetU32() or cfg.messanger.QuestionTextColor ~= imgui.ImColor(255, 255, 255):GetU32() then
+      imgui.SameLine()
+      if imgui.Button(u8"Сброс") then
+        cfg.messanger.QuestionColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32()
+        cfg.messanger.QuestionTimeColor = imgui.ImColor(0, 0, 0):GetU32()
+        cfg.messanger.QuestionHeaderColor = imgui.ImColor(255, 255, 255):GetU32()
+        cfg.messanger.QuestionTextColor = imgui.ImColor(255, 255, 255):GetU32()
+        iQcolor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionColor):GetFloat4())
+        iQuestionTimeColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionTimeColor ):GetFloat4())
+        iQuestionHeaderColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionHeaderColor):GetFloat4())
+        iQuestionTextColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.QuestionTextColor):GetFloat4())
+        inicfg.save(cfg, "support")
+      end
+    end
+
     imgui.Text(u8("Цвета ваших ответов в диалогах:"))
     imgui.SameLine(203)
     imgui.Text("")
@@ -2088,7 +2117,22 @@ function imgui_settings_3_sup_messanger()
       cfg.messanger.AnswerTextColor = imgui.ImColor.FromFloat4(iAnswerTextColor.v[1], iAnswerTextColor.v[2], iAnswerTextColor.v[3], iAnswerTextColor.v[4]):GetU32()
       inicfg.save(cfg, "support")
     end
-
+    --
+    if cfg.messanger.AnswerColor ~= imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32() or cfg.messanger.AnswerTimeColor ~= imgui.ImColor(0, 0, 0):GetU32() or cfg.messanger.AnswerHeaderColor ~= imgui.ImColor(255, 255, 255):GetU32() or cfg.messanger.AnswerTextColor ~= imgui.ImColor(255, 255, 255):GetU32() then
+      imgui.SameLine()
+      if imgui.Button(u8"Сброс") then
+        cfg.messanger.AnswerColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32()
+        cfg.messanger.AnswerTimeColor = imgui.ImColor(0, 0, 0):GetU32()
+        cfg.messanger.AnswerHeaderColor = imgui.ImColor(255, 255, 255):GetU32()
+        cfg.messanger.AnswerTextColor = imgui.ImColor(255, 255, 255):GetU32()
+        iAcolor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerColor):GetFloat4())
+        iAnswerTimeColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerTimeColor ):GetFloat4())
+        iAnswerHeaderColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerHeaderColor):GetFloat4())
+        iAnswerTextColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerTextColor):GetFloat4())
+        inicfg.save(cfg, "support")
+      end
+    end
+    --
     imgui.Text(u8("Цвета чужих ответов в диалогах:"))
     imgui.SameLine(203)
     imgui.Text("")
@@ -2115,7 +2159,25 @@ function imgui_settings_3_sup_messanger()
       cfg.messanger.AnswerTextOthersColor = imgui.ImColor.FromFloat4(iAnswerTextOthersColor.v[1], iAnswerTextOthersColor.v[2], iAnswerTextOthersColor.v[3], iAnswerTextOthersColor.v[4]):GetU32()
       inicfg.save(cfg, "support")
     end
+    --
+    if cfg.messanger.AnswerColorOthers ~= imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32() or cfg.messanger.AnswerTimeOthersColor ~= imgui.ImColor(0, 0, 0):GetU32() or cfg.messanger.AnswerHeaderOthersColor ~= imgui.ImColor(255, 255, 255):GetU32() or cfg.messanger.AnswerTextOthersColor ~= imgui.ImColor(255, 255, 255):GetU32() then
+      imgui.SameLine()
+      if imgui.Button(u8"Сброс") then
+        cfg.messanger.AnswerColorOthers = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32()
+        cfg.messanger.AnswerTimeOthersColor = imgui.ImColor(0, 0, 0):GetU32()
+        cfg.messanger.AnswerHeaderOthersColor = imgui.ImColor(255, 255, 255):GetU32()
+        cfg.messanger.AnswerTextOthersColor = imgui.ImColor(255, 255, 255):GetU32()
+        iAcolor1 = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerColorOthers):GetFloat4())
+        iAnswerTimeOthersColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerTimeOthersColor ):GetFloat4())
+        iAnswerHeaderOthersColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerHeaderOthersColor):GetFloat4())
+        iAnswerTextOthersColor = imgui.ImFloat4(imgui.ImColor(cfg.messanger.AnswerTextOthersColor):GetFloat4())
+        inicfg.save(cfg, "support")
+      end
+    end
+    --
+
   else
+
     imgui.SameLine()
     imgui.TextDisabled(u8"Включить sduty мессенджер?")
   end
