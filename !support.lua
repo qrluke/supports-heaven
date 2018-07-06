@@ -505,13 +505,13 @@ function sampev.onSendCommand(text)
     if iSoundAnswer.v then PLAYA = true end
     id, text = string.match(text, "(%d+) (.+)")
     if sampIsPlayerConnected(id) then
-      local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
       if selecteddialogSDUTY == sampGetPlayerNickname(id) then ScrollToDialogSDUTY = true end
-      text = "<-"..sampGetPlayerNickname(myid).."["..myid.."]".." to "..sampGetPlayerNickname(id).."["..id.."]: "..text
-      if DEV then simulateSupportAnswer(text) end
+      if DEV then
+				local _asdasd, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+        simulateSupportAnswer("<-"..sampGetPlayerNickname(myid).."["..myid.."]".." to "..sampGetPlayerNickname(id).."["..id.."]: "..text)
+      end
       AddA(text)
     end
-
   end
 end
 
@@ -1383,8 +1383,12 @@ function imgui_messanger_sup_dialog()
     end
   else
     if iMessanger[selecteddialogSDUTY] == nil then
-      imgui.SetCursorPos(imgui.ImVec2(imgui.GetContentRegionAvailWidth() / 3, (iMessangerHeight.v - 100) / 2))
-      imgui.Text(u8"Выберите диалог.")
+      local text = u8"Выберите диалог."
+      local width = imgui.GetWindowWidth()
+      local height = imgui.GetWindowHeight()
+      local calc = imgui.CalcTextSize(text)
+      imgui.SetCursorPos(imgui.ImVec2( width / 2 - calc.x / 2, height / 2 - calc.y / 2))
+      imgui.Text(text)
     end
   end
   imgui.EndChild()
@@ -1441,8 +1445,12 @@ function imgui_messanger_sms_dialog()
     end
   else
     if sms[selecteddialogSMS] == nil then
-      imgui.SetCursorPos(imgui.ImVec2(imgui.GetContentRegionAvailWidth() / 3, (iMessangerHeight.v - 100) / 2))
-      imgui.Text(u8"Выберите диалог.")
+      local text = u8"Выберите диалог."
+      local width = imgui.GetWindowWidth()
+      local height = imgui.GetWindowHeight()
+      local calc = imgui.CalcTextSize(text)
+      imgui.SetCursorPos(imgui.ImVec2( width / 2 - calc.x / 2, height / 2 - calc.y / 2))
+      imgui.Text(text)
     end
   end
   imgui.EndChild()
