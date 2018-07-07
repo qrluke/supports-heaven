@@ -45,6 +45,7 @@ function var_cfg()
       SoundSmsOut = true,
       SoundSmsOutNumber = 15,
       settingstab = 1,
+      debug = false,
     },
     supfuncs = {
       fastrespondviachat = true,
@@ -281,7 +282,7 @@ function var_main()
   PLAYSMSOUT = false
   SSDB_trigger = false
   SSDB1_trigger = false
-  DEV = true
+  DEBUG = cfg.options.debug
   math.randomseed(os.time())
 end
 --varload
@@ -302,7 +303,7 @@ function main()
   main_init_debug()
   main_ImColorToHEX()
   main_copyright()
-  if DEV then First = true end
+  if DEBUG then First = true end
   while true do
     wait(0)
     main_while_debug()
@@ -348,7 +349,8 @@ function main_init_supfuncs()
 end
 
 function main_init_debug()
-  if DEV then First = true end
+  if DEBUG then First = true end
+  sampRegisterChatCommand("supdebug", DEBUG_toggle)
 end
 
 function main_ImColorToHEX()
@@ -376,7 +378,7 @@ function main_copyright()
 end
 
 function main_while_debug()
-  if SSDB_trigger == true then if DEV then sampAddChatMessage("сохраняем", color) end imgui_messanger_sms_saveDB() SSDB_trigger = false end
+  if SSDB_trigger == true then if DEBUG then sampAddChatMessage("сохраняем", color) end imgui_messanger_sms_saveDB() SSDB_trigger = false end
 end
 
 function main_while_playsounds()
@@ -419,7 +421,7 @@ end
 
 function main_while_hotkeys()
   if wasKeyPressed(key.VK_Z) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() or First then
-    if DEV then First = false end
+    if DEBUG then First = false end
     main_window_state.v = not main_window_state.v
   end
 end
@@ -450,6 +452,17 @@ function DEBUG_simulateSupportAnswer(text)
   sup_AddA(text)
 end
 
+function DEBUG_toggle()
+  cfg.options.debug = not cfg.options.debug
+  DEBUG = cfg.options.debug
+  if DEBUG then
+    addOneOffSound(0.0, 0.0, 0.0, 1054)
+  else
+    addOneOffSound(0.0, 0.0, 0.0, 1055)
+  end
+  inicfg.save(cfg, "debug")
+end
+
 function RPC.onPlaySound(sound)
   if sound == 1052 and iSoundSmsOut.v then
     return false
@@ -457,7 +470,7 @@ function RPC.onPlaySound(sound)
 end
 --говно
 function RPC.onServerMessage(color, text)
-  if DEV then DEBUG_simulateSupport(text) end
+  if DEBUG then DEBUG_simulateSupport(text) end
   if text:find("SMS") then
     text = string.gsub(text, "{FFFF00}", "")
     text = string.gsub(text, "{FF8000}", "")
@@ -572,13 +585,12 @@ function RPC.onServerMessage(color, text)
       end
     end
   end
-  if DEV then return false end -- исправить
+  if DEBUG then return false end -- исправить
 end
 --считаем активность саппорта
 function RPC.onSendCommand(text)
   if string.find(text, '/pm') then
     if text:match('/pm (%d+) $') then
-      sampAddChatMessage("text", color)
       lua_thread.create(sup_FastRespond_via_dialog, text:match('/pm (%d+) $'))
       return false
     else
@@ -588,7 +600,7 @@ function RPC.onSendCommand(text)
         id, text = string.match(text, "(%d+) (.+)")
         if sampIsPlayerConnected(id) then
           if selecteddialogSDUTY == sampGetPlayerNickname(id) then ScrollToDialogSDUTY = true end
-          if DEV then
+          if DEBUG then
             local _asdasd, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
             DEBUG_simulateSupportAnswer("<-"..sampGetPlayerNickname(myid).."["..myid.."]".." to "..sampGetPlayerNickname(id).."["..id.."]: "..text)
           end
@@ -703,89 +715,95 @@ function sup_ParseFastRespond_fr()
 end
 
 function sup_FastRespond_via_chat()
-  if LASTID ~= -1 then
-    if sampIsPlayerConnected(LASTID) and sampGetPlayerNickname(LASTID) == LASTNICK then
-      sampSetChatInputEnabled(true)
-      sampSetChatInputText("/pm "..LASTID.." ")
-    else
-      sampAddChatMessage("Ошибка: игрок, задавший вопрос, отключился.", color)
+  if cfg.supfuncs.fastrespondviachat then
+    if LASTID ~= -1 then
+      if sampIsPlayerConnected(LASTID) and sampGetPlayerNickname(LASTID) == LASTNICK then
+        sampSetChatInputEnabled(true)
+        sampSetChatInputText("/pm "..LASTID.." ")
+      else
+        sampAddChatMessage("Ошибка: игрок, задавший вопрос, отключился.", color)
+      end
     end
   end
 end
 
 function sup_FastRespond_via_dialog(param)
-  if tonumber(param) ~= nil then
-    id = tonumber(param)
-    if sampIsPlayerConnected(id) then
-      if getfr == {} then
-        sampShowDialog(8320, "{D2D2D2}Ответ для "..sampGetPlayerNickname(id).."["..id.."]", "База быстрых ответов пуста.\nПополнить базу можно в настройках.", "Ясно.")
-      else
-        FRtext_D = "{FFD700}Вопрос{40E0D0}:{FF9D00} "..sup_getLastQuestion(sampGetPlayerNickname(id)).."\n\n"
-        for k, v in pairs(getfr) do
-          FRtext_D = FRtext_D..string.format("{FFD700}%s {40E0D0}- {FF9D00}%s", k, v).."\n"
-        end
-        sampShowDialog(8320, "{D2D2D2}Ответ для "..sampGetPlayerNickname(id).."["..id.."]", FRtext_D, "Выбрать", "", 1)
-        while sampIsDialogActive() do wait(0) end
-        local result, button, list, input = sampHasDialogRespond(8320)
-        if button == 1 then
-          FRnumber_D = sampGetCurrentDialogEditboxText(8320)
-          if tonumber(FRnumber_D) ~= nil and getfr[tonumber(FRnumber_D)] ~= nil then
-            sampSendChat("/pm "..id.." "..getfr[tonumber(FRnumber_D)])
+  if cfg.supfuncs.fastrespondviadialog then
+    if tonumber(param) ~= nil then
+      id = tonumber(param)
+      if sampIsPlayerConnected(id) then
+        if getfr == {} then
+          sampShowDialog(8320, "{D2D2D2}Ответ для "..sampGetPlayerNickname(id).."["..id.."]", "База быстрых ответов пуста.\nПополнить базу можно в настройках.", "Ясно.")
+        else
+          FRtext_D = "{FFD700}Вопрос{40E0D0}:{FF9D00} "..sup_getLastQuestion(sampGetPlayerNickname(id)).."\n\n"
+          for k, v in pairs(getfr) do
+            FRtext_D = FRtext_D..string.format("{FFD700}%s {40E0D0}- {FF9D00}%s", k, v).."\n"
+          end
+          sampShowDialog(8320, "{D2D2D2}Ответ для "..sampGetPlayerNickname(id).."["..id.."]", FRtext_D, "Выбрать", "", 1)
+          while sampIsDialogActive() do wait(0) end
+          local result, button, list, input = sampHasDialogRespond(8320)
+          if button == 1 then
+            FRnumber_D = sampGetCurrentDialogEditboxText(8320)
+            if tonumber(FRnumber_D) ~= nil and getfr[tonumber(FRnumber_D)] ~= nil then
+              sampSendChat("/pm "..id.." "..getfr[tonumber(FRnumber_D)])
+            end
           end
         end
+      else
+        sampAddChatMessage("Ошибка: игрок с заданным id оффлайн.", color)
       end
-    else
-      sampAddChatMessage("Ошибка: игрок с заданным id оффлайн.", color)
     end
   end
 end
 
 function sup_UnAnswered_via_samp_dialog()
-  local UNANindex = {}
-  for k in pairs(iMessanger) do
-    if #iMessanger[k]["A"] == 0 then table.insert(UNANindex, k) end
-  end
-  table.sort(UNANindex, function(a, b) return iMessanger[a]["Chat"][#iMessanger[a]["Chat"]]["time"] < iMessanger[b]["Chat"][#iMessanger[b]["Chat"]]["time"] end)
-  UNANi = 1
-  UNANtext = ""
-  for k, v in pairs(UNANindex) do
-    for i = 1, sampGetMaxPlayerId() + 1 do
-      if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == v then
-        UNANsec = math.fmod(os.time() - iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["time"], 60)
-        if UNANsec < 10 then UNANsec = "0"..UNANsec end
-        UNANmin = math.floor((os.time() - iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["time"]) / 60)
-        UNANtext = UNANtext..string.format("{FFD700}%s {40E0D0}- {ADD8E6}[%s:%s] %s[%s]: {FF9D00}%s", UNANi, UNANmin, UNANsec, v, i, iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["text"]).."\n"
-        UNANi = UNANi + 1
-        break
-      else
-        if i == sampGetMaxPlayerId() + 1 then
+  if cfg.supfuncs.unanswereddialog then
+    local UNANindex = {}
+    for k in pairs(iMessanger) do
+      if #iMessanger[k]["A"] == 0 then table.insert(UNANindex, k) end
+    end
+    table.sort(UNANindex, function(a, b) return iMessanger[a]["Chat"][#iMessanger[a]["Chat"]]["time"] < iMessanger[b]["Chat"][#iMessanger[b]["Chat"]]["time"] end)
+    UNANi = 1
+    UNANtext = ""
+    for k, v in pairs(UNANindex) do
+      for i = 1, sampGetMaxPlayerId() + 1 do
+        if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == v then
+          UNANsec = math.fmod(os.time() - iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["time"], 60)
+          if UNANsec < 10 then UNANsec = "0"..UNANsec end
+          UNANmin = math.floor((os.time() - iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["time"]) / 60)
+          UNANtext = UNANtext..string.format("{FFD700}%s {40E0D0}- {ADD8E6}[%s:%s] %s[%s]: {FF9D00}%s", UNANi, UNANmin, UNANsec, v, i, iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["text"]).."\n"
+          UNANi = UNANi + 1
           break
+        else
+          if i == sampGetMaxPlayerId() + 1 then
+            break
+          end
         end
       end
     end
-  end
-  if UNANtext == "" then
-    sampShowDialog(9899, "{D2D2D2}Вопросы без ответа", "Таких нет.", "Ясно.")
-  else
-    sampShowDialog(9899, "{D2D2D2}Вопросы без ответа (номер/номер ответ)", UNANtext, "Выбрать", "", 1)
-    while sampIsDialogActive() do wait(0) end
-    local result, button, list, input = sampHasDialogRespond(9899)
-    if button == 1 then
-      UNANanswer = sampGetCurrentDialogEditboxText(9899)
-      if string.find(UNANanswer, "(%d+) (.+)") then
-        UNID, UNANanswe = string.match(UNANanswer, "(%d+) (.+)")
-        UNANid = string.match(string.gsub(UNANtext, "{......}", ""), "%[(%d+)%]")
-        UNANid = string.match(UNANtext, UNID.." - .+%[(%d+)%].+\n")
-        if UNANid ~= nil and sampIsPlayerConnected(UNANid) then
-          sampSendChat("/pm "..tonumber(UNANid).." "..UNANanswe)
-        end
-      else
-        if tonumber(UNANanswer) ~= nil then
+    if UNANtext == "" then
+      sampShowDialog(9899, "{D2D2D2}Вопросы без ответа", "Таких нет.", "Ясно.")
+    else
+      sampShowDialog(9899, "{D2D2D2}Вопросы без ответа (номер/номер ответ)", UNANtext, "Выбрать", "", 1)
+      while sampIsDialogActive() do wait(0) end
+      local result, button, list, input = sampHasDialogRespond(9899)
+      if button == 1 then
+        UNANanswer = sampGetCurrentDialogEditboxText(9899)
+        if string.find(UNANanswer, "(%d+) (.+)") then
+          UNID, UNANanswe = string.match(UNANanswer, "(%d+) (.+)")
           UNANid = string.match(string.gsub(UNANtext, "{......}", ""), "%[(%d+)%]")
-          UNANid = string.match(UNANtext, tonumber(UNANanswer).." - .+%[(%d+)%].+\n")
-          if sampIsPlayerConnected(UNANid) then
-            sampSetChatInputEnabled(true)
-            sampSetChatInputText("/pm "..tonumber(UNANanswer).." ")
+          UNANid = string.match(UNANtext, UNID.." - .+%[(%d+)%].+\n")
+          if UNANid ~= nil and sampIsPlayerConnected(UNANid) then
+            sampSendChat("/pm "..tonumber(UNANid).." "..UNANanswe)
+          end
+        else
+          if tonumber(UNANanswer) ~= nil then
+            UNANid = string.match(string.gsub(UNANtext, "{......}", ""), "%[(%d+)%]")
+            UNANid = string.match(UNANtext, tonumber(UNANanswer).." - .+%[(%d+)%].+\n")
+            if sampIsPlayerConnected(UNANid) then
+              sampSetChatInputEnabled(true)
+              sampSetChatInputText("/pm "..tonumber(UNANanswer).." ")
+            end
           end
         end
       end
@@ -2409,9 +2427,9 @@ function imgui_settings_3_sup_funcs()
   if imgui.IsItemHovered() then
     imgui.SetTooltip(u8"По нажатию хоткея открывается чат с /pm id последнего вопроса.")
   end
-	if ifastrespondviachat.v then
-		imgui.Text(u8"Тут настройка хоткея, а пока: Alt+1")
-	end
+  if ifastrespondviachat.v then
+    imgui.Text(u8"Тут настройка хоткея, а пока: Alt+1")
+  end
 
 
   if imgui.Checkbox("##iunanswereddialog", iunanswereddialog) then
@@ -2420,7 +2438,7 @@ function imgui_settings_3_sup_funcs()
   end
   imgui.SameLine()
   if iunanswereddialog.v then
-    imgui.Text(u8("Список проигнорированных вопросов включен"))  else
+    imgui.Text(u8("Список проигнорированных вопросов включен")) else
     imgui.TextDisabled(u8"Включить список проигнорированных вопросов?")
   end
   imgui.SameLine()
@@ -2428,9 +2446,9 @@ function imgui_settings_3_sup_funcs()
   if imgui.IsItemHovered() then
     imgui.SetTooltip(u8"По нажатию хоткея открывается список с проигнорированными саппортами вопросами.\nВ поле можно ввести порядковый номер вопроса, либо порядковый номер, пробел, ответ.")
   end
-	if iunanswereddialog.v then
-		imgui.Text(u8"Тут настройка хоткея, а пока: F1")
-	end
+  if iunanswereddialog.v then
+    imgui.Text(u8"Тут настройка хоткея, а пока: F1")
+  end
 
   if imgui.Checkbox("##fastrespondviadialog", ifastrespondviadialog) then
     cfg.supfuncs.fastrespondviadialog = ifastrespondviadialog.v
