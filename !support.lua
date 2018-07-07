@@ -12,6 +12,7 @@ function var_require()
   RPC = require 'lib.samp.events'
   inspect = require 'inspect'
   key = require 'vkeys'
+  hk = require 'rkeys'
   encoding = require 'encoding'
   encoding.default = 'CP1251'
   u8 = encoding.UTF8
@@ -60,6 +61,13 @@ function var_cfg()
     stats = {
       active = true,
       height = 160,
+    },
+    hkUnAn = {
+      [1] = "VK_F1",
+    },
+    hkSupFRChat = {
+      [1] = "VK_MENU",
+      [2] = "VK_1",
     },
     colors =
     {
@@ -122,7 +130,7 @@ function var_cfg()
     {
       active = true,
       text = "Тут можно писать.\\nEnter - новая строка.\\nCtrl + Enter - сохранить текст.\\nESC - отменить изменения.\\nTAB - табуляция.",
-      fr = "1. Действие тарифа продлена до 03.07.\\\n2. Проявить себя с наилучшей стороны и оставить заявление в курилке сервера.\\n3. Команда саппортов не имеет данной информации.\\n4. Следите за гос. новостями.\\n5. Не консультируем по рыночным ценам.\\n6. /gps 0 - 22, напротив SF News.\\n7. /addtq - доб. клиента, /tupdate - нач. тюнинг, /endtune - оконч. тюнинг\\n8. /pagesize and /fontsize\\n9. /showcmd >> /mm >> [5] Организация\\n10. /changecar - игроку, /sellcar - в гос.\\n11. /changehouse - игроку, /sellhouse - в гос\\n12. 1-2 лвл 5к, 3-5 лвл 5к, 6-15 лвл 10 к, 16 лвл и выше - 30к\\n13. Следите за новостями на форуме - Samp-Rp.Su >> новости\\n14. Hell's Angels MC, Outlaws MC, Bandidos MC, Mongols MC.\\n15. Для восстановления доступа нажмите клавишу 'F6' и введите '/restoreAccess'.\\n16. Все команды на форуме: Samp-Rp.Su >> Помощь по гире >> FAQ >> Список команд.\\n17. /dir - Лидеры профсоюзероа. Обращайтесь к ним, по поводу принятия в профсоюз.\\n18. Samp-Rp.Su >> Игровые обсуждения >> Жалобы на администрацию.\\n19. Команда для переноса аккаунта - /transferaccount.\\n20. - Перенос аккаунтов только с 01, 03, 04, 09 на новый сервер проекта - Legacy.\\n21. Мы отвечаем на вопросы, касаемые проекта Samp-Rp, не оффтопьте, пожалуйста.\\n22. Samp-Rp.Ru >> Донат.\\n23. На данные вопросы отвечает администрация - /aquestion\\n24. /pageseize - кол-во строк чата, /fontsize - размер шрифта\\n25. Грибы можно продовать в закусочных, /sellgrib - 1 гриб = 5 вирт\\n26. Прокачивая ранг, вы повышаете лимит ЗП и скидки на аренду\\n27. 10 = 5.000 / 20 = 15.000 / 30 = 50.000 / 40 = 500.000 / 50 = 5.000.000",
+      fr = "1. Действие тарифа продлена до 03.07.\\n2. Проявить себя с наилучшей стороны и оставить заявление в курилке сервера.\\n3. Команда саппортов не имеет данной информации.\\n4. Следите за гос. новостями.\\n5. Не консультируем по рыночным ценам.\\n6. /gps 0 - 22, напротив SF News.\\n7. /addtq - доб. клиента, /tupdate - нач. тюнинг, /endtune - оконч. тюнинг\\n8. /pagesize and /fontsize\\n9. /showcmd >> /mm >> [5] Организация\\n10. /changecar - игроку, /sellcar - в гос.\\n11. /changehouse - игроку, /sellhouse - в гос\\n12. 1-2 лвл 5к, 3-5 лвл 5к, 6-15 лвл 10 к, 16 лвл и выше - 30к\\n13. Следите за новостями на форуме - Samp-Rp.Su >> новости\\n14. Hell's Angels MC, Outlaws MC, Bandidos MC, Mongols MC.\\n15. Для восстановления доступа нажмите клавишу 'F6' и введите '/restoreAccess'.\\n16. Все команды на форуме: Samp-Rp.Su >> Помощь по гире >> FAQ >> Список команд.\\n17. /dir - Лидеры профсоюзероа. Обращайтесь к ним, по поводу принятия в профсоюз.\\n18. Samp-Rp.Su >> Игровые обсуждения >> Жалобы на администрацию.\\n19. Команда для переноса аккаунта - /transferaccount.\\n20. - Перенос аккаунтов только с 01, 03, 04, 09 на новый сервер проекта - Legacy.\\n21. Мы отвечаем на вопросы, касаемые проекта Samp-Rp, не оффтопьте, пожалуйста.\\n22. Samp-Rp.Ru >> Донат.\\n23. На данные вопросы отвечает администрация - /aquestion\\n24. /pageseize - кол-во строк чата, /fontsize - размер шрифта\\n25. Грибы можно продовать в закусочных, /sellgrib - 1 гриб = 5 вирт\\n26. Прокачивая ранг, вы повышаете лимит ЗП и скидки на аренду\\n27. 10 = 5.000 / 20 = 15.000 / 30 = 50.000 / 40 = 500.000 / 50 = 5.000.000",
       lines = 10,
     }
   }, 'support')
@@ -243,6 +251,7 @@ function var_imgui_ImBuffer()
 end
 
 function var_main()
+  hotkeys = {}
   iMonths = {
     [1] = "Январь",
     [2] = "Февраль",
@@ -301,8 +310,10 @@ function main()
   main_init_sms()
   main_init_supfuncs()
   main_init_debug()
+  main_init_hotkeys()
   main_ImColorToHEX()
   main_copyright()
+  inicfg.save(cfg, "support")
   if DEBUG then First = true end
   while true do
     wait(0)
@@ -340,17 +351,39 @@ function main_init_supfuncs()
   sup_ParseVehicleTxt_hc()
   sup_ParseFastRespond_fr()
   if iLogBool.v then
-    local a = os.clock()
     sup_updateStats()
-    if iShowTimeToUpdateCSV.v then
-      printStringNow(os.clock() - a.." sec.", 2000)
-    end
   end
 end
 
 function main_init_debug()
   if DEBUG then First = true end
   sampRegisterChatCommand("supdebug", DEBUG_toggle)
+end
+
+function main_init_hotkeys()
+  hotkeys["hkUnAn"] = {}
+  for i = 1, #cfg.hkUnAn do
+    table.insert(hotkeys["hkUnAn"], key[cfg["hkUnAn"][i]])
+  end
+  hk.registerHotKey(hotkeys["hkUnAn"], true,
+    function()
+      if not sampIsChatInputActive() and not isSampfuncsConsoleActive() then
+        sup_UnAnswered_via_samp_dialog()
+      end
+    end
+  )
+
+  hotkeys["hkSupFRChat"] = {}
+  for i = 1, #cfg.hkSupFRChat do
+    table.insert(hotkeys["hkSupFRChat"], key[cfg["hkSupFRChat"][i]])
+  end
+  hk.registerHotKey(hotkeys["hkSupFRChat"], true,
+    function()
+      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+        sup_FastRespond_via_chat()
+      end
+    end
+  )
 end
 
 function main_ImColorToHEX()
@@ -420,7 +453,7 @@ function main_while_playsounds()
 end
 
 function main_while_hotkeys()
-  if wasKeyPressed(key.VK_Z) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() or First then
+  if wasKeyPressed(key.VK_Z) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() or First == true then
     if DEBUG then First = false end
     main_window_state.v = not main_window_state.v
   end
@@ -460,7 +493,7 @@ function DEBUG_toggle()
   else
     addOneOffSound(0.0, 0.0, 0.0, 1055)
   end
-  inicfg.save(cfg, "debug")
+  inicfg.save(cfg, "support")
 end
 
 function RPC.onPlaySound(sound)
@@ -648,9 +681,10 @@ end
 function sup_logger_HostAnswer(text)
   if iLogBool.v then
     id, text = string.match(text, "(%d+) (.+)")
+    sampAddChatMessage(id..text, color)
     if id ~= nil and tonumber(id) ~= nil and tonumber(id) <= sampGetMaxPlayerId() and sampIsPlayerConnected(id) and sampGetPlayerNickname(id) ~= nil then
-      string = string.format("%s,%s,%s,%s,%s,%s,%s", sup_logger_autoincrement(), sampGetPlayerNickname(id), sup_getLastQuestion(sampGetPlayerNickname(id)),
-      string.gsub(text, "[\"\', ]", ""), sup_getRespondTime(sampGetPlayerNickname(id), os.time()), os.date('%Y - %m - %d %X'), os.time())
+      string = string.format("%s,%s,%s,%s,%s,%s,%s", sup_logger_autoincrement(), sampGetPlayerNickname(id), string.gsub(sup_getLastQuestion(sampGetPlayerNickname(id)), "[\"\', ]", ""),
+      string.gsub(text, "[\"\',]", ""), sup_getRespondTime(sampGetPlayerNickname(id), os.time()), os.date('%Y - %m - %d %X'), os.time())
       sup_logger_writecsv(file, string)
     end
   end
@@ -829,6 +863,7 @@ end
 
 function sup_updateStats()
   if iLogBool.v then
+    local a = os.clock()
     if not doesFileExist(file) then
       f = io.open(file, "wb+")
       f:write("")
@@ -862,6 +897,9 @@ function sup_updateStats()
         end
       end
       table.sort(iYears, function(a, b) return a > b end)
+    end
+    if iShowTimeToUpdateCSV.v then
+      printStringNow(os.clock() - a.." sec.", 2000)
     end
   end
 end
@@ -2087,6 +2125,12 @@ function imgui_log()
       imgui.SliderInt(u8"Месяц##", iMonth, 1, 12)
       imgui.SameLine()
       imgui.SliderInt(u8"День", iDay, 1, 31)
+      imgui.SameLine()
+      imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.16, 0.29, 0.48, 0.54))
+      if imgui.Button(u8"Обновить") then
+        sup_updateStats()
+      end
+      imgui.PopStyleColor()
       imgui_log_getDayLogs(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4), iDay.v)
       imgui.Columns(6, "mycolumns")
       imgui.Separator()
@@ -2122,23 +2166,31 @@ function imgui_log()
           if _ > 0 then
             _ = csvall[date][_]
             CSV_id, CSV_nickname, CSV_vopros, CSV_otvet, CSV_respondtime, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+),(.+),(.+)")
-            imgui.Selectable(CSV_id)
+            imgui.Text(CSV_id)
             imgui.SetColumnWidth(-1, 50)
             imgui.NextColumn()
             imgui.SetColumnWidth(-1, 135)
-            imgui.Selectable(CSV_nickname)
+            imgui.Text(CSV_nickname)
             imgui.NextColumn()
             imgui.SetColumnWidth(-1, AQWidth)
             imgui.TextWrapped(u8:encode(CSV_vopros))
+            if imgui.IsItemHovered() and imgui.IsMouseClicked(1) then
+              setClipboardText(CSV_vopros)
+              printStringNow("Text copied", 1000)
+            end
             imgui.NextColumn()
             imgui.SetColumnWidth(-1, AQWidth)
             imgui.TextWrapped(u8:encode(CSV_otvet))
+            if imgui.IsItemHovered() and imgui.IsMouseClicked(1) then
+              setClipboardText(CSV_otvet)
+              printStringNow("Text copied", 1000)
+            end
             imgui.NextColumn()
             imgui.SetColumnWidth(-1, 40)
-            imgui.Selectable(CSV_respondtime)
+            imgui.Text(CSV_respondtime)
             imgui.NextColumn()
             imgui.SetColumnWidth(-1, 140)
-            imgui.Selectable(CSV_dateandtime)
+            imgui.Text(CSV_dateandtime)
             imgui.NextColumn()
             imgui.Separator()
           end
@@ -2168,6 +2220,12 @@ function imgui_histogram()
       imgui.PushItemWidth(200)
       imgui.SameLine()
       imgui.SliderInt(u8"Месяц", iMonth, 1, 12)
+      imgui.SameLine()
+      imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.16, 0.29, 0.48, 0.54))
+      if imgui.Button(u8"Обновить") then
+        sup_updateStats()
+      end
+      imgui.PopStyleColor()
       imgui_histogram_getMonthStats(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4))
       imgui.PlotHistogram("##Статистика", month_histogram, 0, u8:encode(iMonths[iMonth.v].." "..iYears[iYear.v + 1]), 0, math.max(unpack(month_histogram)) + math.max(unpack(month_histogram)) * 0.15, imgui.ImVec2(imgui.GetWindowContentRegionWidth(), cfg.stats.height))
     else
