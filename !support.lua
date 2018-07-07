@@ -1,5 +1,5 @@
 --meta
-script_name("support")
+script_name("supfuncs")
 script_author("rubbishman")
 script_version('0.01')
 script_dependencies('SAMPFUNCS', 'Dear imgui', 'SAMP.Lua')
@@ -9,7 +9,7 @@ function var_require()
   inicfg = require "inicfg"
   dlstatus = require('moonloader').download_status
   as_action = require('moonloader').audiostream_state
-  sampev = require 'lib.samp.events'
+  RPC = require 'lib.samp.events'
   inspect = require 'inspect'
   key = require 'vkeys'
   encoding = require 'encoding'
@@ -46,6 +46,11 @@ function var_cfg()
       SoundSmsOutNumber = 15,
       settingstab = 1,
     },
+    supfuncs = {
+      fastrespondviachat = true,
+      fastrespondviadialog = true,
+      unanswereddialog = true,
+    },
     log = {
       active = true,
       logger = true,
@@ -80,6 +85,7 @@ function var_cfg()
       mode = 1,
       suphh = true,
       suphc = true,
+      supfr = true,
       HideOthersAnswers = false,
       Height = 300,
       SmsInColor = imgui.ImColor(66.3, 150.45, 249.9, 102):GetU32(),
@@ -115,6 +121,7 @@ function var_cfg()
     {
       active = true,
       text = "Тут можно писать.\\nEnter - новая строка.\\nCtrl + Enter - сохранить текст.\\nESC - отменить изменения.\\nTAB - табуляция.",
+      fr = "1. Действие тарифа продлена до 03.07.\\\n2. Проявить себя с наилучшей стороны и оставить заявление в курилке сервера.\\n3. Команда саппортов не имеет данной информации.\\n4. Следите за гос. новостями.\\n5. Не консультируем по рыночным ценам.\\n6. /gps 0 - 22, напротив SF News.\\n7. /addtq - доб. клиента, /tupdate - нач. тюнинг, /endtune - оконч. тюнинг\\n8. /pagesize and /fontsize\\n9. /showcmd >> /mm >> [5] Организация\\n10. /changecar - игроку, /sellcar - в гос.\\n11. /changehouse - игроку, /sellhouse - в гос\\n12. 1-2 лвл 5к, 3-5 лвл 5к, 6-15 лвл 10 к, 16 лвл и выше - 30к\\n13. Следите за новостями на форуме - Samp-Rp.Su >> новости\\n14. Hell's Angels MC, Outlaws MC, Bandidos MC, Mongols MC.\\n15. Для восстановления доступа нажмите клавишу 'F6' и введите '/restoreAccess'.\\n16. Все команды на форуме: Samp-Rp.Su >> Помощь по гире >> FAQ >> Список команд.\\n17. /dir - Лидеры профсоюзероа. Обращайтесь к ним, по поводу принятия в профсоюз.\\n18. Samp-Rp.Su >> Игровые обсуждения >> Жалобы на администрацию.\\n19. Команда для переноса аккаунта - /transferaccount.\\n20. - Перенос аккаунтов только с 01, 03, 04, 09 на новый сервер проекта - Legacy.\\n21. Мы отвечаем на вопросы, касаемые проекта Samp-Rp, не оффтопьте, пожалуйста.\\n22. Samp-Rp.Ru >> Донат.\\n23. На данные вопросы отвечает администрация - /aquestion\\n24. /pageseize - кол-во строк чата, /fontsize - размер шрифта\\n25. Грибы можно продовать в закусочных, /sellgrib - 1 гриб = 5 вирт\\n26. Прокачивая ранг, вы повышаете лимит ЗП и скидки на аренду\\n27. 10 = 5.000 / 20 = 15.000 / 30 = 50.000 / 40 = 500.000 / 50 = 5.000.000",
       lines = 10,
     }
   }, 'support')
@@ -140,6 +147,10 @@ function var_imgui_ImBool()
   iShowA2 = imgui.ImBool(cfg.messanger.iShowA2)
   isuphh = imgui.ImBool(cfg.messanger.suphh)
   isuphc = imgui.ImBool(cfg.messanger.suphc)
+  isupfr = imgui.ImBool(cfg.messanger.supfr)
+  ifastrespondviachat = imgui.ImBool(cfg.supfuncs.fastrespondviachat)
+  ifastrespondviadialog = imgui.ImBool(cfg.supfuncs.fastrespondviadialog)
+  iunanswereddialog = imgui.ImBool(cfg.supfuncs.unanswereddialog)
   iChangeScroll = imgui.ImBool(cfg.messanger.iChangeScroll)
   iSetKeyboard = imgui.ImBool(cfg.messanger.iSetKeyboard)
   iNotepadActive = imgui.ImBool(cfg.notepad.active)
@@ -226,6 +237,8 @@ function var_imgui_ImBuffer()
   iSMSAddDialog = imgui.ImBuffer(64)
   textNotepad = imgui.ImBuffer(65536)
   textNotepad.v = string.gsub(string.gsub(u8:encode(cfg.notepad.text), "\\n", "\n"), "\\t", "\t")
+  fr = imgui.ImBuffer(65536)
+  fr.v = string.gsub(string.gsub(u8:encode(cfg.notepad.fr), "\\n", "\n"), "\\t", "\t")
 end
 
 function var_main()
@@ -243,11 +256,15 @@ function var_main()
     [11] = "Ноябрь",
     [12] = "Декабрь"
   }
+  russian_characters = {
+    [168] = 'Ё', [184] = 'ё', [192] = 'А', [193] = 'Б', [194] = 'В', [195] = 'Г', [196] = 'Д', [197] = 'Е', [198] = 'Ж', [199] = 'З', [200] = 'И', [201] = 'Й', [202] = 'К', [203] = 'Л', [204] = 'М', [205] = 'Н', [206] = 'О', [207] = 'П', [208] = 'Р', [209] = 'С', [210] = 'Т', [211] = 'У', [212] = 'Ф', [213] = 'Х', [214] = 'Ц', [215] = 'Ч', [216] = 'Ш', [217] = 'Щ', [218] = 'Ъ', [219] = 'Ы', [220] = 'Ь', [221] = 'Э', [222] = 'Ю', [223] = 'Я', [224] = 'а', [225] = 'б', [226] = 'в', [227] = 'г', [228] = 'д', [229] = 'е', [230] = 'ж', [231] = 'з', [232] = 'и', [233] = 'й', [234] = 'к', [235] = 'л', [236] = 'м', [237] = 'н', [238] = 'о', [239] = 'п', [240] = 'р', [241] = 'с', [242] = 'т', [243] = 'у', [244] = 'ф', [245] = 'х', [246] = 'ц', [247] = 'ч', [248] = 'ш', [249] = 'щ', [250] = 'ъ', [251] = 'ы', [252] = 'ь', [253] = 'э', [254] = 'ю', [255] = 'я',
+  }
   file = getGameDirectory()..'\\moonloader\\support.csv'
   color = 0xffa500
   selected = 1
   selecteddialogSDUTY = ""
   month_histogram = {}
+  getfr = {}
   players = {}
   iYears = {}
   iMessanger = {}
@@ -279,6 +296,23 @@ var_main()
 function main()
   if not isSampfuncsLoaded() or not isSampLoaded() then return end
   while not isSampAvailable() do wait(100) end
+  main_checksounds()
+  main_init_sms()
+  main_init_supfuncs()
+  main_init_debug()
+  main_ImColorToHEX()
+  main_copyright()
+  if DEV then First = true end
+  while true do
+    wait(0)
+    main_while_debug()
+    main_while_hotkeys()
+    main_while_playsounds()
+    imgui.Process = main_window_state.v
+  end
+end
+
+function main_checksounds()
   if not doesDirectoryExist(getGameDirectory().."\\moonloader\\resource\\sup") then
     createDirectory(getGameDirectory().."\\moonloader\\resource\\sup")
   end
@@ -288,14 +322,36 @@ function main()
       downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support's%20heaven/resource/sup/"..i..".mp3", file)
     end
   end
+end
+
+function main_init_sms()
   if not doesDirectoryExist(getGameDirectory().."\\moonloader\\config\\smsmessanger\\") then
     createDirectory(getGameDirectory().."\\moonloader\\config\\smsmessanger\\")
   end
-
   _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
   smsfile = getGameDirectory()..'\\moonloader\\config\\smsmessanger\\'..sampGetCurrentServerAddress().."-"..sampGetPlayerNickname(myid)..'.sms'
   imgui_messanger_sms_loadDB()
-  inicfg.save(cfg, "support")
+  lua_thread.create(imgui_messanger_sms_kostilsaveDB)
+end
+
+function main_init_supfuncs()
+  sup_ParseHouseTxt_hh()
+  sup_ParseVehicleTxt_hc()
+  sup_ParseFastRespond_fr()
+  if iLogBool.v then
+    local a = os.clock()
+    sup_updateStats()
+    if iShowTimeToUpdateCSV.v then
+      printStringNow(os.clock() - a.." sec.", 2000)
+    end
+  end
+end
+
+function main_init_debug()
+  if DEV then First = true end
+end
+
+function main_ImColorToHEX()
   local r, g, b, a = imgui.ImColor.FromFloat4(Qcolor.v[1], Qcolor.v[2], Qcolor.v[3], Qcolor.v[4]):GetRGBA()
   Qcolor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
 
@@ -313,78 +369,63 @@ function main()
 
   local r, g, b, a = imgui.ImColor.FromFloat4(SmsReceivedColor.v[1], SmsReceivedColor.v[2], SmsReceivedColor.v[3], SmsReceivedColor.v[4]):GetRGBA()
   SmsReceivedColor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
+end
 
-  -- вырезать тут, если хочешь отключить сообщение при входе в игру
+function main_copyright()
   sampAddChatMessage(("SUPPORT v"..thisScript().version.." successfully loaded! Команды: /supstats и /supcolor! Author: rubbishman.ru"), color)
-  -- вырезать тут, если хочешь отключить сообщение при входе в игру
+end
 
-  First = true
-  sup_ParseHouseTxt_hh()
-  sup_ParseVehicleTxt_hc()
-  sampRegisterChatCommand("test", function() lua_thread.create(test) end)
-  lua_thread.create(imgui_messanger_sms_kostilsaveDB) -- костыль для сохранения времени проверки смс переписок по нажатию кнопки в gui
-  while true do
-    wait(0)
-    if SSDB_trigger == true then if DEV then sampAddChatMessage("сохраняем", color) end imgui_messanger_sms_saveDB() SSDB_trigger = false end
-    if wasKeyPressed(key.VK_B) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
-      FastChatRespond()
+function main_while_debug()
+  if SSDB_trigger == true then if DEV then sampAddChatMessage("сохраняем", color) end imgui_messanger_sms_saveDB() SSDB_trigger = false end
+end
+
+function main_while_playsounds()
+  if PLAYQ then
+    PLAYQ = false
+    a1 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundQuestionNumber.v..[[.mp3]])
+    if getAudioStreamState(a1) ~= as_action.PLAY then
+      setAudioStreamState(a1, as_action.PLAY)
     end
-    if wasKeyPressed(key.VK_C) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
-      print(inspect(sms))
-      table.save(sms, getGameDirectory()..'\\moonloader\\config\\smsmessanger\\'..sampGetCurrentServerAddress().."-"..sampGetPlayerNickname(myid)..'.sms')
+  end
+  if PLAYA1 then
+    PLAYA1 = false
+    a2 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerOthersNumber.v..[[.mp3]])
+    if getAudioStreamState(a2) ~= as_action.PLAY then
+      setAudioStreamState(a2, as_action.PLAY)
     end
-    if wasKeyPressed(key.VK_Z) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() or First then
-      First = false
-      if not main_window_state.v and cfg.log.logger then
-        local a = os.clock()
-        updateStats()
-        if iShowTimeToUpdateCSV.v then
-          printStringNow(os.clock() - a.." sec.", 2000)
-        end
-      end
-      main_window_state.v = not main_window_state.v
+  end
+  if PLAYA then
+    PLAYA = false
+    a3 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerNumber.v..[[.mp3]])
+    if getAudioStreamState(a3) ~= as_action.PLAY then
+      setAudioStreamState(a3, as_action.PLAY)
     end
-    if PLAYQ then
-      PLAYQ = false
-      a1 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundQuestionNumber.v..[[.mp3]])
-      if getAudioStreamState(a1) ~= as_action.PLAY then
-        setAudioStreamState(a1, as_action.PLAY)
-      end
+  end
+  if PLAYSMSIN then
+    PLAYSMSIN = false
+    a4 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundSmsInNumber.v..[[.mp3]])
+    if getAudioStreamState(a4) ~= as_action.PLAY then
+      setAudioStreamState(a4, as_action.PLAY)
     end
-    if PLAYA1 then
-      PLAYA1 = false
-      a2 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerOthersNumber.v..[[.mp3]])
-      if getAudioStreamState(a2) ~= as_action.PLAY then
-        setAudioStreamState(a2, as_action.PLAY)
-      end
+  end
+  if PLAYSMSOUT then
+    PLAYSMSOUT = false
+    a5 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundSmsOutNumber.v..[[.mp3]])
+    if getAudioStreamState(a5) ~= as_action.PLAY then
+      setAudioStreamState(a5, as_action.PLAY)
     end
-    if PLAYA then
-      PLAYA = false
-      a3 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerNumber.v..[[.mp3]])
-      if getAudioStreamState(a3) ~= as_action.PLAY then
-        setAudioStreamState(a3, as_action.PLAY)
-      end
-    end
-    if PLAYSMSIN then
-      PLAYSMSIN = false
-      a4 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundSmsInNumber.v..[[.mp3]])
-      if getAudioStreamState(a4) ~= as_action.PLAY then
-        setAudioStreamState(a4, as_action.PLAY)
-      end
-    end
-    if PLAYSMSOUT then
-      PLAYSMSOUT = false
-      a5 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundSmsOutNumber.v..[[.mp3]])
-      if getAudioStreamState(a5) ~= as_action.PLAY then
-        setAudioStreamState(a5, as_action.PLAY)
-      end
-    end
-    imgui.Process = main_window_state.v
   end
 end
--------------------------------------SUBJ---------------------------------------
+
+function main_while_hotkeys()
+  if wasKeyPressed(key.VK_Z) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() or First then
+    if DEV then First = false end
+    main_window_state.v = not main_window_state.v
+  end
+end
+
 --симулируем саппорта
-function simulateSupport(text)
+function DEBUG_simulateSupport(text)
   if not string.find(text, "недос") then
     tempid = math.random(1, 10)
     if sampIsPlayerConnected(tempid) then
@@ -392,32 +433,31 @@ function simulateSupport(text)
         if iSoundQuestion.v then PLAYQ = true end
         text = "->Вопрос "..sampGetPlayerNickname(tempid).."["..tempid.."]: "..text
         sampAddChatMessage(text, Qcolor_HEX)
-        AddQ(text)
+        sup_AddQ(text)
       else
         if iSoundAnswerOthers.v then PLAYA1 = true end
         text = "<-FutureAdmin[228] to "..LASTNICK.."["..LASTID.."]: "..text
         sampAddChatMessage(text, Acolor1_HEX)
-        AddA(text)
+        sup_AddA(text)
       end
       if selecteddialogSDUTY == LASTNICK or selecteddialogSDUTY == sampGetPlayerNickname(tempid) then ScrollToDialogSDUTY = true end
     end
   end
 end
 
-function simulateSupportAnswer(text)
+function DEBUG_simulateSupportAnswer(text)
   sampAddChatMessage(text, Acolor_HEX)
-  AddA(text)
+  sup_AddA(text)
 end
 
-function sampev.onPlaySound(sound)
+function RPC.onPlaySound(sound)
   if sound == 1052 and iSoundSmsOut.v then
     return false
   end
 end
 --говно
-function sampev.onServerMessage(color, text)
-  if DEV then simulateSupport(text) end
-
+function RPC.onServerMessage(color, text)
+  if DEV then DEBUG_simulateSupport(text) end
   if text:find("SMS") then
     text = string.gsub(text, "{FFFF00}", "")
     text = string.gsub(text, "{FF8000}", "")
@@ -488,7 +528,7 @@ function sampev.onServerMessage(color, text)
   end
   if color == -5963521 then
     if text:find("->Вопрос", true) then
-      AddQ(text)
+      sup_AddQ(text)
       if iSoundQuestion.v then PLAYQ = true end
       if not iHideSmsReceived.v then
         if iReplaceSmsReceivedColor.v then
@@ -502,7 +542,7 @@ function sampev.onServerMessage(color, text)
       end
     end
     if text:find("<-", true) and text:find("to", true) then
-      AddA(text)
+      sup_AddA(text)
       SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<%-(%a.+)%[(%d+)%] to ([%a_]+)%[(%d+)%]: (.+)")
       asdsadasads, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
       if SupportNick == sampGetPlayerNickname(myid) then
@@ -535,34 +575,31 @@ function sampev.onServerMessage(color, text)
   if DEV then return false end -- исправить
 end
 --считаем активность саппорта
-function sampev.onSendCommand(text)
+function RPC.onSendCommand(text)
   if string.find(text, '/pm') then
-    parseHostAnswer(text)
-    if iSoundAnswer.v then PLAYA = true end
-    id, text = string.match(text, "(%d+) (.+)")
-    if sampIsPlayerConnected(id) then
-      if selecteddialogSDUTY == sampGetPlayerNickname(id) then ScrollToDialogSDUTY = true end
-      if DEV then
-        local _asdasd, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
-        simulateSupportAnswer("<-"..sampGetPlayerNickname(myid).."["..myid.."]".." to "..sampGetPlayerNickname(id).."["..id.."]: "..text)
-      end
-      AddA(text)
-    end
-  end
-end
-
-function FastChatRespond()
-  if LASTID ~= -1 then
-    if sampIsPlayerConnected(LASTID) and sampGetPlayerNickname(LASTID) == LASTNICK then
-      sampSetChatInputEnabled(true)
-      sampSetChatInputText("/pm "..LASTID.." ")
+    if text:match('/pm (%d+) $') then
+      sampAddChatMessage("text", color)
+      lua_thread.create(sup_FastRespond_via_dialog, text:match('/pm (%d+) $'))
+      return false
     else
-      sampAddChatMessage("Ошибка: игрок, задавший вопрос, отключился.", color)
+      if string.match(text, "(%d+) (.+)") then
+        sup_logger_HostAnswer(text)
+        if iSoundAnswer.v then PLAYA = true end
+        id, text = string.match(text, "(%d+) (.+)")
+        if sampIsPlayerConnected(id) then
+          if selecteddialogSDUTY == sampGetPlayerNickname(id) then ScrollToDialogSDUTY = true end
+          if DEV then
+            local _asdasd, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+            DEBUG_simulateSupportAnswer("<-"..sampGetPlayerNickname(myid).."["..myid.."]".." to "..sampGetPlayerNickname(id).."["..id.."]: "..text)
+          end
+          sup_AddA(text)
+        end
+      end
     end
   end
 end
 
-function AddQ(text)
+function sup_AddQ(text)
   ClientNick, ClientID, Question = string.match(text, "->Вопрос ([%a_]+)%[(%d+)%]: (.+)")
   if ClientNick ~= nil and ClientID ~= nil and Question ~= nil then
     LASTID = ClientID
@@ -580,7 +617,7 @@ function AddQ(text)
   end
 end
 
-function AddA(text)
+function sup_AddA(text)
   SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<%-(%a.+)%[(%d+)%] to ([%a_]+)%[(%d+)%]: (.+)")
   if SupportNick ~= nil and SupportID ~= nil and ClientNick ~= nil and Answer ~= nil then
     if iMessanger[ClientNick] == nil then
@@ -596,14 +633,40 @@ function AddA(text)
   end
 end
 
-function parseHostAnswer(text)
+function sup_logger_HostAnswer(text)
   if iLogBool.v then
     id, text = string.match(text, "(%d+) (.+)")
     if id ~= nil and tonumber(id) ~= nil and tonumber(id) <= sampGetMaxPlayerId() and sampIsPlayerConnected(id) and sampGetPlayerNickname(id) ~= nil then
-      string = string.format("%s,%s,%s,%s,%s,%s,%s", getid(), sampGetPlayerNickname(id), getLastQuestion(sampGetPlayerNickname(id)),
-      string.gsub(text, "[\"\', ]", ""), getRespondTime(sampGetPlayerNickname(id), os.time()), os.date('%Y - %m - %d %X'), os.time())
-      file_write(file, string)
+      string = string.format("%s,%s,%s,%s,%s,%s,%s", sup_logger_autoincrement(), sampGetPlayerNickname(id), sup_getLastQuestion(sampGetPlayerNickname(id)),
+      string.gsub(text, "[\"\', ]", ""), sup_getRespondTime(sampGetPlayerNickname(id), os.time()), os.date('%Y - %m - %d %X'), os.time())
+      sup_logger_writecsv(file, string)
     end
+  end
+end
+--возвращает автоинкремент id'a в csv
+function sup_logger_autoincrement()
+  if doesFileExist(file) then
+    ctr = 0
+    for _ in io.lines(file) do
+      ctr = ctr + 1
+    end
+    return ctr
+  else
+    return 1
+  end
+end
+--отвечает за csv
+function sup_logger_writecsv(file, string)
+  if not doesFileExist(file) then
+    f = io.open(file, "wb+")
+    f:write("")
+    f:close()
+    sup_logger_writecsv(file, string)
+  else
+    f = io.open(file, "a")
+    io.output(f)
+    io.write(string.."\n")
+    io.close(f)
   end
 end
 
@@ -627,7 +690,57 @@ function sup_ParseVehicleTxt_hc()
   end
 end
 
-function test()
+function sup_ParseFastRespond_fr()
+  getfr = {}
+  ftbasetext = string.gsub(cfg.notepad.fr, "\\n", "\n")
+  for s in ftbasetext:gmatch("[^\n]+") do
+    s = s:gsub("\\", "")
+    number, text = string.match(s, "(%d+%.) (.+)")
+    if number ~= 0 and text ~= 0 then
+      table.insert(getfr, text)
+    end
+  end
+end
+
+function sup_FastRespond_via_chat()
+  if LASTID ~= -1 then
+    if sampIsPlayerConnected(LASTID) and sampGetPlayerNickname(LASTID) == LASTNICK then
+      sampSetChatInputEnabled(true)
+      sampSetChatInputText("/pm "..LASTID.." ")
+    else
+      sampAddChatMessage("Ошибка: игрок, задавший вопрос, отключился.", color)
+    end
+  end
+end
+
+function sup_FastRespond_via_dialog(param)
+  if tonumber(param) ~= nil then
+    id = tonumber(param)
+    if sampIsPlayerConnected(id) then
+      if getfr == {} then
+        sampShowDialog(8320, "{D2D2D2}Ответ для "..sampGetPlayerNickname(id).."["..id.."]", "База быстрых ответов пуста.\nПополнить базу можно в настройках.", "Ясно.")
+      else
+        FRtext_D = "{FFD700}Вопрос{40E0D0}:{FF9D00} "..sup_getLastQuestion(sampGetPlayerNickname(id)).."\n\n"
+        for k, v in pairs(getfr) do
+          FRtext_D = FRtext_D..string.format("{FFD700}%s {40E0D0}- {FF9D00}%s", k, v).."\n"
+        end
+        sampShowDialog(8320, "{D2D2D2}Ответ для "..sampGetPlayerNickname(id).."["..id.."]", FRtext_D, "Выбрать", "", 1)
+        while sampIsDialogActive() do wait(0) end
+        local result, button, list, input = sampHasDialogRespond(8320)
+        if button == 1 then
+          FRnumber_D = sampGetCurrentDialogEditboxText(8320)
+          if tonumber(FRnumber_D) ~= nil and getfr[tonumber(FRnumber_D)] ~= nil then
+            sampSendChat("/pm "..id.." "..getfr[tonumber(FRnumber_D)])
+          end
+        end
+      end
+    else
+      sampAddChatMessage("Ошибка: игрок с заданным id оффлайн.", color)
+    end
+  end
+end
+
+function sup_UnAnswered_via_samp_dialog()
   local UNANindex = {}
   for k in pairs(iMessanger) do
     if #iMessanger[k]["A"] == 0 then table.insert(UNANindex, k) end
@@ -661,26 +774,26 @@ function test()
       UNANanswer = sampGetCurrentDialogEditboxText(9899)
       if string.find(UNANanswer, "(%d+) (.+)") then
         UNID, UNANanswe = string.match(UNANanswer, "(%d+) (.+)")
-				UNANid = string.match(string.gsub(UNANtext, "{......}",""), "%[(%d+)%]")
-				UNANid = string.match(UNANtext, UNID.." - .+%[(%d+)%].+\n")
+        UNANid = string.match(string.gsub(UNANtext, "{......}", ""), "%[(%d+)%]")
+        UNANid = string.match(UNANtext, UNID.." - .+%[(%d+)%].+\n")
         if UNANid ~= nil and sampIsPlayerConnected(UNANid) then
-					sampSendChat("/pm "..tonumber(UNANid).." "..UNANanswe)
+          sampSendChat("/pm "..tonumber(UNANid).." "..UNANanswe)
         end
       else
-				if tonumber(UNANanswer) ~= nil then
-					UNANid = string.match(string.gsub(UNANtext, "{......}",""), "%[(%d+)%]")
-					UNANid = string.match(UNANtext, tonumber(UNANanswer).." - .+%[(%d+)%].+\n")
-	        if sampIsPlayerConnected(UNANid) then
-						sampSetChatInputEnabled(true)
-						sampSetChatInputText("/pm "..tonumber(UNANanswer).." ")
-	        end
-				 end
+        if tonumber(UNANanswer) ~= nil then
+          UNANid = string.match(string.gsub(UNANtext, "{......}", ""), "%[(%d+)%]")
+          UNANid = string.match(UNANtext, tonumber(UNANanswer).." - .+%[(%d+)%].+\n")
+          if sampIsPlayerConnected(UNANid) then
+            sampSetChatInputEnabled(true)
+            sampSetChatInputText("/pm "..tonumber(UNANanswer).." ")
+          end
+        end
       end
     end
   end
 end
 
-function getLastQuestion(nick)
+function sup_getLastQuestion(nick)
   if iMessanger[nick] ~= nil and iMessanger[nick]["Q"] ~= nil and iMessanger[nick]["Q"][#iMessanger[nick]["Q"]] ~= nil and iMessanger[nick]["Q"][#iMessanger[nick]["Q"]]["Question"] ~= nil then
     return iMessanger[nick]["Q"][#iMessanger[nick]["Q"]]["Question"]
   else
@@ -688,107 +801,53 @@ function getLastQuestion(nick)
   end
 end
 
-function getRespondTime(nick, timestamp)
+function sup_getRespondTime(nick, timestamp)
   if iMessanger[nick] ~= nil and iMessanger[nick]["Q"] ~= nil and iMessanger[nick]["Q"][#iMessanger[nick]["Q"]] ~= nil and iMessanger[nick]["Q"][#iMessanger[nick]["Q"]]["time"] ~= nil then
     return tostring(timestamp - tonumber(iMessanger[nick]["Q"][#iMessanger[nick]["Q"]]["time"]))
   else
     return "-"
   end
 end
--------------------------------------HELP---------------------------------------
-function join_argb(a, r, g, b)
-  local argb = b -- b
-  argb = bit.bor(argb, bit.lshift(g, 8)) -- g
-  argb = bit.bor(argb, bit.lshift(r, 16)) -- r
-  argb = bit.bor(argb, bit.lshift(a, 24)) -- a
-  return argb
-end
-------------------------------------STATS---------------------------------------
-function updateStats()
-  if not doesFileExist(file) then
-    f = io.open(file, "wb+")
-    f:write("")
-    f:close()
-  else
-    csv = {}
-    csvall = {}
-    countall = 0
-    for _ in io.lines(file) do
-      CSV_id, CSV_nickname, CSV_vopros, CSV_otvet, CSV_respondtime, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+),(.+),(.+)")
-      if tonumber(CSV_unix) ~= nil then
-        countall = countall + 1
-        CSV_unix = tonumber(CSV_unix)
-        CSV_year = os.date("%Y", CSV_unix)
-        if os.date('%H', CSV_unix) == "00" or os.date('%H', CSV_unix) == "01" or os.date('%H', CSV_unix) == '02' or os.date('%H', CSV_unix) == "03" or os.date('%H', CSV_unix) == "04" then
-          date = os.date("%x", CSV_unix - (tonumber(os.date("%H", CSV_unix) + 1) * 3600))
-        else
-          date = os.date("%x", CSV_unix)
-        end
-        if csv[date] == nil then csv[date] = 0 end
-        csv[date] = csv[date] + 1
-        if csvall[date] == nil then csvall[date] = {} end
-        table.insert(csvall[date], _)
-        checkyear = false
-        for i = 0, #iYears do
-          if CSV_year == iYears[i] then checkyear = true end
-        end
-        if checkyear == false then
-          table.insert(iYears, CSV_year)
+
+function sup_updateStats()
+  if iLogBool.v then
+    if not doesFileExist(file) then
+      f = io.open(file, "wb+")
+      f:write("")
+      f:close()
+    else
+      csv = {}
+      csvall = {}
+      countall = 0
+      for _ in io.lines(file) do
+        CSV_id, CSV_nickname, CSV_vopros, CSV_otvet, CSV_respondtime, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+),(.+),(.+)")
+        if tonumber(CSV_unix) ~= nil then
+          countall = countall + 1
+          CSV_unix = tonumber(CSV_unix)
+          CSV_year = os.date("%Y", CSV_unix)
+          if os.date('%H', CSV_unix) == "00" or os.date('%H', CSV_unix) == "01" or os.date('%H', CSV_unix) == '02' or os.date('%H', CSV_unix) == "03" or os.date('%H', CSV_unix) == "04" then
+            date = os.date("%x", CSV_unix - (tonumber(os.date("%H", CSV_unix) + 1) * 3600))
+          else
+            date = os.date("%x", CSV_unix)
+          end
+          if csv[date] == nil then csv[date] = 0 end
+          csv[date] = csv[date] + 1
+          if csvall[date] == nil then csvall[date] = {} end
+          table.insert(csvall[date], _)
+          checkyear = false
+          for i = 0, #iYears do
+            if CSV_year == iYears[i] then checkyear = true end
+          end
+          if checkyear == false then
+            table.insert(iYears, CSV_year)
+          end
         end
       end
+      table.sort(iYears, function(a, b) return a > b end)
     end
-    table.sort(iYears, function(a, b) return a > b end)
   end
 end
 
-function getMonthStats(month, year)
-  if tonumber(month) < 10 then month = "0"..month end
-  if tonumber(year) < 10 then year = "0"..year end
-  local sum = 0
-  for day = 1, 31 do
-    if tonumber(day) < 10 then day = "0"..day end
-    date = tostring(month.."/"..day.."/"..year)
-    if csv[date] == nil then csv[date] = 0 end
-    month_histogram[tonumber(day)] = csv[date]
-    sum = sum + csv[date]
-  end
-  month_histogram[0] = sum
-end
-
-function getDayLogs(month, year, day)
-  if tonumber(month) < 10 then month = "0"..month end
-  if tonumber(year) < 10 then year = "0"..year end
-  if tonumber(day) < 10 then day = "0"..day end
-  date = tostring(month.."/"..day.."/"..year)
-end
---возвращает автоинкремент id'a в csv
-function getid()
-  if doesFileExist(file) then
-    ctr = 0
-    for _ in io.lines(file) do
-      ctr = ctr + 1
-    end
-    return ctr
-  else
-    return 1
-  end
-end
---отвечает за csv
-function file_write(file, string)
-  if not doesFileExist(file) then
-    f = io.open(file, "wb+")
-    f:write("")
-    f:close()
-    file_write(file, string)
-  else
-    f = io.open(file, "a")
-    io.output(f)
-    io.write(string.."\n")
-    io.close(f)
-  end
-end
--------------------------------------imgui--------------------------------------
---main_window
 function imgui.OnDrawFrame()
   if main_window_state.v then
     imgui.SetNextWindowPos(imgui.ImVec2(cfg.menuwindow.PosX, cfg.menuwindow.PosY), imgui.Cond.FirstUseEver)
@@ -798,7 +857,7 @@ function imgui.OnDrawFrame()
     if cfg.messanger.activesduty or cfg.messanger.activesms then imgui_messanger() end
     if cfg.notepad.active then imgui_notepad() end
     if cfg.log.active then imgui_log() end
-    if cfg.stats.active then imgui_stats() end
+    if cfg.stats.active then imgui_histogram() end
     imgui_settings()
     imgui.End()
   end
@@ -944,7 +1003,7 @@ function imgui_messanger_sms_settings()
       else
         iSMSAddDialog.v = ""
         for i = 0, sampGetMaxPlayerId() + 1 do
-          if sampIsPlayerConnected(i) and i == tonumber(createnewdialognick) or sampIsPlayerConnected(i) and string.find(string.lower(sampGetPlayerNickname(i)), string.lower(createnewdialognick)) then
+          if sampIsPlayerConnected(i) and i == tonumber(createnewdialognick) or sampIsPlayerConnected(i) and string.find(string.rlower(sampGetPlayerNickname(i)), string.rlower(createnewdialognick)) then
             if sms[sampGetPlayerNickname(i)] == nil then
               sms[sampGetPlayerNickname(i)] = {}
               sms[sampGetPlayerNickname(i)]["Chat"] = {}
@@ -969,7 +1028,7 @@ function imgui_messanger_sms_settings()
     if KeyboardFocusResetForNewDialog then imgui.SetKeyboardFocusHere() KeyboardFocusResetForNewDialog = false end
     if iSMSAddDialog.v ~= "" then
       for i = 0, sampGetMaxPlayerId() do
-        if sampIsPlayerConnected(i) and i == tonumber(iSMSAddDialog.v) or sampIsPlayerConnected(i) and string.find(string.lower(sampGetPlayerNickname(i)), string.lower(iSMSAddDialog.v)) then
+        if sampIsPlayerConnected(i) and i == tonumber(iSMSAddDialog.v) or sampIsPlayerConnected(i) and string.find(string.rlower(sampGetPlayerNickname(i)), string.rlower(iSMSAddDialog.v)) then
           imgui.SetTooltip(u8:encode(sampGetPlayerNickname(i).."["..i.."]"))
           break
         end
@@ -1000,7 +1059,7 @@ function imgui_messanger_sms_player_list()
   for k in pairs(sms) do
     if cfg.messanger.iSMSfilterBool and cfg.messanger.smsfiltertext ~= nil then
       if cfg.messanger.smsfiltertext ~= "" then
-        if string.find(string.lower(k), string.lower(cfg.messanger.smsfiltertext)) ~= nil then
+        if string.find(string.rlower(k), string.rlower(cfg.messanger.smsfiltertext)) ~= nil then
           imgui_messanger_sms_player_list_filter(k)
         end
       else
@@ -1704,6 +1763,10 @@ function imgui_messanger_sup_keyboard()
         imgui_messanger_sup_keyboard_gethc(1)
       elseif gethc ~= nil and toAnswerSDUTY.v:find("/hc (%S+)") then
         imgui_messanger_sup_keyboard_gethc(1)
+      elseif getfr ~= nil and toAnswerSDUTY.v:find("/fr (%d+)") then
+        imgui_messanger_sup_keyboard_getfr(1)
+      elseif getfr ~= nil and toAnswerSDUTY.v:find("/fr (%S+)") then
+        imgui_messanger_sup_keyboard_getfr(1)
       else
         for i = 1, sampGetMaxPlayerId() do
           if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSDUTY then k = i break end
@@ -1720,6 +1783,7 @@ function imgui_messanger_sup_keyboard()
       lockPlayerControl(true)
       imgui_messanger_sup_keyboard_gethh(2)
       imgui_messanger_sup_keyboard_gethc(2)
+      imgui_messanger_sup_keyboard_getfr(2)
     else
       lockPlayerControl(false)
     end
@@ -1730,6 +1794,10 @@ function imgui_messanger_sup_keyboard()
         imgui_messanger_sup_keyboard_gethc(1)
       elseif gethc ~= nil and toAnswerSDUTY.v:find("/hc (%S+)") then
         imgui_messanger_sup_keyboard_gethc(1)
+      elseif getfr ~= nil and toAnswerSDUTY.v:find("/fr (%d+)") then
+        imgui_messanger_sup_keyboard_getfr(1)
+      elseif getfr ~= nil and toAnswerSDUTY.v:find("/fr (%S+)") then
+        imgui_messanger_sup_keyboard_getfr(1)
       else
         for i = 1, sampGetMaxPlayerId() do
           if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSDUTY then k = i break end
@@ -1803,7 +1871,7 @@ function imgui_messanger_sup_keyboard_gethc(mode)
           gethcname = string.match(toAnswerSDUTY.v, "/hc (%S+)")
           for i = 1, #gethc do
             hcid, hcname = string.match(gethc[i], "(%d+) | (%S+)")
-            if hcname and string.find(string.lower(gethc[i]), string.lower(gethcname)) then
+            if hcname and string.find(string.rlower(gethc[i]), string.rlower(gethcname)) then
               toAnswerSDUTY.v = string.gsub(toAnswerSDUTY.v, "/hc (%S+)", gethc[i])
               break
             end
@@ -1830,8 +1898,58 @@ function imgui_messanger_sup_keyboard_gethc(mode)
           gethcname = string.match(toAnswerSDUTY.v, "/hc (%S+)")
           for i = 1, #gethc do
             hcid, hcname = string.match(gethc[i], "(%d+) | (%S+)")
-            if hcname and string.find(string.lower(gethc[i]), string.lower(gethcname)) then
+            if hcname and string.find(string.rlower(gethc[i]), string.rlower(gethcname)) then
               imgui.SetTooltip(u8:encode(gethc[i]))
+              break
+            end
+          end
+        end
+      end
+    end
+  end
+end
+
+function imgui_messanger_sup_keyboard_getfr(mode)
+  if cfg.messanger.supfr then
+    if mode == 1 then
+      if getfr ~= nil then
+        if toAnswerSDUTY.v:find("/fr (%d+)") then
+          getfrnumber = nil
+          getfrnumber = string.match(toAnswerSDUTY.v, "/fr (%d+)")
+          if getfrnumber ~= nil then
+            if getfr[tonumber(getfrnumber)] ~= nil then
+              toAnswerSDUTY.v = string.gsub(toAnswerSDUTY.v, "/fr (%d+)", u8:encode(getfr[tonumber(getfrnumber)]))
+            end
+          end
+          KeyboardFocusReset = true
+        elseif toAnswerSDUTY.v:find("/fr (%S+)") then
+          getfrname = nil
+          getfrname = u8:decode(string.match(toAnswerSDUTY.v, "/fr (%S+)"))
+          for i = 1, #getfr do
+            if getfr[i] and getfrname and string.find(string.rlower(getfr[i]), string.rlower(getfrname)) then
+              toAnswerSDUTY.v = string.gsub(toAnswerSDUTY.v, "/fr (%S+)", u8:encode(getfr[i]))
+              break
+            end
+          end
+          KeyboardFocusReset = true
+        end
+      end
+    else
+      if getfr ~= nil then
+        if toAnswerSDUTY.v:find("/fr (%d+)") then
+          getfrnumber = nil
+          getfrnumber = string.match(toAnswerSDUTY.v, "/fr (%d+)")
+          if getfrnumber ~= nil then
+            if getfr[tonumber(getfrnumber)] ~= nil then
+              imgui.SetTooltip(u8:encode(tonumber(getfrnumber)..". "..getfr[tonumber(getfrnumber)]))
+            end
+          end
+        elseif toAnswerSDUTY.v:find("/fr (%S+)") then
+          getfrname = nil
+          getfrname = u8:decode(string.match(toAnswerSDUTY.v, "/fr (%S+)"))
+          for i = 1, #getfr do
+            if getfr[i] and getfrname and string.find(string.rlower(getfr[i]), string.rlower(getfrname)) then
+              imgui.SetTooltip(u8:encode(i..". "..getfr[i]))
               break
             end
           end
@@ -1951,8 +2069,7 @@ function imgui_log()
       imgui.SliderInt(u8"Месяц##", iMonth, 1, 12)
       imgui.SameLine()
       imgui.SliderInt(u8"День", iDay, 1, 31)
-      getDayLogs(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4), iDay.v)
-
+      imgui_log_getDayLogs(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4), iDay.v)
       imgui.Columns(6, "mycolumns")
       imgui.Separator()
       imgui.Text(u8"ID")
@@ -2017,7 +2134,14 @@ function imgui_log()
   end
 end
 
-function imgui_stats()
+function imgui_log_getDayLogs(month, year, day)
+  if tonumber(month) < 10 then month = "0"..month end
+  if tonumber(year) < 10 then year = "0"..year end
+  if tonumber(day) < 10 then day = "0"..day end
+  date = tostring(month.."/"..day.."/"..year)
+end
+
+function imgui_histogram()
   if imgui.CollapsingHeader(u8"Гистограмма") then
     if #iYears ~= 0 then
       imgui.PushItemWidth(100)
@@ -2026,7 +2150,7 @@ function imgui_stats()
       imgui.PushItemWidth(200)
       imgui.SameLine()
       imgui.SliderInt(u8"Месяц", iMonth, 1, 12)
-      getMonthStats(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4))
+      imgui_histogram_getMonthStats(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4))
       imgui.PlotHistogram("##Статистика", month_histogram, 0, u8:encode(iMonths[iMonth.v].." "..iYears[iYear.v + 1]), 0, math.max(unpack(month_histogram)) + math.max(unpack(month_histogram)) * 0.15, imgui.ImVec2(imgui.GetWindowContentRegionWidth(), cfg.stats.height))
     else
       imgui.Text(u8"Ошибка: лог пуст или невалиден.")
@@ -2034,10 +2158,24 @@ function imgui_stats()
   end
 end
 
+function imgui_histogram_getMonthStats(month, year)
+  if tonumber(month) < 10 then month = "0"..month end
+  if tonumber(year) < 10 then year = "0"..year end
+  local sum = 0
+  for day = 1, 31 do
+    if tonumber(day) < 10 then day = "0"..day end
+    date = tostring(month.."/"..day.."/"..year)
+    if csv[date] == nil then csv[date] = 0 end
+    month_histogram[tonumber(day)] = csv[date]
+    sum = sum + csv[date]
+  end
+  month_histogram[0] = sum
+end
+
 function imgui_settings()
   if imgui.CollapsingHeader(u8"Настройки") then
     imgui.PushItemWidth(imgui.GetContentRegionAvailWidth())
-    imgui.SliderInt(u8"##выбор вкладки настроек", iSettingsTab, 1, 10)
+    imgui.SliderInt(u8"##выбор вкладки настроек", iSettingsTab, 1, 11)
     if iSettingsTab.v ~= cfg.options.settingstab then
       cfg.options.settingstab = iSettingsTab.v
       inicfg.save(cfg, "support")
@@ -2045,14 +2183,15 @@ function imgui_settings()
     imgui.Separator()
     if iSettingsTab.v == 1 then imgui_settings_1_sup_hideandcol() end
     if iSettingsTab.v == 2 then imgui_settings_2_sms_hideandcol() end
-    if iSettingsTab.v == 3 then imgui_settings_3_sup_messanger() end
-    if iSettingsTab.v == 4 then imgui_settings_4_sms_messanger() end
-    if iSettingsTab.v == 5 then imgui_settings_5_notepad() end
-    if iSettingsTab.v == 6 then imgui_settings_6_logger() end
-    if iSettingsTab.v == 7 then imgui_settings_7_logviewer() end
-    if iSettingsTab.v == 8 then imgui_settings_8_histogram() end
-    if iSettingsTab.v == 9 then imgui_settings_9_sup_sounds() end
-    if iSettingsTab.v == 10 then imgui_settings_10_sms_sounds() end
+    if iSettingsTab.v == 3 then imgui_settings_3_sup_funcs() end
+    if iSettingsTab.v == 4 then imgui_settings_4_sup_messanger() end
+    if iSettingsTab.v == 5 then imgui_settings_5_sms_messanger() end
+    if iSettingsTab.v == 6 then imgui_settings_6_notepad() end
+    if iSettingsTab.v == 7 then imgui_settings_7_logger() end
+    if iSettingsTab.v == 8 then imgui_settings_8_logviewer() end
+    if iSettingsTab.v == 9 then imgui_settings_9_histogram() end
+    if iSettingsTab.v == 10 then imgui_settings_10_sup_sounds() end
+    if iSettingsTab.v == 11 then imgui_settings_11_sms_sounds() end
   end
 end
 
@@ -2254,7 +2393,66 @@ function imgui_settings_2_sms_hideandcol()
   end
 end
 
-function imgui_settings_3_sup_messanger()
+function imgui_settings_3_sup_funcs()
+  if imgui.Checkbox("##ifastrespondviachat", ifastrespondviachat) then
+    cfg.supfuncs.fastrespondviachat = ifastrespondviachat.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if ifastrespondviachat.v then
+    imgui.Text(u8("Быстрый ответ включен"))
+  else
+    imgui.TextDisabled(u8"Включить быстрый ответ?")
+  end
+  imgui.SameLine()
+  imgui.TextDisabled("(?)")
+  if imgui.IsItemHovered() then
+    imgui.SetTooltip(u8"По нажатию хоткея открывается чат с /pm id последнего вопроса.")
+  end
+	if ifastrespondviachat.v then
+		imgui.Text(u8"Тут настройка хоткея, а пока: Alt+1")
+	end
+
+
+  if imgui.Checkbox("##iunanswereddialog", iunanswereddialog) then
+    cfg.supfuncs.unanswereddialog = iunanswereddialog.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if iunanswereddialog.v then
+    imgui.Text(u8("Список проигнорированных вопросов включен"))  else
+    imgui.TextDisabled(u8"Включить список проигнорированных вопросов?")
+  end
+  imgui.SameLine()
+  imgui.TextDisabled("(?)")
+  if imgui.IsItemHovered() then
+    imgui.SetTooltip(u8"По нажатию хоткея открывается список с проигнорированными саппортами вопросами.\nВ поле можно ввести порядковый номер вопроса, либо порядковый номер, пробел, ответ.")
+  end
+	if iunanswereddialog.v then
+		imgui.Text(u8"Тут настройка хоткея, а пока: F1")
+	end
+
+  if imgui.Checkbox("##fastrespondviadialog", ifastrespondviadialog) then
+    cfg.supfuncs.fastrespondviadialog = ifastrespondviadialog.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if ifastrespondviadialog.v then
+    imgui.Text(u8("Быстрый ответ по базе готовых ответов включен"))
+  else
+    imgui.TextDisabled(u8"Включить быстрый ответ по базе готовых ответов?")
+  end
+  imgui.SameLine()
+  imgui.TextDisabled("(?)")
+  if imgui.IsItemHovered() then
+    imgui.SetTooltip(u8"\" / pm id \" открывает диалог с вариантами быстрого ответа.\nВопросы берутся из базы, заполненной заранее.")
+  end
+  if ifastrespondviadialog.v then
+    imgui_settings_extra_setupFRbase()
+  end
+end
+
+function imgui_settings_4_sup_messanger()
   if imgui.Checkbox("##включить мессенджер", iMessangerActiveSDUTY) then
     if iMessangerActiveSDUTY.v then
       cfg.messanger.mode = 1
@@ -2409,15 +2607,15 @@ function imgui_settings_3_sup_messanger()
       imgui.SameLine()
       imgui.TextDisabled("(?)")
       if imgui.IsItemHovered() then
-        imgui.SetTooltip(u8"Берет из house.txt информацию. Работает в мессенджере.")
+        imgui.SetTooltip(u8"Берет из house.txt информацию о домах.\nРаботает в sduty мессенджере.")
       end
     else
       imgui.SameLine()
-      imgui.Text(u8"Включить /hh [номер дома]")
+      imgui.TextDisabled(u8"Включить /hh [номер дома]")
       imgui.SameLine()
       imgui.TextDisabled("(?)")
       if imgui.IsItemHovered() then
-        imgui.SetTooltip(u8"Берет из house.txt информацию о домах. Работает в мессенджере.")
+        imgui.SetTooltip(u8"Берет из house.txt информацию о домах.\nРаботает в sduty мессенджере.")
       end
     end
     if imgui.Checkbox("##включить suphc", isuphc) then
@@ -2430,25 +2628,49 @@ function imgui_settings_3_sup_messanger()
       imgui.SameLine()
       imgui.TextDisabled("(?)")
       if imgui.IsItemHovered() then
-        imgui.SetTooltip(u8"Берет из vehicle.txt информацию о т/с. Работает в мессенджере.")
+        imgui.SetTooltip(u8"Берет из vehicle.txt информацию о т/с.\nРаботает в sduty мессенджере.")
       end
     else
       imgui.SameLine()
-      imgui.Text(u8"Включить /hc [id] [name]")
+      imgui.TextDisabled(u8"Включить /hc [id] [name]")
       imgui.SameLine()
       imgui.TextDisabled("(?)")
       if imgui.IsItemHovered() then
-        imgui.SetTooltip(u8"Берет из vehicle.txt информацию. Работает в мессенджере.")
+        imgui.SetTooltip(u8"Берет из vehicle.txt информацию о т/с.\nРаботает в sduty мессенджере.")
       end
     end
-  else
 
+    if imgui.Checkbox("##включить supfr", isupfr) then
+      cfg.messanger.supfr = isupfr.v
+      inicfg.save(cfg, "support")
+    end
+    if isupfr.v then
+      imgui.SameLine()
+      imgui.Text(u8"/fr [id] [text] работает!")
+      imgui.SameLine()
+      imgui.TextDisabled("(?)")
+      if imgui.IsItemHovered() then
+        imgui.SetTooltip(u8"Берёт быстрые ответы из базы.\nРаботает в sduty мессенджере.")
+      end
+    else
+      imgui.SameLine()
+      imgui.TextDisabled(u8"Включить /fr [id] [text]")
+      imgui.SameLine()
+      imgui.TextDisabled("(?)")
+      if imgui.IsItemHovered() then
+        imgui.SetTooltip(u8"Берёт быстрые ответы из базы.\nРаботает в sduty мессенджере.")
+      end
+    end
+    if cfg.messanger.supfr then
+      imgui_settings_extra_setupFRbase()
+    end
+  else
     imgui.SameLine()
     imgui.TextDisabled(u8"Включить sduty мессенджер?")
   end
 end
 
-function imgui_settings_4_sms_messanger()
+function imgui_settings_5_sms_messanger()
   if imgui.Checkbox("##включить sms мессенджер", iMessangerActiveSMS) then
     if iMessangerActiveSMS.v then
       cfg.messanger.mode = 2
@@ -2569,7 +2791,7 @@ function imgui_settings_4_sms_messanger()
       imgui.Text(u8:encode("СУБД активна. Количество диалогов: "..kol.."."))
       imgui.NewLine()
       imgui.SameLine(32)
-      imgui.Text(u8:encode("Путь к БД: "..smsfile))
+      imgui.TextWrapped(u8:encode("Путь к БД: "..smsfile))
     else
       imgui.SameLine()
       imgui.TextDisabled(u8"Сохранять БД смс?")
@@ -2589,7 +2811,7 @@ function imgui_settings_4_sms_messanger()
   end
 end
 
-function imgui_settings_5_notepad()
+function imgui_settings_6_notepad()
   if imgui.Checkbox("##включить блокнот", iNotepadActive) then
     cfg.notepad.active = iNotepadActive.v
     inicfg.save(cfg, "support")
@@ -2609,9 +2831,9 @@ function imgui_settings_5_notepad()
   end
 end
 
-function imgui_settings_6_logger()
+function imgui_settings_7_logger()
   if imgui.Checkbox("##включить логгер", iLogBool) then
-    if cfg.log.logger == false then updateStats() end
+    if cfg.log.logger == false then sup_updateStats() end
     cfg.log.logger = iLogBool.v
     inicfg.save(cfg, "support")
   end
@@ -2641,7 +2863,7 @@ function imgui_settings_6_logger()
   end
 end
 
-function imgui_settings_7_logviewer()
+function imgui_settings_8_logviewer()
 
   if imgui.Checkbox("##включить лог", iLogActive) then
     cfg.log.active = iLogActive.v
@@ -2662,7 +2884,7 @@ function imgui_settings_7_logviewer()
   end
 end
 
-function imgui_settings_8_histogram()
+function imgui_settings_9_histogram()
   if imgui.Checkbox("##включить Гистограмма", iStatsActive) then
     cfg.stats.active = iStatsActive.v
     inicfg.save(cfg, "support")
@@ -2682,7 +2904,7 @@ function imgui_settings_8_histogram()
   end
 end
 
-function imgui_settings_9_sup_sounds()
+function imgui_settings_10_sup_sounds()
   if imgui.Checkbox("##SoundQuestion", iSoundQuestion) then
     cfg.options.SoundQuestion = iSoundQuestion.v
     inicfg.save(cfg, "support")
@@ -2736,7 +2958,7 @@ function imgui_settings_9_sup_sounds()
   end
 end
 
-function imgui_settings_10_sms_sounds()
+function imgui_settings_11_sms_sounds()
   if imgui.Checkbox("##SoundSmsIn", iSoundSmsIn) then
     cfg.options.SoundSmsIn = iSoundSmsIn.v
     inicfg.save(cfg, "support")
@@ -2771,6 +2993,45 @@ function imgui_settings_10_sms_sounds()
   else
     imgui.SameLine()
     imgui.TextDisabled(u8"Включить уведомление об исходящем сообщении?")
+  end
+end
+
+function imgui_settings_extra_setupFRbase()
+  imgui.SameLine()
+  imgui.TextDisabled(u8"Как настроить ответы?")
+  if imgui.IsItemHovered() then
+    imgui.SetTooltip(u8"Одна строка - один быстрый ответ, всё просто.\nНумеровать не нужно, при сохранении каждой строке будет присвоен номер.\nCtrl+Enter - сохранить, Esc - Отменить изменения, Ctrl+A, Ctrl+C, Ctrl+X, Ctrl+V - работают!")
+  end
+  if imgui.InputTextMultiline("##notepad3", fr, imgui.ImVec2(-1, imgui.GetContentRegionAvail().y), imgui.InputTextFlags.EnterReturnsTrue) then
+    frtext = fr.v
+    str = 1
+    frtextF = ""
+    for s in string.gmatch(u8:decode(frtext), "[^\n]+") do
+      number, text = string.match(s, "(%d+%.) (.+)")
+      if number == nil then
+        frtextF = frtextF..str..". "..s.."\n"
+      else
+        frtextF = frtextF..str..". "..text.."\n"
+      end
+      str = str + 1
+    end
+    frtextF = string.gsub(frtextF, "\n$", "")
+    fr.v = u8:encode(frtextF)
+    frtext = fr.v
+    frtext = string.gsub(frtext, "\n", "\\n")
+    frtext = string.gsub(frtext, "\t", "\\t")
+    cfg.notepad.fr = u8:decode(frtext)
+    if inicfg.save(cfg, "support") then
+      printStringNow("Text saved", 1000)
+      sup_ParseFastRespond_fr()
+    else
+      printStringNow("Text not saved", 1000)
+    end
+  end
+  if imgui.IsItemActive() then
+    lockPlayerControl(true)
+  else
+    lockPlayerControl(false)
   end
 end
 
@@ -2836,8 +3097,55 @@ function apply_custom_style()
 end
 
 apply_custom_style()
-
+----------------------------------HELPERS---------------------------------------
 do
+  function join_argb(a, r, g, b)
+    local argb = b -- b
+    argb = bit.bor(argb, bit.lshift(g, 8)) -- g
+    argb = bit.bor(argb, bit.lshift(r, 16)) -- r
+    argb = bit.bor(argb, bit.lshift(a, 24)) -- a
+    return argb
+  end
+
+  function string.rlower(s)
+    s = s:lower()
+    local strlen = s:len()
+    if strlen == 0 then return s end
+    s = s:lower()
+    local output = ''
+    for i = 1, strlen do
+      local ch = s:byte(i)
+      if ch >= 192 and ch <= 223 then -- upper russian characters
+        output = output .. russian_characters[ch + 32]
+      elseif ch == 168 then -- Ё
+        output = output .. russian_characters[184]
+      else
+        output = output .. string.char(ch)
+      end
+    end
+    return output
+  end
+
+  function string.rupper(s)
+    s = s:upper()
+    local strlen = s:len()
+    if strlen == 0 then return s end
+    s = s:upper()
+    local output = ''
+    for i = 1, strlen do
+      local ch = s:byte(i)
+      if ch >= 224 and ch <= 255 then -- lower russian characters
+        output = output .. russian_characters[ch - 32]
+      elseif ch == 184 then -- ё
+        output = output .. russian_characters[168]
+      else
+        output = output .. string.char(ch)
+      end
+    end
+    return output
+  end
+
+
   local function exportstring( s )
     return string.format("%q", s)
   end
