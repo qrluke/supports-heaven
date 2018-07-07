@@ -13,9 +13,11 @@ function var_require()
   inspect = require 'inspect'
   key = require 'vkeys'
   hk = require 'rkeys'
+  ihk = require 'lib.imcustom.hotkey'
   encoding = require 'encoding'
   encoding.default = 'CP1251'
   u8 = encoding.UTF8
+	ihk._SETTINGS.noKeysMessage = u8("-")
 end
 
 function var_cfg()
@@ -63,11 +65,13 @@ function var_cfg()
       height = 160,
     },
     hkUnAn = {
-      [1] = "VK_F1",
+      [1] = 112,
     },
     hkSupFRChat = {
-      [1] = "VK_MENU",
-      [2] = "VK_1",
+      [1] = 49,
+    },
+    hkMainMenu = {
+      [1] = 90
     },
     colors =
     {
@@ -302,6 +306,8 @@ var_imgui_ImFloat4_ImColor()
 var_imgui_ImInt()
 var_imgui_ImBuffer()
 var_main()
+hotk = {}
+hotke = {}
 -------------------------------------MAIN---------------------------------------
 function main()
   if not isSampfuncsLoaded() or not isSampLoaded() then return end
@@ -318,7 +324,6 @@ function main()
   while true do
     wait(0)
     main_while_debug()
-    main_while_hotkeys()
     main_while_playsounds()
     imgui.Process = main_window_state.v
   end
@@ -363,8 +368,9 @@ end
 function main_init_hotkeys()
   hotkeys["hkUnAn"] = {}
   for i = 1, #cfg.hkUnAn do
-    table.insert(hotkeys["hkUnAn"], key[cfg["hkUnAn"][i]])
+    table.insert(hotkeys["hkUnAn"], cfg["hkUnAn"][i])
   end
+  hk.unRegisterHotKey(hotkeys["hkUnAn"])
   hk.registerHotKey(hotkeys["hkUnAn"], true,
     function()
       if not sampIsChatInputActive() and not isSampfuncsConsoleActive() then
@@ -375,12 +381,27 @@ function main_init_hotkeys()
 
   hotkeys["hkSupFRChat"] = {}
   for i = 1, #cfg.hkSupFRChat do
-    table.insert(hotkeys["hkSupFRChat"], key[cfg["hkSupFRChat"][i]])
+    table.insert(hotkeys["hkSupFRChat"], cfg["hkSupFRChat"][i])
   end
+  hk.unRegisterHotKey(hotkeys["hkSupFRChat"])
   hk.registerHotKey(hotkeys["hkSupFRChat"], true,
     function()
       if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
         sup_FastRespond_via_chat()
+      end
+    end
+  )
+
+  hotkeys["hkMainMenu"] = {}
+  for i = 1, #cfg.hkMainMenu do
+    table.insert(hotkeys["hkMainMenu"], cfg["hkMainMenu"][i])
+  end
+  hk.unRegisterHotKey(hotkeys["hkMainMenu"])
+  hk.registerHotKey(hotkeys["hkMainMenu"], true,
+    function()
+      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+        if DEBUG then First = false end
+        main_window_state.v = not main_window_state.v
       end
     end
   )
@@ -449,13 +470,6 @@ function main_while_playsounds()
     if getAudioStreamState(a5) ~= as_action.PLAY then
       setAudioStreamState(a5, as_action.PLAY)
     end
-  end
-end
-
-function main_while_hotkeys()
-  if wasKeyPressed(key.VK_Z) and not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() or First == true then
-    if DEBUG then First = false end
-    main_window_state.v = not main_window_state.v
   end
 end
 
@@ -681,10 +695,10 @@ end
 function sup_logger_HostAnswer(text)
   if iLogBool.v then
     id, text = string.match(text, "(%d+) (.+)")
-    sampAddChatMessage(id..text, color)
+    pattern = [[\"\',]]
     if id ~= nil and tonumber(id) ~= nil and tonumber(id) <= sampGetMaxPlayerId() and sampIsPlayerConnected(id) and sampGetPlayerNickname(id) ~= nil then
-      string = string.format("%s,%s,%s,%s,%s,%s,%s", sup_logger_autoincrement(), sampGetPlayerNickname(id), string.gsub(sup_getLastQuestion(sampGetPlayerNickname(id)), "[\"\', ]", ""),
-      string.gsub(text, "[\"\',]", ""), sup_getRespondTime(sampGetPlayerNickname(id), os.time()), os.date('%Y - %m - %d %X'), os.time())
+      string = string.format("%s,%s,%s,%s,%s,%s,%s", sup_logger_autoincrement(), sampGetPlayerNickname(id), string.gsub(sup_getLastQuestion(sampGetPlayerNickname(id)), "["..pattern.."]", ""),
+      string.gsub(text, "["..pattern.."]", ""), sup_getRespondTime(sampGetPlayerNickname(id), os.time()), os.date('%Y - %m - %d %X'), os.time())
       sup_logger_writecsv(file, string)
     end
   end
@@ -2251,7 +2265,7 @@ end
 function imgui_settings()
   if imgui.CollapsingHeader(u8"Настройки") then
     imgui.PushItemWidth(imgui.GetContentRegionAvailWidth())
-    imgui.SliderInt(u8"##выбор вкладки настроек", iSettingsTab, 1, 11)
+    imgui.SliderInt(u8"##выбор вкладки настроек", iSettingsTab, 1, 12)
     if iSettingsTab.v ~= cfg.options.settingstab then
       cfg.options.settingstab = iSettingsTab.v
       inicfg.save(cfg, "support")
@@ -2268,6 +2282,7 @@ function imgui_settings()
     if iSettingsTab.v == 9 then imgui_settings_9_histogram() end
     if iSettingsTab.v == 10 then imgui_settings_10_sup_sounds() end
     if iSettingsTab.v == 11 then imgui_settings_11_sms_sounds() end
+    if iSettingsTab.v == 12 then imgui_settings_12_hotkeys() end
   end
 end
 
@@ -2485,9 +2500,7 @@ function imgui_settings_3_sup_funcs()
   if imgui.IsItemHovered() then
     imgui.SetTooltip(u8"По нажатию хоткея открывается чат с /pm id последнего вопроса.")
   end
-  if ifastrespondviachat.v then
-    imgui.Text(u8"Тут настройка хоткея, а пока: Alt+1")
-  end
+
 
 
   if imgui.Checkbox("##iunanswereddialog", iunanswereddialog) then
@@ -2503,9 +2516,6 @@ function imgui_settings_3_sup_funcs()
   imgui.TextDisabled("(?)")
   if imgui.IsItemHovered() then
     imgui.SetTooltip(u8"По нажатию хоткея открывается список с проигнорированными саппортами вопросами.\nВ поле можно ввести порядковый номер вопроса, либо порядковый номер, пробел, ответ.")
-  end
-  if iunanswereddialog.v then
-    imgui.Text(u8"Тут настройка хоткея, а пока: F1")
   end
 
   if imgui.Checkbox("##fastrespondviadialog", ifastrespondviadialog) then
@@ -3069,6 +3079,82 @@ function imgui_settings_11_sms_sounds()
   else
     imgui.SameLine()
     imgui.TextDisabled(u8"Включить уведомление об исходящем сообщении?")
+  end
+end
+
+function imgui_settings_12_hotkeys()
+	hotk.v = {}
+	hotke.v = hotkeys["hkMainMenu"]
+	if ihk.HotKey("##hkMainMenu", hotke, hotk, 100) then
+		if not hk.isHotKeyDefined(hotke.v) then
+			if hk.isHotKeyDefined(hotk.v) then
+				hk.unRegisterHotKey(hotk.v)
+			end
+		end
+		cfg.hkMainMenu = {}
+		for k, v in pairs(hotke.v) do
+			table.insert(cfg.hkMainMenu, v)
+		end
+		if cfg.hkMainMenu == {} then cfg["hkMainMenu"][1] = 90 end
+		inicfg.save(cfg, "support")
+		main_init_hotkeys()
+	end
+	imgui.SameLine()
+	imgui.Text(u8"Горячая клавиша главного меню.")
+	imgui.SameLine()
+	imgui.TextDisabled("(?)")
+	if imgui.IsItemHovered() then
+		imgui.SetTooltip(u8"По нажатию хоткея открывается главное меню.")
+	end
+  if ifastrespondviachat.v then
+    hotk.v = {}
+    hotke.v = hotkeys["hkSupFRChat"]
+    if ihk.HotKey("##hkSupFRChat", hotke, hotk, 100) then
+      if not hk.isHotKeyDefined(hotke.v) then
+        if hk.isHotKeyDefined(hotk.v) then
+          hk.unRegisterHotKey(hotk.v)
+        end
+      end
+      cfg.hkSupFRChat = {}
+      for k, v in pairs(hotke.v) do
+        table.insert(cfg.hkSupFRChat, v)
+      end
+      if cfg.hkSupFRChat == {} then cfg["hkSupFRChat"][1] = 49 end
+			inicfg.save(cfg, "support")
+      main_init_hotkeys()
+    end
+    imgui.SameLine()
+    imgui.Text(u8"Горячая клавиша быстрого ответа в чат.")
+		imgui.SameLine()
+		imgui.TextDisabled("(?)")
+		if imgui.IsItemHovered() then
+			imgui.SetTooltip(u8"По нажатию хоткея открывается чат с /pm id последнего вопроса.")
+		end
+  end
+	if iunanswereddialog.v then
+    hotk.v = {}
+    hotke.v = hotkeys["hkUnAn"]
+    if ihk.HotKey(u8"##hkUnAn", hotke, hotk, 100) then
+      if not hk.isHotKeyDefined(hotke.v) then
+        if hk.isHotKeyDefined(hotk.v) then
+          hk.unRegisterHotKey(hotk.v)
+        end
+      end
+      cfg.hkUnAn = {}
+      for k, v in pairs(hotke.v) do
+        table.insert(cfg.hkUnAn, v)
+      end
+      if cfg.hkUnAn == {} then cfg["hkUnAn"][1] = 112 end
+			inicfg.save(cfg, "support")
+      main_init_hotkeys()
+    end
+    imgui.SameLine()
+    imgui.Text(u8"Горячая клавиша быстрого ответа по базе готовых ответов.")
+		imgui.SameLine()
+		imgui.TextDisabled("(?)")
+		if imgui.IsItemHovered() then
+			imgui.SetTooltip(u8"По нажатию хоткея открывается список с проигнорированными саппортами вопросами.\nВ поле можно ввести порядковый номер вопроса, либо порядковый номер, пробел, ответ.")
+		end
   end
 end
 
