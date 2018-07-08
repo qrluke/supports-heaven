@@ -1,5 +1,5 @@
 --meta
-script_name("supfuncs")
+script_name("Support's Heaven")
 script_author("rubbishman")
 script_version('0.01')
 script_dependencies('SAMPFUNCS', 'Dear imgui', 'SAMP.Lua')
@@ -17,7 +17,7 @@ function var_require()
   encoding = require 'encoding'
   encoding.default = 'CP1251'
   u8 = encoding.UTF8
-	ihk._SETTINGS.noKeysMessage = u8("-")
+  ihk._SETTINGS.noKeysMessage = u8("-")
 end
 
 function var_cfg()
@@ -49,6 +49,13 @@ function var_cfg()
       SoundSmsOutNumber = 15,
       settingstab = 1,
       debug = false,
+    },
+    only = {
+      messanger = false,
+      notepad = false,
+      logviewer = false,
+      histogram = false,
+      settings = false,
     },
     supfuncs = {
       fastrespondviachat = true,
@@ -919,18 +926,44 @@ function sup_updateStats()
 end
 
 function imgui.OnDrawFrame()
+
   if main_window_state.v then
     imgui.SetNextWindowPos(imgui.ImVec2(cfg.menuwindow.PosX, cfg.menuwindow.PosY), imgui.Cond.FirstUseEver)
     imgui.SetNextWindowSize(imgui.ImVec2(cfg.menuwindow.Width, cfg.menuwindow.Height))
-    imgui.Begin("Support Assistant v"..thisScript().version, main_window_state, imgui.WindowFlags.NoCollapse)
+    if cfg.only.messanger or cfg.only.notepad or cfg.only.logviewer or cfg.only.histogram or cfg.only.settings then
+      beginflags = imgui.WindowFlags.NoCollapse + imgui.WindowFlags.MenuBar
+    else
+      beginflags = imgui.WindowFlags.NoCollapse
+    end
+    imgui.Begin(u8:encode(thisScript().name.." v"..thisScript().version), main_window_state, beginflags)
     imgui_saveposandsize()
-    if cfg.messanger.activesduty or cfg.messanger.activesms then imgui_messanger() end
-    if cfg.notepad.active then imgui_notepad() end
-    if cfg.log.active then imgui_log() end
-    if cfg.stats.active then imgui_histogram() end
-    imgui_settings()
+    if not cfg.only.messanger and not cfg.only.notepad and not cfg.only.logviewer and not cfg.only.histogram and not cfg.only.settings then
+      if cfg.messanger.activesduty or cfg.messanger.activesms then imgui_messanger() end
+      if cfg.notepad.active then imgui_notepad() end
+      if cfg.log.active then imgui_log() end
+      if cfg.stats.active then imgui_histogram() end
+      imgui_settings()
+    else
+      if cfg.only.messanger then if cfg.messanger.activesduty or cfg.messanger.activesms then imgui_messanger() end end
+      if cfg.only.notepad then if cfg.notepad.active then imgui_notepad() end end
+      if cfg.only.logviewer then if cfg.log.active then imgui_log() end end
+      if cfg.only.histogram then if cfg.stats.active then imgui_histogram() end end
+      if cfg.only.settings then imgui_settings() end
+    end
     imgui.End()
   end
+end
+function imgui_menu()
+  imgui.BeginMenuBar()
+  if imgui.MenuItem(u8'В меню') then
+    cfg.only.messanger = false
+    cfg.only.notepad = false
+    cfg.only.logviewer = false
+    cfg.only.histogram = false
+    cfg.only.settings = false
+    inicfg.save(cfg, "support")
+  end
+  imgui.EndMenuBar()
 end
 
 function imgui_saveposandsize()
@@ -947,23 +980,43 @@ function imgui_saveposandsize()
 end
 
 function imgui_messanger()
-  if imgui.CollapsingHeader(u8"Мессенджер") then
-    imgui.Columns(2, nil, false)
-    imgui.SetColumnWidth(-1, 200)
-    if cfg.messanger.mode == 1 then imgui_messanger_sup_settings() end
-    if cfg.messanger.mode == 2 then imgui_messanger_sms_settings() end
-    if cfg.messanger.mode == 1 then imgui_messanger_sup_player_list() end
-    if cfg.messanger.mode == 2 then imgui_messanger_sms_player_list() end
-    if cfg.messanger.activesduty and cfg.messanger.activesms then imgui_messanger_switchmode() end
-    imgui.NextColumn()
-    if cfg.messanger.mode == 1 then imgui_messanger_sup_header() end
-    if cfg.messanger.mode == 2 then imgui_messanger_sms_header() end
-    if cfg.messanger.mode == 1 then imgui_messanger_sup_dialog() end
-    if cfg.messanger.mode == 2 then imgui_messanger_sms_dialog() end
-    if cfg.messanger.mode == 1 then imgui_messanger_sup_keyboard() end
-    if cfg.messanger.mode == 2 then imgui_messanger_sms_keyboard() end
+  if not cfg.only.messanger then
+    ch1 = imgui.CollapsingHeader(u8"Мессенджер")
+    if ch1 then
+      imgui_messanger_rightclick()
+      imgui_messanger_content()
+    end
+    imgui.Columns(1)
+    if not ch1 then imgui_messanger_rightclick() end
+  else
+    imgui_menu()
+    imgui_messanger_content()
   end
+end
+
+function imgui_messanger_content()
+  imgui.Columns(2, nil, false)
+  imgui.SetColumnWidth(-1, 200)
+  if cfg.messanger.mode == 1 then imgui_messanger_sup_settings() end
+  if cfg.messanger.mode == 2 then imgui_messanger_sms_settings() end
+  if cfg.messanger.mode == 1 then imgui_messanger_sup_player_list() end
+  if cfg.messanger.mode == 2 then imgui_messanger_sms_player_list() end
+  if cfg.messanger.activesduty and cfg.messanger.activesms then imgui_messanger_switchmode() end
+  imgui.NextColumn()
+  if cfg.messanger.mode == 1 then imgui_messanger_sup_header() end
+  if cfg.messanger.mode == 2 then imgui_messanger_sms_header() end
+  if cfg.messanger.mode == 1 then imgui_messanger_sup_dialog() end
+  if cfg.messanger.mode == 2 then imgui_messanger_sms_dialog() end
+  if cfg.messanger.mode == 1 then imgui_messanger_sup_keyboard() end
+  if cfg.messanger.mode == 2 then imgui_messanger_sms_keyboard() end
   imgui.Columns(1)
+end
+
+function imgui_messanger_rightclick()
+  if imgui.IsItemHovered(imgui.HoveredFlags.RootWindow) and imgui.IsMouseClicked(1) then
+    cfg.only.messanger = true
+		inicfg.save(cfg, "support")
+  end
 end
 
 function imgui_messanger_sup_settings()
@@ -1116,9 +1169,17 @@ end
 
 function imgui_messanger_sms_player_list()
   if cfg.messanger.activesduty and cfg.messanger.activesms then
-    playerlistY = iMessangerHeight.v - 74
+    if cfg.only.messanger then
+      playerlistY = imgui.GetContentRegionAvail().y - 35
+    else
+      playerlistY = iMessangerHeight.v - 35
+    end
   else
-    playerlistY = iMessangerHeight.v - 35
+    if cfg.only.messanger then
+      playerlistY = imgui.GetContentRegionAvail().y - 74
+    else
+      playerlistY = iMessangerHeight.v - 74
+    end
   end
   imgui.BeginChild("список ников", imgui.ImVec2(192, playerlistY), true)
 
@@ -1187,9 +1248,17 @@ end
 
 function imgui_messanger_sup_player_list()
   if cfg.messanger.activesduty and cfg.messanger.activesms then
-    playerlistY = iMessangerHeight.v - 74
+    if cfg.only.messanger then
+      playerlistY = imgui.GetContentRegionAvail().y - 35
+    else
+      playerlistY = iMessangerHeight.v - 35
+    end
   else
-    playerlistY = iMessangerHeight.v - 35
+    if cfg.only.messanger then
+      playerlistY = imgui.GetContentRegionAvail().y - 74
+    else
+      playerlistY = iMessangerHeight.v - 74
+    end
   end
   imgui.BeginChild("список ников", imgui.ImVec2(192, playerlistY), true)
   chatindex_V = {}
@@ -1586,7 +1655,14 @@ function imgui_messanger_sms_header()
 end
 
 function imgui_messanger_sup_dialog()
-  imgui.BeginChild("##middle", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), iMessangerHeight.v - 74), true)
+  if cfg.messanger.activesduty and cfg.messanger.activesms then
+    if cfg.only.messanger then
+      dialogY = imgui.GetContentRegionAvail().y - 35
+    else
+      dialogY = iMessangerHeight.v - 35
+    end
+  end
+  imgui.BeginChild("##middle", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), dialogY), true)
   if selecteddialogSDUTY ~= nil and iMessanger[selecteddialogSDUTY] ~= nil and iMessanger[selecteddialogSDUTY]["Chat"] ~= nil then
     for k, v in ipairs(iMessanger[selecteddialogSDUTY]["Chat"]) do
       _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
@@ -1707,7 +1783,14 @@ function imgui_messanger_sup_dialog()
 end
 
 function imgui_messanger_sms_dialog()
-  imgui.BeginChild("##middle", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), iMessangerHeight.v - 74), true)
+  if cfg.messanger.activesduty and cfg.messanger.activesms then
+    if cfg.only.messanger then
+      dialogY = imgui.GetContentRegionAvail().y - 35
+    else
+      dialogY = iMessangerHeight.v - 35
+    end
+  end
+  imgui.BeginChild("##middle", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), dialogY), true)
   if selecteddialogSMS ~= nil and sms[selecteddialogSMS] ~= nil and sms[selecteddialogSMS]["Chat"] ~= nil then
     for k, v in ipairs(sms[selecteddialogSMS]["Chat"]) do
       msg = string.format("%s", u8:encode(v.text))
@@ -2113,108 +2196,144 @@ function imgui_messanger_sms_kostilsaveDB()
 end
 
 function imgui_notepad()
-  if imgui.CollapsingHeader(u8"Блокнот") then
-    if imgui.InputTextMultiline("##notepad", textNotepad, imgui.ImVec2(-1, imgui.GetTextLineHeight() * cfg.notepad.lines), imgui.InputTextFlags.EnterReturnsTrue + imgui.InputTextFlags.AllowTabInput) then
-      notepadtext = textNotepad.v
-      notepadtext = string.gsub(notepadtext, "\n", "\\n")
-      notepadtext = string.gsub(notepadtext, "\t", "\\t")
-      cfg.notepad.text = u8:decode(notepadtext)
-      if inicfg.save(cfg, "support") then
-        printStringNow("Text saved", 1000)
-      else
-        printStringNow("Text not saved", 1000)
-      end
+  if not cfg.only.notepad then
+    ch2 = imgui.CollapsingHeader(u8"Блокнот")
+    if ch2 then
+      imgui_notepad_rightclick()
+      imgui_notepad_content()
+    end
+    if not ch2 then imgui_notepad_rightclick() end
+  else
+    imgui_menu()
+    imgui_notepad_content()
+  end
+end
+
+function imgui_notepad_content()
+  if imgui.InputTextMultiline("##notepad", textNotepad, imgui.ImVec2(-1, imgui.GetTextLineHeight() * cfg.notepad.lines), imgui.InputTextFlags.EnterReturnsTrue + imgui.InputTextFlags.AllowTabInput) then
+    notepadtext = textNotepad.v
+    notepadtext = string.gsub(notepadtext, "\n", "\\n")
+    notepadtext = string.gsub(notepadtext, "\t", "\\t")
+    cfg.notepad.text = u8:decode(notepadtext)
+    if inicfg.save(cfg, "support") then
+      printStringNow("Text saved", 1000)
+    else
+      printStringNow("Text not saved", 1000)
     end
   end
 end
 
+function imgui_notepad_rightclick()
+  if imgui.IsItemHovered(imgui.HoveredFlags.RootWindow) and imgui.IsMouseClicked(1) then
+    cfg.only.notepad = true
+		inicfg.save(cfg, "support")
+  end
+end
+
 function imgui_log()
-  if imgui.CollapsingHeader(u8"Лог моих ответов") then
-    if #iYears ~= 0 then
-      imgui.PushItemWidth(100)
-      imgui.Combo(u8"Год##", iYear, iYears)
-      imgui.PopItemWidth()
-      imgui.SameLine()
-      imgui.PushItemWidth(100)
-      imgui.SliderInt(u8"Месяц##", iMonth, 1, 12)
-      imgui.SameLine()
-      imgui.SliderInt(u8"День", iDay, 1, 31)
-      imgui.SameLine()
-      imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.16, 0.29, 0.48, 0.54))
-      if imgui.Button(u8"Обновить") then
-        sup_updateStats()
-      end
-      imgui.PopStyleColor()
-      imgui_log_getDayLogs(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4), iDay.v)
-      imgui.Columns(6, "mycolumns")
-      imgui.Separator()
-      imgui.Text(u8"ID")
-      imgui.SetColumnWidth(-1, 50)
-      imgui.NextColumn()
-      imgui.SetColumnWidth(-1, 135)
-      imgui.Text(u8"Ник")
-      imgui.NextColumn()
-      if ((cfg.menuwindow.Width - 400) / 2) > 50 then
-        AQWidth = ((cfg.menuwindow.Width - 400) / 2)
-      else
-        AQWidth = 50
-      end
-      imgui.SetColumnWidth(-1, AQWidth)
-      imgui.Text(u8"Вопрос")
-      imgui.NextColumn()
-      imgui.SetColumnWidth(-1, AQWidth)
-      imgui.Text(u8"Ответ")
-      imgui.NextColumn()
-      imgui.SetColumnWidth(-1, 40)
-      imgui.Text(u8"Сек")
-      imgui.NextColumn()
-      imgui.SetColumnWidth(-1, 145)
-      imgui.Text(u8"Дата")
-      imgui.NextColumn()
-      imgui.Columns(1)
-      if csvall[date] ~= nil then
-        imgui.BeginChild("##scrollingregion", imgui.ImVec2(0, cfg.log.height))
-        imgui.Columns(6)
-        imgui.Separator()
-        for _ = #csvall[date], 1, - 1 do
-          if _ > 0 then
-            _ = csvall[date][_]
-            CSV_id, CSV_nickname, CSV_vopros, CSV_otvet, CSV_respondtime, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+),(.+),(.+)")
-            imgui.Text(CSV_id)
-            imgui.SetColumnWidth(-1, 50)
-            imgui.NextColumn()
-            imgui.SetColumnWidth(-1, 135)
-            imgui.Text(CSV_nickname)
-            imgui.NextColumn()
-            imgui.SetColumnWidth(-1, AQWidth)
-            imgui.TextWrapped(u8:encode(CSV_vopros))
-            if imgui.IsItemHovered() and imgui.IsMouseClicked(1) then
-              setClipboardText(CSV_vopros)
-              printStringNow("Text copied", 1000)
-            end
-            imgui.NextColumn()
-            imgui.SetColumnWidth(-1, AQWidth)
-            imgui.TextWrapped(u8:encode(CSV_otvet))
-            if imgui.IsItemHovered() and imgui.IsMouseClicked(1) then
-              setClipboardText(CSV_otvet)
-              printStringNow("Text copied", 1000)
-            end
-            imgui.NextColumn()
-            imgui.SetColumnWidth(-1, 40)
-            imgui.Text(CSV_respondtime)
-            imgui.NextColumn()
-            imgui.SetColumnWidth(-1, 140)
-            imgui.Text(CSV_dateandtime)
-            imgui.NextColumn()
-            imgui.Separator()
-          end
-        end
-        imgui.Columns(1)
-        imgui.EndChild()
-      end
-    else
-      imgui.Text(u8"Ошибка: лог пуст или невалиден.")
+  if not cfg.only.logviewer then
+    ch3 = imgui.CollapsingHeader(u8"Лог моих ответов")
+    if ch3 then
+      imgui_log_rightclick()
+      imgui_log_content()
     end
+    if not ch3 then imgui_log_rightclick() end
+  else
+    imgui_menu()
+    imgui_log_content()
+  end
+end
+
+function imgui_log_content()
+  if #iYears ~= 0 then
+    imgui.PushItemWidth(100)
+    imgui.Combo(u8"Год##", iYear, iYears)
+    imgui.PopItemWidth()
+    imgui.SameLine()
+    imgui.PushItemWidth(100)
+    imgui.SliderInt(u8"Месяц##", iMonth, 1, 12)
+    imgui.SameLine()
+    imgui.SliderInt(u8"День", iDay, 1, 31)
+    imgui.SameLine()
+    imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.16, 0.29, 0.48, 0.54))
+    if imgui.Button(u8"Обновить") then
+      sup_updateStats()
+    end
+    imgui.PopStyleColor()
+    imgui_log_getDayLogs(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4), iDay.v)
+    imgui.Columns(6, "mycolumns")
+    imgui.Separator()
+    imgui.Text(u8"ID")
+    imgui.SetColumnWidth(-1, 50)
+    imgui.NextColumn()
+    imgui.SetColumnWidth(-1, 135)
+    imgui.Text(u8"Ник")
+    imgui.NextColumn()
+    if ((cfg.menuwindow.Width - 400) / 2) > 50 then
+      AQWidth = ((cfg.menuwindow.Width - 400) / 2)
+    else
+      AQWidth = 50
+    end
+    imgui.SetColumnWidth(-1, AQWidth)
+    imgui.Text(u8"Вопрос")
+    imgui.NextColumn()
+    imgui.SetColumnWidth(-1, AQWidth)
+    imgui.Text(u8"Ответ")
+    imgui.NextColumn()
+    imgui.SetColumnWidth(-1, 40)
+    imgui.Text(u8"Сек")
+    imgui.NextColumn()
+    imgui.SetColumnWidth(-1, 150 + imgui.GetStyle().ScrollbarSize)
+    imgui.Text(u8"Дата")
+    imgui.NextColumn()
+    imgui.Columns(1)
+    if csvall[date] ~= nil then
+			if cfg.only.logviewer then
+				logY = imgui.GetContentRegionAvail().y
+			else
+				logY = cfg.log.height
+			end
+      imgui.BeginChild("##scrollingregion", imgui.ImVec2(0, logY))
+      imgui.Columns(6)
+      imgui.Separator()
+      for _ = #csvall[date], 1, - 1 do
+        if _ > 0 then
+          _ = csvall[date][_]
+          CSV_id, CSV_nickname, CSV_vopros, CSV_otvet, CSV_respondtime, CSV_dateandtime, CSV_unix = string.match(_, "(.+),(.+),(.+),(.+),(.+),(.+),(.+)")
+          imgui.Text(CSV_id)
+          imgui.SetColumnWidth(-1, 50)
+          imgui.NextColumn()
+          imgui.SetColumnWidth(-1, 135)
+          imgui.Text(CSV_nickname)
+          imgui.NextColumn()
+          imgui.SetColumnWidth(-1, AQWidth)
+          imgui.TextWrapped(u8:encode(CSV_vopros))
+          if imgui.IsItemHovered() and imgui.IsMouseClicked(1) then
+            setClipboardText(CSV_vopros)
+            printStringNow("Text copied", 1000)
+          end
+          imgui.NextColumn()
+          imgui.SetColumnWidth(-1, AQWidth)
+          imgui.TextWrapped(u8:encode(CSV_otvet))
+          if imgui.IsItemHovered() and imgui.IsMouseClicked(1) then
+            setClipboardText(CSV_otvet)
+            printStringNow("Text copied", 1000)
+          end
+          imgui.NextColumn()
+          imgui.SetColumnWidth(-1, 40)
+          imgui.Text(CSV_respondtime)
+          imgui.NextColumn()
+          imgui.SetColumnWidth(-1, 150 + imgui.GetStyle().ScrollbarSize)
+          imgui.Text(CSV_dateandtime)
+          imgui.NextColumn()
+          imgui.Separator()
+        end
+      end
+      imgui.Columns(1)
+      imgui.EndChild()
+    end
+  else
+    imgui.Text(u8"Ошибка: лог пуст или невалиден.")
   end
 end
 
@@ -2225,26 +2344,50 @@ function imgui_log_getDayLogs(month, year, day)
   date = tostring(month.."/"..day.."/"..year)
 end
 
+function imgui_log_rightclick()
+  if imgui.IsItemHovered(imgui.HoveredFlags.RootWindow) and imgui.IsMouseClicked(1) then
+    cfg.only.logviewer = true
+		inicfg.save(cfg, "support")
+  end
+end
+
 function imgui_histogram()
-  if imgui.CollapsingHeader(u8"Гистограмма") then
-    if #iYears ~= 0 then
-      imgui.PushItemWidth(100)
-      imgui.Combo(u8"Год", iYear, iYears)
-      imgui.PopItemWidth()
-      imgui.PushItemWidth(200)
-      imgui.SameLine()
-      imgui.SliderInt(u8"Месяц", iMonth, 1, 12)
-      imgui.SameLine()
-      imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.16, 0.29, 0.48, 0.54))
-      if imgui.Button(u8"Обновить") then
-        sup_updateStats()
-      end
-      imgui.PopStyleColor()
-      imgui_histogram_getMonthStats(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4))
-      imgui.PlotHistogram("##Статистика", month_histogram, 0, u8:encode(iMonths[iMonth.v].." "..iYears[iYear.v + 1]), 0, math.max(unpack(month_histogram)) + math.max(unpack(month_histogram)) * 0.15, imgui.ImVec2(imgui.GetWindowContentRegionWidth(), cfg.stats.height))
-    else
-      imgui.Text(u8"Ошибка: лог пуст или невалиден.")
+  if not cfg.only.histogram then
+    ch4 = imgui.CollapsingHeader(u8"Гистограмма")
+    if ch4 then
+      imgui_histogram_rightclick()
+      imgui_histogram_content()
     end
+    if not ch4 then imgui_histogram_rightclick() end
+  else
+    imgui_menu()
+    imgui_histogram_content()
+  end
+end
+
+function imgui_histogram_content()
+  if #iYears ~= 0 then
+    imgui.PushItemWidth(100)
+    imgui.Combo(u8"Год", iYear, iYears)
+    imgui.PopItemWidth()
+    imgui.PushItemWidth(200)
+    imgui.SameLine()
+    imgui.SliderInt(u8"Месяц", iMonth, 1, 12)
+    imgui.SameLine()
+    imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.16, 0.29, 0.48, 0.54))
+    if imgui.Button(u8"Обновить") then
+      sup_updateStats()
+    end
+    imgui.PopStyleColor()
+    imgui_histogram_getMonthStats(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4))
+		if cfg.only.histogram then
+			histY = imgui.GetContentRegionAvail().y
+		else
+			histY = cfg.stats.height
+		end
+    imgui.PlotHistogram("##Статистика", month_histogram, 0, u8:encode(iMonths[iMonth.v].." "..iYears[iYear.v + 1]), 0, math.max(unpack(month_histogram)) + math.max(unpack(month_histogram)) * 0.15, imgui.ImVec2(imgui.GetWindowContentRegionWidth(), histY))
+  else
+    imgui.Text(u8"Ошибка: лог пуст или невалиден.")
   end
 end
 
@@ -2262,27 +2405,52 @@ function imgui_histogram_getMonthStats(month, year)
   month_histogram[0] = sum
 end
 
+function imgui_histogram_rightclick()
+  if imgui.IsItemHovered(imgui.HoveredFlags.RootWindow) and imgui.IsMouseClicked(1) then
+    cfg.only.histogram = true
+  end
+end
+
 function imgui_settings()
-  if imgui.CollapsingHeader(u8"Настройки") then
-    imgui.PushItemWidth(imgui.GetContentRegionAvailWidth())
-    imgui.SliderInt(u8"##выбор вкладки настроек", iSettingsTab, 1, 12)
-    if iSettingsTab.v ~= cfg.options.settingstab then
-      cfg.options.settingstab = iSettingsTab.v
-      inicfg.save(cfg, "support")
+  if not cfg.only.settings then
+    ch5 = imgui.CollapsingHeader(u8"Настройки")
+    if ch5 then
+      imgui_settings_rightclick()
+      imgui_settings_content()
     end
-    imgui.Separator()
-    if iSettingsTab.v == 1 then imgui_settings_1_sup_hideandcol() end
-    if iSettingsTab.v == 2 then imgui_settings_2_sms_hideandcol() end
-    if iSettingsTab.v == 3 then imgui_settings_3_sup_funcs() end
-    if iSettingsTab.v == 4 then imgui_settings_4_sup_messanger() end
-    if iSettingsTab.v == 5 then imgui_settings_5_sms_messanger() end
-    if iSettingsTab.v == 6 then imgui_settings_6_notepad() end
-    if iSettingsTab.v == 7 then imgui_settings_7_logger() end
-    if iSettingsTab.v == 8 then imgui_settings_8_logviewer() end
-    if iSettingsTab.v == 9 then imgui_settings_9_histogram() end
-    if iSettingsTab.v == 10 then imgui_settings_10_sup_sounds() end
-    if iSettingsTab.v == 11 then imgui_settings_11_sms_sounds() end
-    if iSettingsTab.v == 12 then imgui_settings_12_hotkeys() end
+    if not ch5 then imgui_settings_rightclick() end
+  else
+    imgui_menu()
+    imgui_settings_content()
+  end
+end
+
+function imgui_settings_content()
+  imgui.PushItemWidth(imgui.GetContentRegionAvailWidth())
+  imgui.SliderInt(u8"##выбор вкладки настроек", iSettingsTab, 1, 12)
+  if iSettingsTab.v ~= cfg.options.settingstab then
+    cfg.options.settingstab = iSettingsTab.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.Separator()
+  if iSettingsTab.v == 1 then imgui_settings_1_sup_hideandcol() end
+  if iSettingsTab.v == 2 then imgui_settings_2_sms_hideandcol() end
+  if iSettingsTab.v == 3 then imgui_settings_3_sup_funcs() end
+  if iSettingsTab.v == 4 then imgui_settings_4_sup_messanger() end
+  if iSettingsTab.v == 5 then imgui_settings_5_sms_messanger() end
+  if iSettingsTab.v == 6 then imgui_settings_6_notepad() end
+  if iSettingsTab.v == 7 then imgui_settings_7_logger() end
+  if iSettingsTab.v == 8 then imgui_settings_8_logviewer() end
+  if iSettingsTab.v == 9 then imgui_settings_9_histogram() end
+  if iSettingsTab.v == 10 then imgui_settings_10_sup_sounds() end
+  if iSettingsTab.v == 11 then imgui_settings_11_sms_sounds() end
+  if iSettingsTab.v == 12 then imgui_settings_12_hotkeys() end
+end
+
+function imgui_settings_rightclick()
+  if imgui.IsItemHovered(imgui.HoveredFlags.RootWindow) and imgui.IsMouseClicked(1) then
+    cfg.only.settings = true
+		inicfg.save(cfg, "support")
   end
 end
 
@@ -3083,29 +3251,29 @@ function imgui_settings_11_sms_sounds()
 end
 
 function imgui_settings_12_hotkeys()
-	hotk.v = {}
-	hotke.v = hotkeys["hkMainMenu"]
-	if ihk.HotKey("##hkMainMenu", hotke, hotk, 100) then
-		if not hk.isHotKeyDefined(hotke.v) then
-			if hk.isHotKeyDefined(hotk.v) then
-				hk.unRegisterHotKey(hotk.v)
-			end
-		end
-		cfg.hkMainMenu = {}
-		for k, v in pairs(hotke.v) do
-			table.insert(cfg.hkMainMenu, v)
-		end
-		if cfg.hkMainMenu == {} then cfg["hkMainMenu"][1] = 90 end
-		inicfg.save(cfg, "support")
-		main_init_hotkeys()
-	end
-	imgui.SameLine()
-	imgui.Text(u8"Горячая клавиша главного меню.")
-	imgui.SameLine()
-	imgui.TextDisabled("(?)")
-	if imgui.IsItemHovered() then
-		imgui.SetTooltip(u8"По нажатию хоткея открывается главное меню.")
-	end
+  hotk.v = {}
+  hotke.v = hotkeys["hkMainMenu"]
+  if ihk.HotKey("##hkMainMenu", hotke, hotk, 100) then
+    if not hk.isHotKeyDefined(hotke.v) then
+      if hk.isHotKeyDefined(hotk.v) then
+        hk.unRegisterHotKey(hotk.v)
+      end
+    end
+    cfg.hkMainMenu = {}
+    for k, v in pairs(hotke.v) do
+      table.insert(cfg.hkMainMenu, v)
+    end
+    if cfg.hkMainMenu == {} then cfg["hkMainMenu"][1] = 90 end
+    inicfg.save(cfg, "support")
+    main_init_hotkeys()
+  end
+  imgui.SameLine()
+  imgui.Text(u8"Горячая клавиша активации скрипта.")
+  imgui.SameLine()
+  imgui.TextDisabled("(?)")
+  if imgui.IsItemHovered() then
+    imgui.SetTooltip(u8"По нажатию хоткея открывается окно скрипта.")
+  end
   if ifastrespondviachat.v then
     hotk.v = {}
     hotke.v = hotkeys["hkSupFRChat"]
@@ -3120,18 +3288,18 @@ function imgui_settings_12_hotkeys()
         table.insert(cfg.hkSupFRChat, v)
       end
       if cfg.hkSupFRChat == {} then cfg["hkSupFRChat"][1] = 49 end
-			inicfg.save(cfg, "support")
+      inicfg.save(cfg, "support")
       main_init_hotkeys()
     end
     imgui.SameLine()
     imgui.Text(u8"Горячая клавиша быстрого ответа в чат.")
-		imgui.SameLine()
-		imgui.TextDisabled("(?)")
-		if imgui.IsItemHovered() then
-			imgui.SetTooltip(u8"По нажатию хоткея открывается чат с /pm id последнего вопроса.")
-		end
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается чат с /pm id последнего вопроса.")
+    end
   end
-	if iunanswereddialog.v then
+  if iunanswereddialog.v then
     hotk.v = {}
     hotke.v = hotkeys["hkUnAn"]
     if ihk.HotKey(u8"##hkUnAn", hotke, hotk, 100) then
@@ -3145,16 +3313,16 @@ function imgui_settings_12_hotkeys()
         table.insert(cfg.hkUnAn, v)
       end
       if cfg.hkUnAn == {} then cfg["hkUnAn"][1] = 112 end
-			inicfg.save(cfg, "support")
+      inicfg.save(cfg, "support")
       main_init_hotkeys()
     end
     imgui.SameLine()
     imgui.Text(u8"Горячая клавиша быстрого ответа по базе готовых ответов.")
-		imgui.SameLine()
-		imgui.TextDisabled("(?)")
-		if imgui.IsItemHovered() then
-			imgui.SetTooltip(u8"По нажатию хоткея открывается список с проигнорированными саппортами вопросами.\nВ поле можно ввести порядковый номер вопроса, либо порядковый номер, пробел, ответ.")
-		end
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается список с проигнорированными саппортами вопросами.\nВ поле можно ввести порядковый номер вопроса, либо порядковый номер, пробел, ответ.")
+    end
   end
 end
 
@@ -3162,7 +3330,7 @@ function imgui_settings_extra_setupFRbase()
   imgui.SameLine()
   imgui.TextDisabled(u8"Как настроить ответы?")
   if imgui.IsItemHovered() then
-    imgui.SetTooltip(u8"Одна строка - один быстрый ответ, всё просто.\nНумеровать не нужно, при сохранении каждой строке будет присвоен номер.\nCtrl+Enter - сохранить, Esc - Отменить изменения, Ctrl+A, Ctrl+C, Ctrl+X, Ctrl+V - работают!")
+    imgui.SetTooltip(u8"Одна строка - один быстрый ответ, всё просто.\nНумеровать не нужно, при сохранении каждой строке будет присвоен номер.\nCtrl+Enter - сохранить, Esc - Отменить изменения, Ctrl+Z, Ctrl+A, Ctrl+C, Ctrl+X, Ctrl+V - работают!")
   end
   if imgui.InputTextMultiline("##notepad3", fr, imgui.ImVec2(-1, imgui.GetContentRegionAvail().y), imgui.InputTextFlags.EnterReturnsTrue) then
     frtext = fr.v
