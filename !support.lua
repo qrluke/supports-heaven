@@ -3833,7 +3833,12 @@ function imgui_messanger_sms_header()
         imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 255, 0, 113):GetVec4())
       end
       if imgui.Button(smsafk[selecteddialogSMS]) then
-        sampSendChat("/id "..selecteddialogSMS)
+        for i = 1, sampGetMaxPlayerId() do
+          if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSMS then
+            sampSendChat("/id "..i)
+						break
+          end
+        end
       end
       if smsafk[selecteddialogSMS]:find("s") or smsafk[selecteddialogSMS]:find("NOT") then
         imgui.PopStyleColor()
