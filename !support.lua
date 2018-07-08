@@ -1,20 +1,1920 @@
 --meta
 script_name("Support's Heaven")
 script_author("rubbishman")
-script_version('0.01')
-script_dependencies('SAMPFUNCS', 'Dear imgui', 'SAMP.Lua')
+script_version(' preview')
+script_dependencies('SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
+--require
+do
+  function r_lib_vkeys()
+    -- This file is part of SA MoonLoader package.
+    -- Licensed under the MIT License.
+    -- Copyright (c) 2016, BlastHack Team <blast.hk>
+
+
+    local k = {
+      VK_LBUTTON = 0x01,
+      VK_RBUTTON = 0x02,
+      VK_CANCEL = 0x03,
+      VK_MBUTTON = 0x04,
+      VK_XBUTTON1 = 0x05,
+      VK_XBUTTON2 = 0x06,
+      VK_BACK = 0x08,
+      VK_TAB = 0x09,
+      VK_CLEAR = 0x0C,
+      VK_RETURN = 0x0D,
+      VK_SHIFT = 0x10,
+      VK_CONTROL = 0x11,
+      VK_MENU = 0x12,
+      VK_PAUSE = 0x13,
+      VK_CAPITAL = 0x14,
+      VK_KANA = 0x15,
+      VK_JUNJA = 0x17,
+      VK_FINAL = 0x18,
+      VK_KANJI = 0x19,
+      VK_ESCAPE = 0x1B,
+      VK_CONVERT = 0x1C,
+      VK_NONCONVERT = 0x1D,
+      VK_ACCEPT = 0x1E,
+      VK_MODECHANGE = 0x1F,
+      VK_SPACE = 0x20,
+      VK_PRIOR = 0x21,
+      VK_NEXT = 0x22,
+      VK_END = 0x23,
+      VK_HOME = 0x24,
+      VK_LEFT = 0x25,
+      VK_UP = 0x26,
+      VK_RIGHT = 0x27,
+      VK_DOWN = 0x28,
+      VK_SELECT = 0x29,
+      VK_PRINT = 0x2A,
+      VK_EXECUTE = 0x2B,
+      VK_SNAPSHOT = 0x2C,
+      VK_INSERT = 0x2D,
+      VK_DELETE = 0x2E,
+      VK_HELP = 0x2F,
+      VK_0 = 0x30,
+      VK_1 = 0x31,
+      VK_2 = 0x32,
+      VK_3 = 0x33,
+      VK_4 = 0x34,
+      VK_5 = 0x35,
+      VK_6 = 0x36,
+      VK_7 = 0x37,
+      VK_8 = 0x38,
+      VK_9 = 0x39,
+      VK_A = 0x41,
+      VK_B = 0x42,
+      VK_C = 0x43,
+      VK_D = 0x44,
+      VK_E = 0x45,
+      VK_F = 0x46,
+      VK_G = 0x47,
+      VK_H = 0x48,
+      VK_I = 0x49,
+      VK_J = 0x4A,
+      VK_K = 0x4B,
+      VK_L = 0x4C,
+      VK_M = 0x4D,
+      VK_N = 0x4E,
+      VK_O = 0x4F,
+      VK_P = 0x50,
+      VK_Q = 0x51,
+      VK_R = 0x52,
+      VK_S = 0x53,
+      VK_T = 0x54,
+      VK_U = 0x55,
+      VK_V = 0x56,
+      VK_W = 0x57,
+      VK_X = 0x58,
+      VK_Y = 0x59,
+      VK_Z = 0x5A,
+      VK_LWIN = 0x5B,
+      VK_RWIN = 0x5C,
+      VK_APPS = 0x5D,
+      VK_SLEEP = 0x5F,
+      VK_NUMPAD0 = 0x60,
+      VK_NUMPAD1 = 0x61,
+      VK_NUMPAD2 = 0x62,
+      VK_NUMPAD3 = 0x63,
+      VK_NUMPAD4 = 0x64,
+      VK_NUMPAD5 = 0x65,
+      VK_NUMPAD6 = 0x66,
+      VK_NUMPAD7 = 0x67,
+      VK_NUMPAD8 = 0x68,
+      VK_NUMPAD9 = 0x69,
+      VK_MULTIPLY = 0x6A,
+      VK_ADD = 0x6B,
+      VK_SEPARATOR = 0x6C,
+      VK_SUBTRACT = 0x6D,
+      VK_DECIMAL = 0x6E,
+      VK_DIVIDE = 0x6F,
+      VK_F1 = 0x70,
+      VK_F2 = 0x71,
+      VK_F3 = 0x72,
+      VK_F4 = 0x73,
+      VK_F5 = 0x74,
+      VK_F6 = 0x75,
+      VK_F7 = 0x76,
+      VK_F8 = 0x77,
+      VK_F9 = 0x78,
+      VK_F10 = 0x79,
+      VK_F11 = 0x7A,
+      VK_F12 = 0x7B,
+      VK_F13 = 0x7C,
+      VK_F14 = 0x7D,
+      VK_F15 = 0x7E,
+      VK_F16 = 0x7F,
+      VK_F17 = 0x80,
+      VK_F18 = 0x81,
+      VK_F19 = 0x82,
+      VK_F20 = 0x83,
+      VK_F21 = 0x84,
+      VK_F22 = 0x85,
+      VK_F23 = 0x86,
+      VK_F24 = 0x87,
+      VK_NUMLOCK = 0x90,
+      VK_SCROLL = 0x91,
+      VK_OEM_FJ_JISHO = 0x92,
+      VK_OEM_FJ_MASSHOU = 0x93,
+      VK_OEM_FJ_TOUROKU = 0x94,
+      VK_OEM_FJ_LOYA = 0x95,
+      VK_OEM_FJ_ROYA = 0x96,
+      VK_LSHIFT = 0xA0,
+      VK_RSHIFT = 0xA1,
+      VK_LCONTROL = 0xA2,
+      VK_RCONTROL = 0xA3,
+      VK_LMENU = 0xA4,
+      VK_RMENU = 0xA5,
+      VK_BROWSER_BACK = 0xA6,
+      VK_BROWSER_FORWARD = 0xA7,
+      VK_BROWSER_REFRESH = 0xA8,
+      VK_BROWSER_STOP = 0xA9,
+      VK_BROWSER_SEARCH = 0xAA,
+      VK_BROWSER_FAVORITES = 0xAB,
+      VK_BROWSER_HOME = 0xAC,
+      VK_VOLUME_MUTE = 0xAD,
+      VK_VOLUME_DOWN = 0xAE,
+      VK_VOLUME_UP = 0xAF,
+      VK_MEDIA_NEXT_TRACK = 0xB0,
+      VK_MEDIA_PREV_TRACK = 0xB1,
+      VK_MEDIA_STOP = 0xB2,
+      VK_MEDIA_PLAY_PAUSE = 0xB3,
+      VK_LAUNCH_MAIL = 0xB4,
+      VK_LAUNCH_MEDIA_SELECT = 0xB5,
+      VK_LAUNCH_APP1 = 0xB6,
+      VK_LAUNCH_APP2 = 0xB7,
+      VK_OEM_1 = 0xBA,
+      VK_OEM_PLUS = 0xBB,
+      VK_OEM_COMMA = 0xBC,
+      VK_OEM_MINUS = 0xBD,
+      VK_OEM_PERIOD = 0xBE,
+      VK_OEM_2 = 0xBF,
+      VK_OEM_3 = 0xC0,
+      VK_ABNT_C1 = 0xC1,
+      VK_ABNT_C2 = 0xC2,
+      VK_OEM_4 = 0xDB,
+      VK_OEM_5 = 0xDC,
+      VK_OEM_6 = 0xDD,
+      VK_OEM_7 = 0xDE,
+      VK_OEM_8 = 0xDF,
+      VK_OEM_AX = 0xE1,
+      VK_OEM_102 = 0xE2,
+      VK_ICO_HELP = 0xE3,
+      VK_PROCESSKEY = 0xE5,
+      VK_ICO_CLEAR = 0xE6,
+      VK_PACKET = 0xE7,
+      VK_OEM_RESET = 0xE9,
+      VK_OEM_JUMP = 0xEA,
+      VK_OEM_PA1 = 0xEB,
+      VK_OEM_PA2 = 0xEC,
+      VK_OEM_PA3 = 0xED,
+      VK_OEM_WSCTRL = 0xEE,
+      VK_OEM_CUSEL = 0xEF,
+      VK_OEM_ATTN = 0xF0,
+      VK_OEM_FINISH = 0xF1,
+      VK_OEM_COPY = 0xF2,
+      VK_OEM_AUTO = 0xF3,
+      VK_OEM_ENLW = 0xF4,
+      VK_OEM_BACKTAB = 0xF5,
+      VK_ATTN = 0xF6,
+      VK_CRSEL = 0xF7,
+      VK_EXSEL = 0xF8,
+      VK_EREOF = 0xF9,
+      VK_PLAY = 0xFA,
+      VK_ZOOM = 0xFB,
+      VK_PA1 = 0xFD,
+      VK_OEM_CLEAR = 0xFE,
+    }
+
+    local names = {
+      [k.VK_LBUTTON] = 'Left Button',
+      [k.VK_RBUTTON] = 'Right Button',
+      [k.VK_CANCEL] = 'Break',
+      [k.VK_MBUTTON] = 'Middle Button',
+      [k.VK_XBUTTON1] = 'X Button 1',
+      [k.VK_XBUTTON2] = 'X Button 2',
+      [k.VK_BACK] = 'Backspace',
+      [k.VK_TAB] = 'Tab',
+      [k.VK_CLEAR] = 'Clear',
+      [k.VK_RETURN] = 'Enter',
+      [k.VK_SHIFT] = 'Shift',
+      [k.VK_CONTROL] = 'Ctrl',
+      [k.VK_MENU] = 'Alt',
+      [k.VK_PAUSE] = 'Pause',
+      [k.VK_CAPITAL] = 'Caps Lock',
+      [k.VK_KANA] = 'Kana',
+      [k.VK_JUNJA] = 'Junja',
+      [k.VK_FINAL] = 'Final',
+      [k.VK_KANJI] = 'Kanji',
+      [k.VK_ESCAPE] = 'Esc',
+      [k.VK_CONVERT] = 'Convert',
+      [k.VK_NONCONVERT] = 'Non Convert',
+      [k.VK_ACCEPT] = 'Accept',
+      [k.VK_MODECHANGE] = 'Mode Change',
+      [k.VK_SPACE] = 'Space',
+      [k.VK_PRIOR] = 'Page Up',
+      [k.VK_NEXT] = 'Page Down',
+      [k.VK_END] = 'End',
+      [k.VK_HOME] = 'Home',
+      [k.VK_LEFT] = 'Arrow Left',
+      [k.VK_UP] = 'Arrow Up',
+      [k.VK_RIGHT] = 'Arrow Right',
+      [k.VK_DOWN] = 'Arrow Down',
+      [k.VK_SELECT] = 'Select',
+      [k.VK_PRINT] = 'Print',
+      [k.VK_EXECUTE] = 'Execute',
+      [k.VK_SNAPSHOT] = 'Print Screen',
+      [k.VK_INSERT] = 'Insert',
+      [k.VK_DELETE] = 'Delete',
+      [k.VK_HELP] = 'Help',
+      [k.VK_0] = '0',
+      [k.VK_1] = '1',
+      [k.VK_2] = '2',
+      [k.VK_3] = '3',
+      [k.VK_4] = '4',
+      [k.VK_5] = '5',
+      [k.VK_6] = '6',
+      [k.VK_7] = '7',
+      [k.VK_8] = '8',
+      [k.VK_9] = '9',
+      [k.VK_A] = 'A',
+      [k.VK_B] = 'B',
+      [k.VK_C] = 'C',
+      [k.VK_D] = 'D',
+      [k.VK_E] = 'E',
+      [k.VK_F] = 'F',
+      [k.VK_G] = 'G',
+      [k.VK_H] = 'H',
+      [k.VK_I] = 'I',
+      [k.VK_J] = 'J',
+      [k.VK_K] = 'K',
+      [k.VK_L] = 'L',
+      [k.VK_M] = 'M',
+      [k.VK_N] = 'N',
+      [k.VK_O] = 'O',
+      [k.VK_P] = 'P',
+      [k.VK_Q] = 'Q',
+      [k.VK_R] = 'R',
+      [k.VK_S] = 'S',
+      [k.VK_T] = 'T',
+      [k.VK_U] = 'U',
+      [k.VK_V] = 'V',
+      [k.VK_W] = 'W',
+      [k.VK_X] = 'X',
+      [k.VK_Y] = 'Y',
+      [k.VK_Z] = 'Z',
+      [k.VK_LWIN] = 'Left Win',
+      [k.VK_RWIN] = 'Right Win',
+      [k.VK_APPS] = 'Context Menu',
+      [k.VK_SLEEP] = 'Sleep',
+      [k.VK_NUMPAD0] = 'Numpad 0',
+      [k.VK_NUMPAD1] = 'Numpad 1',
+      [k.VK_NUMPAD2] = 'Numpad 2',
+      [k.VK_NUMPAD3] = 'Numpad 3',
+      [k.VK_NUMPAD4] = 'Numpad 4',
+      [k.VK_NUMPAD5] = 'Numpad 5',
+      [k.VK_NUMPAD6] = 'Numpad 6',
+      [k.VK_NUMPAD7] = 'Numpad 7',
+      [k.VK_NUMPAD8] = 'Numpad 8',
+      [k.VK_NUMPAD9] = 'Numpad 9',
+      [k.VK_MULTIPLY] = 'Numpad *',
+      [k.VK_ADD] = 'Numpad +',
+      [k.VK_SEPARATOR] = 'Separator',
+      [k.VK_SUBTRACT] = 'Num -',
+      [k.VK_DECIMAL] = 'Numpad .',
+      [k.VK_DIVIDE] = 'Numpad /',
+      [k.VK_F1] = 'F1',
+      [k.VK_F2] = 'F2',
+      [k.VK_F3] = 'F3',
+      [k.VK_F4] = 'F4',
+      [k.VK_F5] = 'F5',
+      [k.VK_F6] = 'F6',
+      [k.VK_F7] = 'F7',
+      [k.VK_F8] = 'F8',
+      [k.VK_F9] = 'F9',
+      [k.VK_F10] = 'F10',
+      [k.VK_F11] = 'F11',
+      [k.VK_F12] = 'F12',
+      [k.VK_F13] = 'F13',
+      [k.VK_F14] = 'F14',
+      [k.VK_F15] = 'F15',
+      [k.VK_F16] = 'F16',
+      [k.VK_F17] = 'F17',
+      [k.VK_F18] = 'F18',
+      [k.VK_F19] = 'F19',
+      [k.VK_F20] = 'F20',
+      [k.VK_F21] = 'F21',
+      [k.VK_F22] = 'F22',
+      [k.VK_F23] = 'F23',
+      [k.VK_F24] = 'F24',
+      [k.VK_NUMLOCK] = 'Num Lock',
+      [k.VK_SCROLL] = 'Scrol Lock',
+      [k.VK_OEM_FJ_JISHO] = 'Jisho',
+      [k.VK_OEM_FJ_MASSHOU] = 'Mashu',
+      [k.VK_OEM_FJ_TOUROKU] = 'Touroku',
+      [k.VK_OEM_FJ_LOYA] = 'Loya',
+      [k.VK_OEM_FJ_ROYA] = 'Roya',
+      [k.VK_LSHIFT] = 'Left Shift',
+      [k.VK_RSHIFT] = 'Right Shift',
+      [k.VK_LCONTROL] = 'Left Ctrl',
+      [k.VK_RCONTROL] = 'Right Ctrl',
+      [k.VK_LMENU] = 'Left Alt',
+      [k.VK_RMENU] = 'Right Alt',
+      [k.VK_BROWSER_BACK] = 'Browser Back',
+      [k.VK_BROWSER_FORWARD] = 'Browser Forward',
+      [k.VK_BROWSER_REFRESH] = 'Browser Refresh',
+      [k.VK_BROWSER_STOP] = 'Browser Stop',
+      [k.VK_BROWSER_SEARCH] = 'Browser Search',
+      [k.VK_BROWSER_FAVORITES] = 'Browser Favorites',
+      [k.VK_BROWSER_HOME] = 'Browser Home',
+      [k.VK_VOLUME_MUTE] = 'Volume Mute',
+      [k.VK_VOLUME_DOWN] = 'Volume Down',
+      [k.VK_VOLUME_UP] = 'Volume Up',
+      [k.VK_MEDIA_NEXT_TRACK] = 'Next Track',
+      [k.VK_MEDIA_PREV_TRACK] = 'Previous Track',
+      [k.VK_MEDIA_STOP] = 'Stop',
+      [k.VK_MEDIA_PLAY_PAUSE] = 'Play / Pause',
+      [k.VK_LAUNCH_MAIL] = 'Mail',
+      [k.VK_LAUNCH_MEDIA_SELECT] = 'Media',
+      [k.VK_LAUNCH_APP1] = 'App1',
+      [k.VK_LAUNCH_APP2] = 'App2',
+      [k.VK_OEM_1] = {';', ':'},
+      [k.VK_OEM_PLUS] = {'=', '+'},
+      [k.VK_OEM_COMMA] = {',', '<'},
+      [k.VK_OEM_MINUS] = {'-', '_'},
+      [k.VK_OEM_PERIOD] = {'.', '>'},
+      [k.VK_OEM_2] = {'/', '?'},
+      [k.VK_OEM_3] = {'`', '~'},
+      [k.VK_ABNT_C1] = 'Abnt C1',
+      [k.VK_ABNT_C2] = 'Abnt C2',
+      [k.VK_OEM_4] = {'[', '{'},
+      [k.VK_OEM_5] = {'\'', '|'},
+      [k.VK_OEM_6] = {']', '}'},
+      [k.VK_OEM_7] = {'\'', '"'},
+      [k.VK_OEM_8] = {'!', '§'},
+      [k.VK_OEM_AX] = 'Ax',
+      [k.VK_OEM_102] = '> <',
+      [k.VK_ICO_HELP] = 'IcoHlp',
+      [k.VK_PROCESSKEY] = 'Process',
+      [k.VK_ICO_CLEAR] = 'IcoClr',
+      [k.VK_PACKET] = 'Packet',
+      [k.VK_OEM_RESET] = 'Reset',
+      [k.VK_OEM_JUMP] = 'Jump',
+      [k.VK_OEM_PA1] = 'OemPa1',
+      [k.VK_OEM_PA2] = 'OemPa2',
+      [k.VK_OEM_PA3] = 'OemPa3',
+      [k.VK_OEM_WSCTRL] = 'WsCtrl',
+      [k.VK_OEM_CUSEL] = 'Cu Sel',
+      [k.VK_OEM_ATTN] = 'Oem Attn',
+      [k.VK_OEM_FINISH] = 'Finish',
+      [k.VK_OEM_COPY] = 'Copy',
+      [k.VK_OEM_AUTO] = 'Auto',
+      [k.VK_OEM_ENLW] = 'Enlw',
+      [k.VK_OEM_BACKTAB] = 'Back Tab',
+      [k.VK_ATTN] = 'Attn',
+      [k.VK_CRSEL] = 'Cr Sel',
+      [k.VK_EXSEL] = 'Ex Sel',
+      [k.VK_EREOF] = 'Er Eof',
+      [k.VK_PLAY] = 'Play',
+      [k.VK_ZOOM] = 'Zoom',
+      [k.VK_PA1] = 'Pa1',
+      [k.VK_OEM_CLEAR] = 'OemClr'
+    }
+
+    k.key_names = names
+
+    function k.id_to_name(vkey)
+      local name = names[vkey]
+      if type(name) == 'table' then
+        return name[1]
+      end
+      return name
+    end
+
+    function k.name_to_id(keyname, case_sensitive)
+      if not case_sensitive then
+        keyname = string.upper(keyname)
+      end
+      for id, v in pairs(names) do
+        if type(v) == 'table' then
+          for _, v2 in pairs(v) do
+            v2 = (case_sensitive) and v2 or string.upper(v2)
+            if v2 == keyname then
+              return id
+            end
+          end
+        else
+          local name = (case_sensitive) and v or string.upper(v)
+          if name == keyname then
+            return id
+          end
+        end
+      end
+    end
+
+    return k
+  end
+
+  function r_lib_rkeys()
+
+    --[[Register HotKey for MoonLoader
+	   Author: DonHomka
+	   Functions:
+	      - bool result, int id = registerHotKey(table keys, bool pressed, function callback)
+	      - bool result, int count = unRegisterHotKey(table keys)
+	      - bool result, int id = isHotKeyDefined(table keys)
+	      - bool result, int id = blockNextHotKey(table keys)
+	      - bool result, int count = unBlockNextHotKey(table keys)
+	      - bool result, int id = isBlockedHotKey(table keys)
+	      - table keys = getCurrentHotKey()
+	      - table keys = getAllHotKey()
+	   HotKey data:
+	      - table keys                  Return table keys for active hotkey
+	      - bool pressed                True - wasKeyPressed() / False - isKeyDown()
+	      - function callback           Call this function on active hotkey
+	   E-mail: a.skinfy@gmail.com
+	   VK: http://vk.com/DonHomka
+	   TeleGramm: http://t.me/DonHomka
+	   Discord: DonHomka#2534]]
+    local vkeys = r_lib_vkeys()
+
+    vkeys.key_names[vkeys.VK_LMENU] = "LAlt"
+    vkeys.key_names[vkeys.VK_RMENU] = "RAlt"
+    vkeys.key_names[vkeys.VK_LSHIFT] = "LShift"
+    vkeys.key_names[vkeys.VK_RSHIFT] = "RShift"
+    vkeys.key_names[vkeys.VK_LCONTROL] = "LCtrl"
+    vkeys.key_names[vkeys.VK_RCONTROL] = "RCtrl"
+
+    local tHotKey = {}
+    local tKeyList = {}
+    local tKeysCheck = {}
+    local iCountCheck = 0
+    local tBlockKeys = {[vkeys.VK_LMENU] = true, [vkeys.VK_RMENU] = true, [vkeys.VK_RSHIFT] = true, [vkeys.VK_LSHIFT] = true, [vkeys.VK_LCONTROL] = true, [vkeys.VK_RCONTROL] = true}
+    local tModKeys = {[vkeys.VK_MENU] = true, [vkeys.VK_SHIFT] = true, [vkeys.VK_CONTROL] = true}
+    local tBlockNext = {}
+    local module = {}
+    module._VERSION = "1.0.7"
+    module._MODKEYS = tModKeys
+    module._LOCKKEYS = false
+
+    local function getKeyNum(id)
+      for k, v in pairs(tKeyList) do
+        if v == id then
+          return k
+        end
+      end
+      return 0
+    end
+
+    function module.blockNextHotKey(keys)
+      local bool = false
+      if not module.isBlockedHotKey(keys) then
+        tBlockNext[#tBlockNext + 1] = keys
+        bool = true
+      end
+      return bool
+    end
+
+    function module.isHotKeyHotKey(keys, keys2)
+      local bool
+      for k, v in pairs(keys) do
+        local lBool = true
+        for i = 1, #keys2 do
+          if v ~= keys2[i] then
+            lBool = false
+            break
+          end
+        end
+        if lBool then
+          bool = true
+          break
+        end
+      end
+      return bool
+    end
+
+
+    function module.isBlockedHotKey(keys)
+      local bool, hkId = false, - 1
+      for k, v in pairs(tBlockNext) do
+        if module.isHotKeyHotKey(keys, v) then
+          bool = true
+          hkId = k
+          break
+        end
+      end
+      return bool, hkId
+    end
+
+    function module.unBlockNextHotKey(keys)
+      local result = false
+      local count = 0
+      while module.isBlockedHotKey(keys) do
+        local _, id = module.isBlockedHotKey(keys)
+        tHotKey[id] = nil
+        result = true
+        count = count + 1
+      end
+      local id = 1
+      for k, v in pairs(tBlockNext) do
+        tBlockNext[id] = v
+        id = id + 1
+      end
+      return result, count
+    end
+
+    function module.isKeyModified(id)
+      return (tModKeys[id] or false) or (tBlockKeys[id] or false)
+    end
+
+    function module.isModifiedDown()
+      local bool = false
+      for k, v in pairs(tModKeys) do
+        if isKeyDown(k) then
+          bool = true
+          break
+        end
+      end
+      return bool
+    end
+
+    lua_thread.create(
+      function ()
+        while true do
+          wait(0)
+          local tDownKeys = module.getCurrentHotKey()
+          for k, v in pairs(tHotKey) do
+            if #v.keys > 0 then
+              local bool = true
+              for i = 1, #v.keys do
+                if i ~= #v.keys and (getKeyNum(v.keys[i]) > getKeyNum(v.keys[i + 1]) or getKeyNum(v.keys[i]) == 0) then
+                  bool = false
+                  break
+                elseif i == #v.keys and (v.pressed and not wasKeyPressed(v.keys[i]) or not v.pressed and not isKeyDown(v.keys[i])) or (#v.keys == 1 and module.isModifiedDown()) then
+                  bool = false
+                  break
+                end
+              end
+              if bool and ((module.onHotKey and module.onHotKey(k, v.keys) ~= false) or module.onHotKey == nil) then
+                local result, id = module.isBlockedHotKey(v.keys)
+                if not result then
+                  v.callback(k, v.keys)
+                else
+                  tBlockNext[id] = nil
+                end
+              end
+            end
+          end
+        end
+      end
+    )
+
+    function module.registerHotKey(keys, pressed, callback)
+      tHotKey[#tHotKey + 1] = {keys = keys, pressed = pressed, callback = callback}
+      return true, #tHotKey
+    end
+
+    function module.getAllHotKey()
+      return tHotKey
+    end
+
+    function module.unRegisterHotKey(keys)
+      local result = false
+      local count = 0
+      while module.isHotKeyDefined(keys) do
+        local _, id = module.isHotKeyDefined(keys)
+        tHotKey[id] = nil
+        result = true
+        count = count + 1
+      end
+      local id = 1
+      local tNewHotKey = {}
+      for k, v in pairs(tHotKey) do
+        tNewHotKey[id] = v
+        id = id + 1
+      end
+      tHotKey = tNewHotKey
+      return result, count
+    end
+
+    function module.isHotKeyDefined(keys)
+      local bool, hkId = false, - 1
+      for k, v in pairs(tHotKey) do
+        if module.isHotKeyHotKey(keys, v.keys) then
+          bool = true
+          hkId = k
+          break
+        end
+      end
+      return bool, hkId
+    end
+
+    function module.getKeysName(keys)
+      local tKeysName = {}
+      for k, v in ipairs(keys) do
+        tKeysName[k] = vkeys.id_to_name(v)
+      end
+      return tKeysName
+    end
+
+    function module.getCurrentHotKey(type)
+      local type = type or 0
+      local tCurKeys = {}
+      for k, v in pairs(vkeys) do
+        if tBlockKeys[v] == nil then
+          local num, down = getKeyNum(v), isKeyDown(v)
+          if down and num == 0 then
+            tKeyList[#tKeyList + 1] = v
+          elseif num > 0 and not down then
+            tKeyList[num] = nil
+          end
+        end
+      end
+      local i = 1
+      for k, v in pairs(tKeyList) do
+        tCurKeys[i] = type == 0 and v or vkeys.id_to_name(v)
+        i = i + 1
+      end
+      return tCurKeys
+    end
+
+    return module
+  end
+
+  function r_lib_window_message()
+    -- This file is part of SA MoonLoader package.
+    -- Licensed under the MIT License.
+    -- Copyright (c) 2016, BlastHack Team <blast.hk>
+
+    -- From https://wiki.winehq.org/List_Of_Windows_Messages
+    local messages = {
+      WM_CREATE = 0x0001,
+      WM_DESTROY = 0x0002,
+      WM_MOVE = 0x0003,
+      WM_SIZE = 0x0005,
+      WM_ACTIVATE = 0x0006,
+      WM_SETFOCUS = 0x0007,
+      WM_KILLFOCUS = 0x0008,
+      WM_ENABLE = 0x000a,
+      WM_SETREDRAW = 0x000b,
+      WM_SETTEXT = 0x000c,
+      WM_GETTEXT = 0x000d,
+      WM_GETTEXTLENGTH = 0x000e,
+      WM_PAINT = 0x000f,
+      WM_CLOSE = 0x0010,
+      WM_QUERYENDSESSION = 0x0011,
+      WM_QUIT = 0x0012,
+      WM_QUERYOPEN = 0x0013,
+      WM_ERASEBKGND = 0x0014,
+      WM_SYSCOLORCHANGE = 0x0015,
+      WM_ENDSESSION = 0x0016,
+      WM_SHOWWINDOW = 0x0018,
+      WM_CTLCOLOR = 0x0019,
+      WM_WININICHANGE = 0x001a,
+      WM_DEVMODECHANGE = 0x001b,
+      WM_ACTIVATEAPP = 0x001c,
+      WM_FONTCHANGE = 0x001d,
+      WM_TIMECHANGE = 0x001e,
+      WM_CANCELMODE = 0x001f,
+      WM_SETCURSOR = 0x0020,
+      WM_MOUSEACTIVATE = 0x0021,
+      WM_CHILDACTIVATE = 0x0022,
+      WM_QUEUESYNC = 0x0023,
+      WM_GETMINMAXINFO = 0x0024,
+      WM_PAINTICON = 0x0026,
+      WM_ICONERASEBKGND = 0x0027,
+      WM_NEXTDLGCTL = 0x0028,
+      WM_SPOOLERSTATUS = 0x002a,
+      WM_DRAWITEM = 0x002b,
+      WM_MEASUREITEM = 0x002c,
+      WM_DELETEITEM = 0x002d,
+      WM_VKEYTOITEM = 0x002e,
+      WM_CHARTOITEM = 0x002f,
+      WM_SETFONT = 0x0030,
+      WM_GETFONT = 0x0031,
+      WM_SETHOTKEY = 0x0032,
+      WM_GETHOTKEY = 0x0033,
+      WM_QUERYDRAGICON = 0x0037,
+      WM_COMPAREITEM = 0x0039,
+      WM_GETOBJECT = 0x003d,
+      WM_COMPACTING = 0x0041,
+      WM_COMMNOTIFY = 0x0044,
+      WM_WINDOWPOSCHANGING = 0x0046,
+      WM_WINDOWPOSCHANGED = 0x0047,
+      WM_POWER = 0x0048,
+      WM_COPYGLOBALDATA = 0x0049,
+      WM_COPYDATA = 0x004a,
+      WM_CANCELJOURNAL = 0x004b,
+      WM_NOTIFY = 0x004e,
+      WM_INPUTLANGCHANGEREQUEST = 0x0050,
+      WM_INPUTLANGCHANGE = 0x0051,
+      WM_TCARD = 0x0052,
+      WM_HELP = 0x0053,
+      WM_USERCHANGED = 0x0054,
+      WM_NOTIFYFORMAT = 0x0055,
+      WM_CONTEXTMENU = 0x007b,
+      WM_STYLECHANGING = 0x007c,
+      WM_STYLECHANGED = 0x007d,
+      WM_DISPLAYCHANGE = 0x007e,
+      WM_GETICON = 0x007f,
+      WM_SETICON = 0x0080,
+      WM_NCCREATE = 0x0081,
+      WM_NCDESTROY = 0x0082,
+      WM_NCCALCSIZE = 0x0083,
+      WM_NCHITTEST = 0x0084,
+      WM_NCPAINT = 0x0085,
+      WM_NCACTIVATE = 0x0086,
+      WM_GETDLGCODE = 0x0087,
+      WM_SYNCPAINT = 0x0088,
+      WM_NCMOUSEMOVE = 0x00a0,
+      WM_NCLBUTTONDOWN = 0x00a1,
+      WM_NCLBUTTONUP = 0x00a2,
+      WM_NCLBUTTONDBLCLK = 0x00a3,
+      WM_NCRBUTTONDOWN = 0x00a4,
+      WM_NCRBUTTONUP = 0x00a5,
+      WM_NCRBUTTONDBLCLK = 0x00a6,
+      WM_NCMBUTTONDOWN = 0x00a7,
+      WM_NCMBUTTONUP = 0x00a8,
+      WM_NCMBUTTONDBLCLK = 0x00a9,
+      WM_NCXBUTTONDOWN = 0x00ab,
+      WM_NCXBUTTONUP = 0x00ac,
+      WM_NCXBUTTONDBLCLK = 0x00ad,
+      EM_GETSEL = 0x00b0,
+      EM_SETSEL = 0x00b1,
+      EM_GETRECT = 0x00b2,
+      EM_SETRECT = 0x00b3,
+      EM_SETRECTNP = 0x00b4,
+      EM_SCROLL = 0x00b5,
+      EM_LINESCROLL = 0x00b6,
+      EM_SCROLLCARET = 0x00b7,
+      EM_GETMODIFY = 0x00b8,
+      EM_SETMODIFY = 0x00b9,
+      EM_GETLINECOUNT = 0x00ba,
+      EM_LINEINDEX = 0x00bb,
+      EM_SETHANDLE = 0x00bc,
+      EM_GETHANDLE = 0x00bd,
+      EM_GETTHUMB = 0x00be,
+      EM_LINELENGTH = 0x00c1,
+      EM_REPLACESEL = 0x00c2,
+      EM_SETFONT = 0x00c3,
+      EM_GETLINE = 0x00c4,
+      EM_LIMITTEXT = 0x00c5,
+      EM_SETLIMITTEXT = 0x00c5,
+      EM_CANUNDO = 0x00c6,
+      EM_UNDO = 0x00c7,
+      EM_FMTLINES = 0x00c8,
+      EM_LINEFROMCHAR = 0x00c9,
+      EM_SETWORDBREAK = 0x00ca,
+      EM_SETTABSTOPS = 0x00cb,
+      EM_SETPASSWORDCHAR = 0x00cc,
+      EM_EMPTYUNDOBUFFER = 0x00cd,
+      EM_GETFIRSTVISIBLELINE = 0x00ce,
+      EM_SETREADONLY = 0x00cf,
+      EM_SETWORDBREAKPROC = 0x00d0,
+      EM_GETWORDBREAKPROC = 0x00d1,
+      EM_GETPASSWORDCHAR = 0x00d2,
+      EM_SETMARGINS = 0x00d3,
+      EM_GETMARGINS = 0x00d4,
+      EM_GETLIMITTEXT = 0x00d5,
+      EM_POSFROMCHAR = 0x00d6,
+      EM_CHARFROMPOS = 0x00d7,
+      EM_SETIMESTATUS = 0x00d8,
+      EM_GETIMESTATUS = 0x00d9,
+      SBM_SETPOS = 0x00e0,
+      SBM_GETPOS = 0x00e1,
+      SBM_SETRANGE = 0x00e2,
+      SBM_GETRANGE = 0x00e3,
+      SBM_ENABLE_ARROWS = 0x00e4,
+      SBM_SETRANGEREDRAW = 0x00e6,
+      SBM_SETSCROLLINFO = 0x00e9,
+      SBM_GETSCROLLINFO = 0x00ea,
+      SBM_GETSCROLLBARINFO = 0x00eb,
+      BM_GETCHECK = 0x00f0,
+      BM_SETCHECK = 0x00f1,
+      BM_GETSTATE = 0x00f2,
+      BM_SETSTATE = 0x00f3,
+      BM_SETSTYLE = 0x00f4,
+      BM_CLICK = 0x00f5,
+      BM_GETIMAGE = 0x00f6,
+      BM_SETIMAGE = 0x00f7,
+      BM_SETDONTCLICK = 0x00f8,
+      WM_INPUT = 0x00ff,
+      WM_KEYDOWN = 0x0100,
+      WM_KEYFIRST = 0x0100,
+      WM_KEYUP = 0x0101,
+      WM_CHAR = 0x0102,
+      WM_DEADCHAR = 0x0103,
+      WM_SYSKEYDOWN = 0x0104,
+      WM_SYSKEYUP = 0x0105,
+      WM_SYSCHAR = 0x0106,
+      WM_SYSDEADCHAR = 0x0107,
+      WM_KEYLAST = 0x0108,
+      WM_UNICHAR = 0x0109,
+      WM_WNT_CONVERTREQUESTEX = 0x0109,
+      WM_CONVERTREQUEST = 0x010a,
+      WM_CONVERTRESULT = 0x010b,
+      WM_INTERIM = 0x010c,
+      WM_IME_STARTCOMPOSITION = 0x010d,
+      WM_IME_ENDCOMPOSITION = 0x010e,
+      WM_IME_COMPOSITION = 0x010f,
+      WM_IME_KEYLAST = 0x010f,
+      WM_INITDIALOG = 0x0110,
+      WM_COMMAND = 0x0111,
+      WM_SYSCOMMAND = 0x0112,
+      WM_TIMER = 0x0113,
+      WM_HSCROLL = 0x0114,
+      WM_VSCROLL = 0x0115,
+      WM_INITMENU = 0x0116,
+      WM_INITMENUPOPUP = 0x0117,
+      WM_SYSTIMER = 0x0118,
+      WM_MENUSELECT = 0x011f,
+      WM_MENUCHAR = 0x0120,
+      WM_ENTERIDLE = 0x0121,
+      WM_MENURBUTTONUP = 0x0122,
+      WM_MENUDRAG = 0x0123,
+      WM_MENUGETOBJECT = 0x0124,
+      WM_UNINITMENUPOPUP = 0x0125,
+      WM_MENUCOMMAND = 0x0126,
+      WM_CHANGEUISTATE = 0x0127,
+      WM_UPDATEUISTATE = 0x0128,
+      WM_QUERYUISTATE = 0x0129,
+      WM_CTLCOLORMSGBOX = 0x0132,
+      WM_CTLCOLOREDIT = 0x0133,
+      WM_CTLCOLORLISTBOX = 0x0134,
+      WM_CTLCOLORBTN = 0x0135,
+      WM_CTLCOLORDLG = 0x0136,
+      WM_CTLCOLORSCROLLBAR = 0x0137,
+      WM_CTLCOLORSTATIC = 0x0138,
+      WM_MOUSEFIRST = 0x0200,
+      WM_MOUSEMOVE = 0x0200,
+      WM_LBUTTONDOWN = 0x0201,
+      WM_LBUTTONUP = 0x0202,
+      WM_LBUTTONDBLCLK = 0x0203,
+      WM_RBUTTONDOWN = 0x0204,
+      WM_RBUTTONUP = 0x0205,
+      WM_RBUTTONDBLCLK = 0x0206,
+      WM_MBUTTONDOWN = 0x0207,
+      WM_MBUTTONUP = 0x0208,
+      WM_MBUTTONDBLCLK = 0x0209,
+      WM_MOUSELAST = 0x0209,
+      WM_MOUSEWHEEL = 0x020a,
+      WM_XBUTTONDOWN = 0x020b,
+      WM_XBUTTONUP = 0x020c,
+      WM_XBUTTONDBLCLK = 0x020d,
+      WM_PARENTNOTIFY = 0x0210,
+      WM_ENTERMENULOOP = 0x0211,
+      WM_EXITMENULOOP = 0x0212,
+      WM_NEXTMENU = 0x0213,
+      WM_SIZING = 0x0214,
+      WM_CAPTURECHANGED = 0x0215,
+      WM_MOVING = 0x0216,
+      WM_POWERBROADCAST = 0x0218,
+      WM_DEVICECHANGE = 0x0219,
+      WM_MDICREATE = 0x0220,
+      WM_MDIDESTROY = 0x0221,
+      WM_MDIACTIVATE = 0x0222,
+      WM_MDIRESTORE = 0x0223,
+      WM_MDINEXT = 0x0224,
+      WM_MDIMAXIMIZE = 0x0225,
+      WM_MDITILE = 0x0226,
+      WM_MDICASCADE = 0x0227,
+      WM_MDIICONARRANGE = 0x0228,
+      WM_MDIGETACTIVE = 0x0229,
+      WM_MDISETMENU = 0x0230,
+      WM_ENTERSIZEMOVE = 0x0231,
+      WM_EXITSIZEMOVE = 0x0232,
+      WM_DROPFILES = 0x0233,
+      WM_MDIREFRESHMENU = 0x0234,
+      WM_IME_REPORT = 0x0280,
+      WM_IME_SETCONTEXT = 0x0281,
+      WM_IME_NOTIFY = 0x0282,
+      WM_IME_CONTROL = 0x0283,
+      WM_IME_COMPOSITIONFULL = 0x0284,
+      WM_IME_SELECT = 0x0285,
+      WM_IME_CHAR = 0x0286,
+      WM_IME_REQUEST = 0x0288,
+      WM_IMEKEYDOWN = 0x0290,
+      WM_IME_KEYDOWN = 0x0290,
+      WM_IMEKEYUP = 0x0291,
+      WM_IME_KEYUP = 0x0291,
+      WM_NCMOUSEHOVER = 0x02a0,
+      WM_MOUSEHOVER = 0x02a1,
+      WM_NCMOUSELEAVE = 0x02a2,
+      WM_MOUSELEAVE = 0x02a3,
+      WM_CUT = 0x0300,
+      WM_COPY = 0x0301,
+      WM_PASTE = 0x0302,
+      WM_CLEAR = 0x0303,
+      WM_UNDO = 0x0304,
+      WM_RENDERFORMAT = 0x0305,
+      WM_RENDERALLFORMATS = 0x0306,
+      WM_DESTROYCLIPBOARD = 0x0307,
+      WM_DRAWCLIPBOARD = 0x0308,
+      WM_PAINTCLIPBOARD = 0x0309,
+      WM_VSCROLLCLIPBOARD = 0x030a,
+      WM_SIZECLIPBOARD = 0x030b,
+      WM_ASKCBFORMATNAME = 0x030c,
+      WM_CHANGECBCHAIN = 0x030d,
+      WM_HSCROLLCLIPBOARD = 0x030e,
+      WM_QUERYNEWPALETTE = 0x030f,
+      WM_PALETTEISCHANGING = 0x0310,
+      WM_PALETTECHANGED = 0x0311,
+      WM_HOTKEY = 0x0312,
+      WM_PRINT = 0x0317,
+      WM_PRINTCLIENT = 0x0318,
+      WM_APPCOMMAND = 0x0319,
+      WM_HANDHELDFIRST = 0x0358,
+      WM_HANDHELDLAST = 0x035f,
+      WM_AFXFIRST = 0x0360,
+      WM_AFXLAST = 0x037f,
+      WM_PENWINFIRST = 0x0380,
+      WM_RCRESULT = 0x0381,
+      WM_HOOKRCRESULT = 0x0382,
+      WM_GLOBALRCCHANGE = 0x0383,
+      WM_PENMISCINFO = 0x0383,
+      WM_SKB = 0x0384,
+      WM_HEDITCTL = 0x0385,
+      WM_PENCTL = 0x0385,
+      WM_PENMISC = 0x0386,
+      WM_CTLINIT = 0x0387,
+      WM_PENEVENT = 0x0388,
+      WM_PENWINLAST = 0x038f,
+      DDM_SETFMT = 0x0400,
+      DM_GETDEFID = 0x0400,
+      NIN_SELECT = 0x0400,
+      TBM_GETPOS = 0x0400,
+      WM_PSD_PAGESETUPDLG = 0x0400,
+      WM_USER = 0x0400,
+      CBEM_INSERTITEMA = 0x0401,
+      DDM_DRAW = 0x0401,
+      DM_SETDEFID = 0x0401,
+      HKM_SETHOTKEY = 0x0401,
+      PBM_SETRANGE = 0x0401,
+      RB_INSERTBANDA = 0x0401,
+      SB_SETTEXTA = 0x0401,
+      TB_ENABLEBUTTON = 0x0401,
+      TBM_GETRANGEMIN = 0x0401,
+      TTM_ACTIVATE = 0x0401,
+      WM_CHOOSEFONT_GETLOGFONT = 0x0401,
+      WM_PSD_FULLPAGERECT = 0x0401,
+      CBEM_SETIMAGELIST = 0x0402,
+      DDM_CLOSE = 0x0402,
+      DM_REPOSITION = 0x0402,
+      HKM_GETHOTKEY = 0x0402,
+      PBM_SETPOS = 0x0402,
+      RB_DELETEBAND = 0x0402,
+      SB_GETTEXTA = 0x0402,
+      TB_CHECKBUTTON = 0x0402,
+      TBM_GETRANGEMAX = 0x0402,
+      WM_PSD_MINMARGINRECT = 0x0402,
+      CBEM_GETIMAGELIST = 0x0403,
+      DDM_BEGIN = 0x0403,
+      HKM_SETRULES = 0x0403,
+      PBM_DELTAPOS = 0x0403,
+      RB_GETBARINFO = 0x0403,
+      SB_GETTEXTLENGTHA = 0x0403,
+      TBM_GETTIC = 0x0403,
+      TB_PRESSBUTTON = 0x0403,
+      TTM_SETDELAYTIME = 0x0403,
+      WM_PSD_MARGINRECT = 0x0403,
+      CBEM_GETITEMA = 0x0404,
+      DDM_END = 0x0404,
+      PBM_SETSTEP = 0x0404,
+      RB_SETBARINFO = 0x0404,
+      SB_SETPARTS = 0x0404,
+      TB_HIDEBUTTON = 0x0404,
+      TBM_SETTIC = 0x0404,
+      TTM_ADDTOOLA = 0x0404,
+      WM_PSD_GREEKTEXTRECT = 0x0404,
+      CBEM_SETITEMA = 0x0405,
+      PBM_STEPIT = 0x0405,
+      TB_INDETERMINATE = 0x0405,
+      TBM_SETPOS = 0x0405,
+      TTM_DELTOOLA = 0x0405,
+      WM_PSD_ENVSTAMPRECT = 0x0405,
+      CBEM_GETCOMBOCONTROL = 0x0406,
+      PBM_SETRANGE32 = 0x0406,
+      RB_SETBANDINFOA = 0x0406,
+      SB_GETPARTS = 0x0406,
+      TB_MARKBUTTON = 0x0406,
+      TBM_SETRANGE = 0x0406,
+      TTM_NEWTOOLRECTA = 0x0406,
+      WM_PSD_YAFULLPAGERECT = 0x0406,
+      CBEM_GETEDITCONTROL = 0x0407,
+      PBM_GETRANGE = 0x0407,
+      RB_SETPARENT = 0x0407,
+      SB_GETBORDERS = 0x0407,
+      TBM_SETRANGEMIN = 0x0407,
+      TTM_RELAYEVENT = 0x0407,
+      CBEM_SETEXSTYLE = 0x0408,
+      PBM_GETPOS = 0x0408,
+      RB_HITTEST = 0x0408,
+      SB_SETMINHEIGHT = 0x0408,
+      TBM_SETRANGEMAX = 0x0408,
+      TTM_GETTOOLINFOA = 0x0408,
+      CBEM_GETEXSTYLE = 0x0409,
+      CBEM_GETEXTENDEDSTYLE = 0x0409,
+      PBM_SETBARCOLOR = 0x0409,
+      RB_GETRECT = 0x0409,
+      SB_SIMPLE = 0x0409,
+      TB_ISBUTTONENABLED = 0x0409,
+      TBM_CLEARTICS = 0x0409,
+      TTM_SETTOOLINFOA = 0x0409,
+      CBEM_HASEDITCHANGED = 0x040a,
+      RB_INSERTBANDW = 0x040a,
+      SB_GETRECT = 0x040a,
+      TB_ISBUTTONCHECKED = 0x040a,
+      TBM_SETSEL = 0x040a,
+      TTM_HITTESTA = 0x040a,
+      WIZ_QUERYNUMPAGES = 0x040a,
+      CBEM_INSERTITEMW = 0x040b,
+      RB_SETBANDINFOW = 0x040b,
+      SB_SETTEXTW = 0x040b,
+      TB_ISBUTTONPRESSED = 0x040b,
+      TBM_SETSELSTART = 0x040b,
+      TTM_GETTEXTA = 0x040b,
+      WIZ_NEXT = 0x040b,
+      CBEM_SETITEMW = 0x040c,
+      RB_GETBANDCOUNT = 0x040c,
+      SB_GETTEXTLENGTHW = 0x040c,
+      TB_ISBUTTONHIDDEN = 0x040c,
+      TBM_SETSELEND = 0x040c,
+      TTM_UPDATETIPTEXTA = 0x040c,
+      WIZ_PREV = 0x040c,
+      CBEM_GETITEMW = 0x040d,
+      RB_GETROWCOUNT = 0x040d,
+      SB_GETTEXTW = 0x040d,
+      TB_ISBUTTONINDETERMINATE = 0x040d,
+      TTM_GETTOOLCOUNT = 0x040d,
+      CBEM_SETEXTENDEDSTYLE = 0x040e,
+      RB_GETROWHEIGHT = 0x040e,
+      SB_ISSIMPLE = 0x040e,
+      TB_ISBUTTONHIGHLIGHTED = 0x040e,
+      TBM_GETPTICS = 0x040e,
+      TTM_ENUMTOOLSA = 0x040e,
+      SB_SETICON = 0x040f,
+      TBM_GETTICPOS = 0x040f,
+      TTM_GETCURRENTTOOLA = 0x040f,
+      RB_IDTOINDEX = 0x0410,
+      SB_SETTIPTEXTA = 0x0410,
+      TBM_GETNUMTICS = 0x0410,
+      TTM_WINDOWFROMPOINT = 0x0410,
+      RB_GETTOOLTIPS = 0x0411,
+      SB_SETTIPTEXTW = 0x0411,
+      TBM_GETSELSTART = 0x0411,
+      TB_SETSTATE = 0x0411,
+      TTM_TRACKACTIVATE = 0x0411,
+      RB_SETTOOLTIPS = 0x0412,
+      SB_GETTIPTEXTA = 0x0412,
+      TB_GETSTATE = 0x0412,
+      TBM_GETSELEND = 0x0412,
+      TTM_TRACKPOSITION = 0x0412,
+      RB_SETBKCOLOR = 0x0413,
+      SB_GETTIPTEXTW = 0x0413,
+      TB_ADDBITMAP = 0x0413,
+      TBM_CLEARSEL = 0x0413,
+      TTM_SETTIPBKCOLOR = 0x0413,
+      RB_GETBKCOLOR = 0x0414,
+      SB_GETICON = 0x0414,
+      TB_ADDBUTTONSA = 0x0414,
+      TBM_SETTICFREQ = 0x0414,
+      TTM_SETTIPTEXTCOLOR = 0x0414,
+      RB_SETTEXTCOLOR = 0x0415,
+      TB_INSERTBUTTONA = 0x0415,
+      TBM_SETPAGESIZE = 0x0415,
+      TTM_GETDELAYTIME = 0x0415,
+      RB_GETTEXTCOLOR = 0x0416,
+      TB_DELETEBUTTON = 0x0416,
+      TBM_GETPAGESIZE = 0x0416,
+      TTM_GETTIPBKCOLOR = 0x0416,
+      RB_SIZETORECT = 0x0417,
+      TB_GETBUTTON = 0x0417,
+      TBM_SETLINESIZE = 0x0417,
+      TTM_GETTIPTEXTCOLOR = 0x0417,
+      RB_BEGINDRAG = 0x0418,
+      TB_BUTTONCOUNT = 0x0418,
+      TBM_GETLINESIZE = 0x0418,
+      TTM_SETMAXTIPWIDTH = 0x0418,
+      RB_ENDDRAG = 0x0419,
+      TB_COMMANDTOINDEX = 0x0419,
+      TBM_GETTHUMBRECT = 0x0419,
+      TTM_GETMAXTIPWIDTH = 0x0419,
+      RB_DRAGMOVE = 0x041a,
+      TBM_GETCHANNELRECT = 0x041a,
+      TB_SAVERESTOREA = 0x041a,
+      TTM_SETMARGIN = 0x041a,
+      RB_GETBARHEIGHT = 0x041b,
+      TB_CUSTOMIZE = 0x041b,
+      TBM_SETTHUMBLENGTH = 0x041b,
+      TTM_GETMARGIN = 0x041b,
+      RB_GETBANDINFOW = 0x041c,
+      TB_ADDSTRINGA = 0x041c,
+      TBM_GETTHUMBLENGTH = 0x041c,
+      TTM_POP = 0x041c,
+      RB_GETBANDINFOA = 0x041d,
+      TB_GETITEMRECT = 0x041d,
+      TBM_SETTOOLTIPS = 0x041d,
+      TTM_UPDATE = 0x041d,
+      RB_MINIMIZEBAND = 0x041e,
+      TB_BUTTONSTRUCTSIZE = 0x041e,
+      TBM_GETTOOLTIPS = 0x041e,
+      TTM_GETBUBBLESIZE = 0x041e,
+      RB_MAXIMIZEBAND = 0x041f,
+      TBM_SETTIPSIDE = 0x041f,
+      TB_SETBUTTONSIZE = 0x041f,
+      TTM_ADJUSTRECT = 0x041f,
+      TBM_SETBUDDY = 0x0420,
+      TB_SETBITMAPSIZE = 0x0420,
+      TTM_SETTITLEA = 0x0420,
+      MSG_FTS_JUMP_VA = 0x0421,
+      TB_AUTOSIZE = 0x0421,
+      TBM_GETBUDDY = 0x0421,
+      TTM_SETTITLEW = 0x0421,
+      RB_GETBANDBORDERS = 0x0422,
+      MSG_FTS_JUMP_QWORD = 0x0423,
+      RB_SHOWBAND = 0x0423,
+      TB_GETTOOLTIPS = 0x0423,
+      MSG_REINDEX_REQUEST = 0x0424,
+      TB_SETTOOLTIPS = 0x0424,
+      MSG_FTS_WHERE_IS_IT = 0x0425,
+      RB_SETPALETTE = 0x0425,
+      TB_SETPARENT = 0x0425,
+      RB_GETPALETTE = 0x0426,
+      RB_MOVEBAND = 0x0427,
+      TB_SETROWS = 0x0427,
+      TB_GETROWS = 0x0428,
+      TB_GETBITMAPFLAGS = 0x0429,
+      TB_SETCMDID = 0x042a,
+      RB_PUSHCHEVRON = 0x042b,
+      TB_CHANGEBITMAP = 0x042b,
+      TB_GETBITMAP = 0x042c,
+      MSG_GET_DEFFONT = 0x042d,
+      TB_GETBUTTONTEXTA = 0x042d,
+      TB_REPLACEBITMAP = 0x042e,
+      TB_SETINDENT = 0x042f,
+      TB_SETIMAGELIST = 0x0430,
+      TB_GETIMAGELIST = 0x0431,
+      TB_LOADIMAGES = 0x0432,
+      EM_CANPASTE = 0x0432,
+      TTM_ADDTOOLW = 0x0432,
+      EM_DISPLAYBAND = 0x0433,
+      TB_GETRECT = 0x0433,
+      TTM_DELTOOLW = 0x0433,
+      EM_EXGETSEL = 0x0434,
+      TB_SETHOTIMAGELIST = 0x0434,
+      TTM_NEWTOOLRECTW = 0x0434,
+      EM_EXLIMITTEXT = 0x0435,
+      TB_GETHOTIMAGELIST = 0x0435,
+      TTM_GETTOOLINFOW = 0x0435,
+      EM_EXLINEFROMCHAR = 0x0436,
+      TB_SETDISABLEDIMAGELIST = 0x0436,
+      TTM_SETTOOLINFOW = 0x0436,
+      EM_EXSETSEL = 0x0437,
+      TB_GETDISABLEDIMAGELIST = 0x0437,
+      TTM_HITTESTW = 0x0437,
+      EM_FINDTEXT = 0x0438,
+      TB_SETSTYLE = 0x0438,
+      TTM_GETTEXTW = 0x0438,
+      EM_FORMATRANGE = 0x0439,
+      TB_GETSTYLE = 0x0439,
+      TTM_UPDATETIPTEXTW = 0x0439,
+      EM_GETCHARFORMAT = 0x043a,
+      TB_GETBUTTONSIZE = 0x043a,
+      TTM_ENUMTOOLSW = 0x043a,
+      EM_GETEVENTMASK = 0x043b,
+      TB_SETBUTTONWIDTH = 0x043b,
+      TTM_GETCURRENTTOOLW = 0x043b,
+      EM_GETOLEINTERFACE = 0x043c,
+      TB_SETMAXTEXTROWS = 0x043c,
+      EM_GETPARAFORMAT = 0x043d,
+      TB_GETTEXTROWS = 0x043d,
+      EM_GETSELTEXT = 0x043e,
+      TB_GETOBJECT = 0x043e,
+      EM_HIDESELECTION = 0x043f,
+      TB_GETBUTTONINFOW = 0x043f,
+      EM_PASTESPECIAL = 0x0440,
+      TB_SETBUTTONINFOW = 0x0440,
+      EM_REQUESTRESIZE = 0x0441,
+      TB_GETBUTTONINFOA = 0x0441,
+      EM_SELECTIONTYPE = 0x0442,
+      TB_SETBUTTONINFOA = 0x0442,
+      EM_SETBKGNDCOLOR = 0x0443,
+      TB_INSERTBUTTONW = 0x0443,
+      EM_SETCHARFORMAT = 0x0444,
+      TB_ADDBUTTONSW = 0x0444,
+      EM_SETEVENTMASK = 0x0445,
+      TB_HITTEST = 0x0445,
+      EM_SETOLECALLBACK = 0x0446,
+      TB_SETDRAWTEXTFLAGS = 0x0446,
+      EM_SETPARAFORMAT = 0x0447,
+      TB_GETHOTITEM = 0x0447,
+      EM_SETTARGETDEVICE = 0x0448,
+      TB_SETHOTITEM = 0x0448,
+      EM_STREAMIN = 0x0449,
+      TB_SETANCHORHIGHLIGHT = 0x0449,
+      EM_STREAMOUT = 0x044a,
+      TB_GETANCHORHIGHLIGHT = 0x044a,
+      EM_GETTEXTRANGE = 0x044b,
+      TB_GETBUTTONTEXTW = 0x044b,
+      EM_FINDWORDBREAK = 0x044c,
+      TB_SAVERESTOREW = 0x044c,
+      EM_SETOPTIONS = 0x044d,
+      TB_ADDSTRINGW = 0x044d,
+      EM_GETOPTIONS = 0x044e,
+      TB_MAPACCELERATORA = 0x044e,
+      EM_FINDTEXTEX = 0x044f,
+      TB_GETINSERTMARK = 0x044f,
+      EM_GETWORDBREAKPROCEX = 0x0450,
+      TB_SETINSERTMARK = 0x0450,
+      EM_SETWORDBREAKPROCEX = 0x0451,
+      TB_INSERTMARKHITTEST = 0x0451,
+      EM_SETUNDOLIMIT = 0x0452,
+      TB_MOVEBUTTON = 0x0452,
+      TB_GETMAXSIZE = 0x0453,
+      EM_REDO = 0x0454,
+      TB_SETEXTENDEDSTYLE = 0x0454,
+      EM_CANREDO = 0x0455,
+      TB_GETEXTENDEDSTYLE = 0x0455,
+      EM_GETUNDONAME = 0x0456,
+      TB_GETPADDING = 0x0456,
+      EM_GETREDONAME = 0x0457,
+      TB_SETPADDING = 0x0457,
+      EM_STOPGROUPTYPING = 0x0458,
+      TB_SETINSERTMARKCOLOR = 0x0458,
+      EM_SETTEXTMODE = 0x0459,
+      TB_GETINSERTMARKCOLOR = 0x0459,
+      EM_GETTEXTMODE = 0x045a,
+      TB_MAPACCELERATORW = 0x045a,
+      EM_AUTOURLDETECT = 0x045b,
+      TB_GETSTRINGW = 0x045b,
+      EM_GETAUTOURLDETECT = 0x045c,
+      TB_GETSTRINGA = 0x045c,
+      EM_SETPALETTE = 0x045d,
+      EM_GETTEXTEX = 0x045e,
+      EM_GETTEXTLENGTHEX = 0x045f,
+      EM_SHOWSCROLLBAR = 0x0460,
+      EM_SETTEXTEX = 0x0461,
+      TAPI_REPLY = 0x0463,
+      ACM_OPENA = 0x0464,
+      BFFM_SETSTATUSTEXTA = 0x0464,
+      CDM_FIRST = 0x0464,
+      CDM_GETSPEC = 0x0464,
+      EM_SETPUNCTUATION = 0x0464,
+      IPM_CLEARADDRESS = 0x0464,
+      WM_CAP_UNICODE_START = 0x0464,
+      ACM_PLAY = 0x0465,
+      BFFM_ENABLEOK = 0x0465,
+      CDM_GETFILEPATH = 0x0465,
+      EM_GETPUNCTUATION = 0x0465,
+      IPM_SETADDRESS = 0x0465,
+      PSM_SETCURSEL = 0x0465,
+      UDM_SETRANGE = 0x0465,
+      WM_CHOOSEFONT_SETLOGFONT = 0x0465,
+      ACM_STOP = 0x0466,
+      BFFM_SETSELECTIONA = 0x0466,
+      CDM_GETFOLDERPATH = 0x0466,
+      EM_SETWORDWRAPMODE = 0x0466,
+      IPM_GETADDRESS = 0x0466,
+      PSM_REMOVEPAGE = 0x0466,
+      UDM_GETRANGE = 0x0466,
+      WM_CAP_SET_CALLBACK_ERRORW = 0x0466,
+      WM_CHOOSEFONT_SETFLAGS = 0x0466,
+      ACM_OPENW = 0x0467,
+      BFFM_SETSELECTIONW = 0x0467,
+      CDM_GETFOLDERIDLIST = 0x0467,
+      EM_GETWORDWRAPMODE = 0x0467,
+      IPM_SETRANGE = 0x0467,
+      PSM_ADDPAGE = 0x0467,
+      UDM_SETPOS = 0x0467,
+      WM_CAP_SET_CALLBACK_STATUSW = 0x0467,
+      BFFM_SETSTATUSTEXTW = 0x0468,
+      CDM_SETCONTROLTEXT = 0x0468,
+      EM_SETIMECOLOR = 0x0468,
+      IPM_SETFOCUS = 0x0468,
+      PSM_CHANGED = 0x0468,
+      UDM_GETPOS = 0x0468,
+      CDM_HIDECONTROL = 0x0469,
+      EM_GETIMECOLOR = 0x0469,
+      IPM_ISBLANK = 0x0469,
+      PSM_RESTARTWINDOWS = 0x0469,
+      UDM_SETBUDDY = 0x0469,
+      CDM_SETDEFEXT = 0x046a,
+      EM_SETIMEOPTIONS = 0x046a,
+      PSM_REBOOTSYSTEM = 0x046a,
+      UDM_GETBUDDY = 0x046a,
+      EM_GETIMEOPTIONS = 0x046b,
+      PSM_CANCELTOCLOSE = 0x046b,
+      UDM_SETACCEL = 0x046b,
+      EM_CONVPOSITION = 0x046c,
+      EM_CONVPOSITION = 0x046c,
+      PSM_QUERYSIBLINGS = 0x046c,
+      UDM_GETACCEL = 0x046c,
+      MCIWNDM_GETZOOM = 0x046d,
+      PSM_UNCHANGED = 0x046d,
+      UDM_SETBASE = 0x046d,
+      PSM_APPLY = 0x046e,
+      UDM_GETBASE = 0x046e,
+      PSM_SETTITLEA = 0x046f,
+      UDM_SETRANGE32 = 0x046f,
+      PSM_SETWIZBUTTONS = 0x0470,
+      UDM_GETRANGE32 = 0x0470,
+      WM_CAP_DRIVER_GET_NAMEW = 0x0470,
+      PSM_PRESSBUTTON = 0x0471,
+      UDM_SETPOS32 = 0x0471,
+      WM_CAP_DRIVER_GET_VERSIONW = 0x0471,
+      PSM_SETCURSELID = 0x0472,
+      UDM_GETPOS32 = 0x0472,
+      PSM_SETFINISHTEXTA = 0x0473,
+      PSM_GETTABCONTROL = 0x0474,
+      PSM_ISDIALOGMESSAGE = 0x0475,
+      MCIWNDM_REALIZE = 0x0476,
+      PSM_GETCURRENTPAGEHWND = 0x0476,
+      MCIWNDM_SETTIMEFORMATA = 0x0477,
+      PSM_INSERTPAGE = 0x0477,
+      EM_SETLANGOPTIONS = 0x0478,
+      MCIWNDM_GETTIMEFORMATA = 0x0478,
+      PSM_SETTITLEW = 0x0478,
+      WM_CAP_FILE_SET_CAPTURE_FILEW = 0x0478,
+      EM_GETLANGOPTIONS = 0x0479,
+      MCIWNDM_VALIDATEMEDIA = 0x0479,
+      PSM_SETFINISHTEXTW = 0x0479,
+      WM_CAP_FILE_GET_CAPTURE_FILEW = 0x0479,
+      EM_GETIMECOMPMODE = 0x047a,
+      EM_FINDTEXTW = 0x047b,
+      MCIWNDM_PLAYTO = 0x047b,
+      WM_CAP_FILE_SAVEASW = 0x047b,
+      EM_FINDTEXTEXW = 0x047c,
+      MCIWNDM_GETFILENAMEA = 0x047c,
+      EM_RECONVERSION = 0x047d,
+      MCIWNDM_GETDEVICEA = 0x047d,
+      PSM_SETHEADERTITLEA = 0x047d,
+      WM_CAP_FILE_SAVEDIBW = 0x047d,
+      EM_SETIMEMODEBIAS = 0x047e,
+      MCIWNDM_GETPALETTE = 0x047e,
+      PSM_SETHEADERTITLEW = 0x047e,
+      EM_GETIMEMODEBIAS = 0x047f,
+      MCIWNDM_SETPALETTE = 0x047f,
+      PSM_SETHEADERSUBTITLEA = 0x047f,
+      MCIWNDM_GETERRORA = 0x0480,
+      PSM_SETHEADERSUBTITLEW = 0x0480,
+      PSM_HWNDTOINDEX = 0x0481,
+      PSM_INDEXTOHWND = 0x0482,
+      MCIWNDM_SETINACTIVETIMER = 0x0483,
+      PSM_PAGETOINDEX = 0x0483,
+      PSM_INDEXTOPAGE = 0x0484,
+      DL_BEGINDRAG = 0x0485,
+      MCIWNDM_GETINACTIVETIMER = 0x0485,
+      PSM_IDTOINDEX = 0x0485,
+      DL_DRAGGING = 0x0486,
+      PSM_INDEXTOID = 0x0486,
+      DL_DROPPED = 0x0487,
+      PSM_GETRESULT = 0x0487,
+      DL_CANCELDRAG = 0x0488,
+      PSM_RECALCPAGESIZES = 0x0488,
+      MCIWNDM_GET_SOURCE = 0x048c,
+      MCIWNDM_PUT_SOURCE = 0x048d,
+      MCIWNDM_GET_DEST = 0x048e,
+      MCIWNDM_PUT_DEST = 0x048f,
+      MCIWNDM_CAN_PLAY = 0x0490,
+      MCIWNDM_CAN_WINDOW = 0x0491,
+      MCIWNDM_CAN_RECORD = 0x0492,
+      MCIWNDM_CAN_SAVE = 0x0493,
+      MCIWNDM_CAN_EJECT = 0x0494,
+      MCIWNDM_CAN_CONFIG = 0x0495,
+      IE_GETINK = 0x0496,
+      IE_MSGFIRST = 0x0496,
+      MCIWNDM_PALETTEKICK = 0x0496,
+      IE_SETINK = 0x0497,
+      IE_GETPENTIP = 0x0498,
+      IE_SETPENTIP = 0x0499,
+      IE_GETERASERTIP = 0x049a,
+      IE_SETERASERTIP = 0x049b,
+      IE_GETBKGND = 0x049c,
+      IE_SETBKGND = 0x049d,
+      IE_GETGRIDORIGIN = 0x049e,
+      IE_SETGRIDORIGIN = 0x049f,
+      IE_GETGRIDPEN = 0x04a0,
+      IE_SETGRIDPEN = 0x04a1,
+      IE_GETGRIDSIZE = 0x04a2,
+      IE_SETGRIDSIZE = 0x04a3,
+      IE_GETMODE = 0x04a4,
+      IE_SETMODE = 0x04a5,
+      IE_GETINKRECT = 0x04a6,
+      WM_CAP_SET_MCI_DEVICEW = 0x04a6,
+      WM_CAP_GET_MCI_DEVICEW = 0x04a7,
+      WM_CAP_PAL_OPENW = 0x04b4,
+      WM_CAP_PAL_SAVEW = 0x04b5,
+      IE_GETAPPDATA = 0x04b8,
+      IE_SETAPPDATA = 0x04b9,
+      IE_GETDRAWOPTS = 0x04ba,
+      IE_SETDRAWOPTS = 0x04bb,
+      IE_GETFORMAT = 0x04bc,
+      IE_SETFORMAT = 0x04bd,
+      IE_GETINKINPUT = 0x04be,
+      IE_SETINKINPUT = 0x04bf,
+      IE_GETNOTIFY = 0x04c0,
+      IE_SETNOTIFY = 0x04c1,
+      IE_GETRECOG = 0x04c2,
+      IE_SETRECOG = 0x04c3,
+      IE_GETSECURITY = 0x04c4,
+      IE_SETSECURITY = 0x04c5,
+      IE_GETSEL = 0x04c6,
+      IE_SETSEL = 0x04c7,
+      CDM_LAST = 0x04c8,
+      EM_SETBIDIOPTIONS = 0x04c8,
+      IE_DOCOMMAND = 0x04c8,
+      MCIWNDM_NOTIFYMODE = 0x04c8,
+      EM_GETBIDIOPTIONS = 0x04c9,
+      IE_GETCOMMAND = 0x04c9,
+      EM_SETTYPOGRAPHYOPTIONS = 0x04ca,
+      IE_GETCOUNT = 0x04ca,
+      EM_GETTYPOGRAPHYOPTIONS = 0x04cb,
+      IE_GETGESTURE = 0x04cb,
+      MCIWNDM_NOTIFYMEDIA = 0x04cb,
+      EM_SETEDITSTYLE = 0x04cc,
+      IE_GETMENU = 0x04cc,
+      EM_GETEDITSTYLE = 0x04cd,
+      IE_GETPAINTDC = 0x04cd,
+      MCIWNDM_NOTIFYERROR = 0x04cd,
+      IE_GETPDEVENT = 0x04ce,
+      IE_GETSELCOUNT = 0x04cf,
+      IE_GETSELITEMS = 0x04d0,
+      IE_GETSTYLE = 0x04d1,
+      MCIWNDM_SETTIMEFORMATW = 0x04db,
+      EM_OUTLINE = 0x04dc,
+      EM_OUTLINE = 0x04dc,
+      MCIWNDM_GETTIMEFORMATW = 0x04dc,
+      EM_GETSCROLLPOS = 0x04dd,
+      EM_GETSCROLLPOS = 0x04dd,
+      EM_SETSCROLLPOS = 0x04de,
+      EM_SETSCROLLPOS = 0x04de,
+      EM_SETFONTSIZE = 0x04df,
+      EM_SETFONTSIZE = 0x04df,
+      EM_GETZOOM = 0x04e0,
+      MCIWNDM_GETFILENAMEW = 0x04e0,
+      EM_SETZOOM = 0x04e1,
+      MCIWNDM_GETDEVICEW = 0x04e1,
+      EM_GETVIEWKIND = 0x04e2,
+      EM_SETVIEWKIND = 0x04e3,
+      EM_GETPAGE = 0x04e4,
+      MCIWNDM_GETERRORW = 0x04e4,
+      EM_SETPAGE = 0x04e5,
+      EM_GETHYPHENATEINFO = 0x04e6,
+      EM_SETHYPHENATEINFO = 0x04e7,
+      EM_GETPAGEROTATE = 0x04eb,
+      EM_SETPAGEROTATE = 0x04ec,
+      EM_GETCTFMODEBIAS = 0x04ed,
+      EM_SETCTFMODEBIAS = 0x04ee,
+      EM_GETCTFOPENSTATUS = 0x04f0,
+      EM_SETCTFOPENSTATUS = 0x04f1,
+      EM_GETIMECOMPTEXT = 0x04f2,
+      EM_ISIME = 0x04f3,
+      EM_GETIMEPROPERTY = 0x04f4,
+      EM_GETQUERYRTFOBJ = 0x050d,
+      EM_SETQUERYRTFOBJ = 0x050e,
+      FM_GETFOCUS = 0x0600,
+      FM_GETDRIVEINFOA = 0x0601,
+      FM_GETSELCOUNT = 0x0602,
+      FM_GETSELCOUNTLFN = 0x0603,
+      FM_GETFILESELA = 0x0604,
+      FM_GETFILESELLFNA = 0x0605,
+      FM_REFRESH_WINDOWS = 0x0606,
+      FM_RELOAD_EXTENSIONS = 0x0607,
+      FM_GETDRIVEINFOW = 0x0611,
+      FM_GETFILESELW = 0x0614,
+      FM_GETFILESELLFNW = 0x0615,
+      WLX_WM_SAS = 0x0659,
+      SM_GETSELCOUNT = 0x07e8,
+      UM_GETSELCOUNT = 0x07e8,
+      WM_CPL_LAUNCH = 0x07e8,
+      SM_GETSERVERSELA = 0x07e9,
+      UM_GETUSERSELA = 0x07e9,
+      WM_CPL_LAUNCHED = 0x07e9,
+      SM_GETSERVERSELW = 0x07ea,
+      UM_GETUSERSELW = 0x07ea,
+      SM_GETCURFOCUSA = 0x07eb,
+      UM_GETGROUPSELA = 0x07eb,
+      SM_GETCURFOCUSW = 0x07ec,
+      UM_GETGROUPSELW = 0x07ec,
+      SM_GETOPTIONS = 0x07ed,
+      UM_GETCURFOCUSA = 0x07ed,
+      UM_GETCURFOCUSW = 0x07ee,
+      UM_GETOPTIONS = 0x07ef,
+      UM_GETOPTIONS2 = 0x07f0,
+      LVM_FIRST = 0x1000,
+      LVM_GETBKCOLOR = 0x1000,
+      LVM_SETBKCOLOR = 0x1001,
+      LVM_GETIMAGELIST = 0x1002,
+      LVM_SETIMAGELIST = 0x1003,
+      LVM_GETITEMCOUNT = 0x1004,
+      LVM_GETITEMA = 0x1005,
+      LVM_SETITEMA = 0x1006,
+      LVM_INSERTITEMA = 0x1007,
+      LVM_DELETEITEM = 0x1008,
+      LVM_DELETEALLITEMS = 0x1009,
+      LVM_GETCALLBACKMASK = 0x100a,
+      LVM_SETCALLBACKMASK = 0x100b,
+      LVM_GETNEXTITEM = 0x100c,
+      LVM_FINDITEMA = 0x100d,
+      LVM_GETITEMRECT = 0x100e,
+      LVM_SETITEMPOSITION = 0x100f,
+      LVM_GETITEMPOSITION = 0x1010,
+      LVM_GETSTRINGWIDTHA = 0x1011,
+      LVM_HITTEST = 0x1012,
+      LVM_ENSUREVISIBLE = 0x1013,
+      LVM_SCROLL = 0x1014,
+      LVM_REDRAWITEMS = 0x1015,
+      LVM_ARRANGE = 0x1016,
+      LVM_EDITLABELA = 0x1017,
+      LVM_GETEDITCONTROL = 0x1018,
+      LVM_GETCOLUMNA = 0x1019,
+      LVM_SETCOLUMNA = 0x101a,
+      LVM_INSERTCOLUMNA = 0x101b,
+      LVM_DELETECOLUMN = 0x101c,
+      LVM_GETCOLUMNWIDTH = 0x101d,
+      LVM_SETCOLUMNWIDTH = 0x101e,
+      LVM_GETHEADER = 0x101f,
+      LVM_CREATEDRAGIMAGE = 0x1021,
+      LVM_GETVIEWRECT = 0x1022,
+      LVM_GETTEXTCOLOR = 0x1023,
+      LVM_SETTEXTCOLOR = 0x1024,
+      LVM_GETTEXTBKCOLOR = 0x1025,
+      LVM_SETTEXTBKCOLOR = 0x1026,
+      LVM_GETTOPINDEX = 0x1027,
+      LVM_GETCOUNTPERPAGE = 0x1028,
+      LVM_GETORIGIN = 0x1029,
+      LVM_UPDATE = 0x102a,
+      LVM_SETITEMSTATE = 0x102b,
+      LVM_GETITEMSTATE = 0x102c,
+      LVM_GETITEMTEXTA = 0x102d,
+      LVM_SETITEMTEXTA = 0x102e,
+      LVM_SETITEMCOUNT = 0x102f,
+      LVM_SORTITEMS = 0x1030,
+      LVM_SETITEMPOSITION32 = 0x1031,
+      LVM_GETSELECTEDCOUNT = 0x1032,
+      LVM_GETITEMSPACING = 0x1033,
+      LVM_GETISEARCHSTRINGA = 0x1034,
+      LVM_SETICONSPACING = 0x1035,
+      LVM_SETEXTENDEDLISTVIEWSTYLE = 0x1036,
+      LVM_GETEXTENDEDLISTVIEWSTYLE = 0x1037,
+      LVM_GETSUBITEMRECT = 0x1038,
+      LVM_SUBITEMHITTEST = 0x1039,
+      LVM_SETCOLUMNORDERARRAY = 0x103a,
+      LVM_GETCOLUMNORDERARRAY = 0x103b,
+      LVM_SETHOTITEM = 0x103c,
+      LVM_GETHOTITEM = 0x103d,
+      LVM_SETHOTCURSOR = 0x103e,
+      LVM_GETHOTCURSOR = 0x103f,
+      LVM_APPROXIMATEVIEWRECT = 0x1040,
+      LVM_SETWORKAREAS = 0x1041,
+      LVM_GETSELECTIONMARK = 0x1042,
+      LVM_SETSELECTIONMARK = 0x1043,
+      LVM_SETBKIMAGEA = 0x1044,
+      LVM_GETBKIMAGEA = 0x1045,
+      LVM_GETWORKAREAS = 0x1046,
+      LVM_SETHOVERTIME = 0x1047,
+      LVM_GETHOVERTIME = 0x1048,
+      LVM_GETNUMBEROFWORKAREAS = 0x1049,
+      LVM_SETTOOLTIPS = 0x104a,
+      LVM_GETITEMW = 0x104b,
+      LVM_SETITEMW = 0x104c,
+      LVM_INSERTITEMW = 0x104d,
+      LVM_GETTOOLTIPS = 0x104e,
+      LVM_FINDITEMW = 0x1053,
+      LVM_GETSTRINGWIDTHW = 0x1057,
+      LVM_GETCOLUMNW = 0x105f,
+      LVM_SETCOLUMNW = 0x1060,
+      LVM_INSERTCOLUMNW = 0x1061,
+      LVM_GETITEMTEXTW = 0x1073,
+      LVM_SETITEMTEXTW = 0x1074,
+      LVM_GETISEARCHSTRINGW = 0x1075,
+      LVM_EDITLABELW = 0x1076,
+      LVM_GETBKIMAGEW = 0x108b,
+      LVM_SETSELECTEDCOLUMN = 0x108c,
+      LVM_SETTILEWIDTH = 0x108d,
+      LVM_SETVIEW = 0x108e,
+      LVM_GETVIEW = 0x108f,
+      LVM_INSERTGROUP = 0x1091,
+      LVM_SETGROUPINFO = 0x1093,
+      LVM_GETGROUPINFO = 0x1095,
+      LVM_REMOVEGROUP = 0x1096,
+      LVM_MOVEGROUP = 0x1097,
+      LVM_MOVEITEMTOGROUP = 0x109a,
+      LVM_SETGROUPMETRICS = 0x109b,
+      LVM_GETGROUPMETRICS = 0x109c,
+      LVM_ENABLEGROUPVIEW = 0x109d,
+      LVM_SORTGROUPS = 0x109e,
+      LVM_INSERTGROUPSORTED = 0x109f,
+      LVM_REMOVEALLGROUPS = 0x10a0,
+      LVM_HASGROUP = 0x10a1,
+      LVM_SETTILEVIEWINFO = 0x10a2,
+      LVM_GETTILEVIEWINFO = 0x10a3,
+      LVM_SETTILEINFO = 0x10a4,
+      LVM_GETTILEINFO = 0x10a5,
+      LVM_SETINSERTMARK = 0x10a6,
+      LVM_GETINSERTMARK = 0x10a7,
+      LVM_INSERTMARKHITTEST = 0x10a8,
+      LVM_GETINSERTMARKRECT = 0x10a9,
+      LVM_SETINSERTMARKCOLOR = 0x10aa,
+      LVM_GETINSERTMARKCOLOR = 0x10ab,
+      LVM_SETINFOTIP = 0x10ad,
+      LVM_GETSELECTEDCOLUMN = 0x10ae,
+      LVM_ISGROUPVIEWENABLED = 0x10af,
+      LVM_GETOUTLINECOLOR = 0x10b0,
+      LVM_SETOUTLINECOLOR = 0x10b1,
+      LVM_CANCELEDITLABEL = 0x10b3,
+      LVM_MAPINDEXTOID = 0x10b4,
+      LVM_MAPIDTOINDEX = 0x10b5,
+      LVM_ISITEMVISIBLE = 0x10b6,
+      OCM__BASE = 0x2000,
+      LVM_SETUNICODEFORMAT = 0x2005,
+      LVM_GETUNICODEFORMAT = 0x2006,
+      OCM_CTLCOLOR = 0x2019,
+      OCM_DRAWITEM = 0x202b,
+      OCM_MEASUREITEM = 0x202c,
+      OCM_DELETEITEM = 0x202d,
+      OCM_VKEYTOITEM = 0x202e,
+      OCM_CHARTOITEM = 0x202f,
+      OCM_COMPAREITEM = 0x2039,
+      OCM_NOTIFY = 0x204e,
+      OCM_COMMAND = 0x2111,
+      OCM_HSCROLL = 0x2114,
+      OCM_VSCROLL = 0x2115,
+      OCM_CTLCOLORMSGBOX = 0x2132,
+      OCM_CTLCOLOREDIT = 0x2133,
+      OCM_CTLCOLORLISTBOX = 0x2134,
+      OCM_CTLCOLORBTN = 0x2135,
+      OCM_CTLCOLORDLG = 0x2136,
+      OCM_CTLCOLORSCROLLBAR = 0x2137,
+      OCM_CTLCOLORSTATIC = 0x2138,
+      OCM_PARENTNOTIFY = 0x2210,
+      WM_APP = 0x8000,
+      WM_RASDIALEVENT = 0xcccd,
+    }
+
+    return messages
+  end
+
+  function r_lib_imcustom_hotkey()
+    local imgui = require 'imgui'
+    local vkeys = r_lib_vkeys()
+    local rkeys = r_lib_rkeys()
+    local wm = r_lib_window_message()
+
+    local tBlockKeys = {[vkeys.VK_RETURN] = true, [vkeys.VK_T] = true, [vkeys.VK_F6] = true, [vkeys.VK_F8] = true}
+    local tBlockChar = {[116] = true, [84] = true}
+    local tBlockNextDown = {}
+    local module = {}
+    module._VERSION = "1.1.5"
+    module._SETTINGS = {
+      noKeysMessage = "No"
+    }
+
+    local tHotKeyData = {
+      edit = nil,
+      save = {}
+    }
+    local tKeys = {}
+
+    function module.HotKey(name, keys, lastkeys, width)
+      local width = width or 90
+      local name = tostring(name)
+      local lastkeys = lastkeys or {}
+      local keys, bool = keys or {}, false
+      lastkeys.v = keys.v
+
+      local sKeys = table.concat(rkeys.getKeysName(keys.v), " + ")
+
+      if #tHotKeyData.save > 0 and tostring(tHotKeyData.save[1]) == name then
+        keys.v = tHotKeyData.save[2]
+        sKeys = table.concat(rkeys.getKeysName(keys.v), " + ")
+        tHotKeyData.save = {}
+        bool = true
+      elseif tHotKeyData.edit ~= nil and tostring(tHotKeyData.edit) == name then
+        if #tKeys == 0 then
+          sKeys = os.time() % 2 == 0 and module._SETTINGS.noKeysMessage or " "
+        else
+          sKeys = table.concat(rkeys.getKeysName(tKeys), " + ")
+        end
+      end
+
+      imgui.PushStyleColor(imgui.Col.Button, imgui.GetStyle().Colors[imgui.Col.FrameBg])
+      imgui.PushStyleColor(imgui.Col.ButtonHovered, imgui.GetStyle().Colors[imgui.Col.FrameBgHovered])
+      imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.GetStyle().Colors[imgui.Col.FrameBgActive])
+      if imgui.Button((tostring(sKeys):len() == 0 and module._SETTINGS.noKeysMessage or sKeys) .. name, imgui.ImVec2(width, 0)) then
+        tHotKeyData.edit = name
+      end
+      imgui.PopStyleColor(3)
+      return bool
+    end
+
+    function module.getCurrentEdit()
+      return tHotKeyData.edit ~= nil
+    end
+
+    function module.getKeysList(bool)
+      local bool = bool or false
+      local tKeysList = {}
+      if bool then
+        for k, v in ipairs(tKeys) do
+          tKeysList[k] = vkeys.id_to_name(v)
+        end
+      else
+        tKeysList = tKeys
+      end
+      return tKeysList
+    end
+
+    function module.getKeyNumber(id)
+      for k, v in ipairs(tKeys) do
+        if v == id then
+          return k
+        end
+      end
+      return - 1
+    end
+
+    local function reloadKeysList()
+      local tNewKeys = {}
+      for k, v in pairs(tKeys) do
+        tNewKeys[#tNewKeys + 1] = v
+      end
+      tKeys = tNewKeys
+      return true
+    end
+
+    addEventHandler("onWindowMessage",
+      function (msg, wparam, lparam)
+        if tHotKeyData.edit ~= nil and msg == wm.WM_CHAR then
+          if tBlockChar[wparam] then
+            consumeWindowMessage(true, true)
+          end
+        end
+        if msg == wm.WM_KEYDOWN or msg == wm.WM_SYSKEYDOWN then
+          if tHotKeyData.edit ~= nil and wparam == vkeys.VK_ESCAPE then
+            tKeys = {}
+            tHotKeyData.edit = nil
+            consumeWindowMessage(true, true)
+          end
+          if tHotKeyData.edit ~= nil and wparam == vkeys.VK_BACK then
+            tHotKeyData.save = {tHotKeyData.edit, {}}
+            tHotKeyData.edit = nil
+            consumeWindowMessage(true, true)
+          end
+          local num = module.getKeyNumber(wparam)
+          if num == -1 then
+            tKeys[#tKeys + 1] = wparam
+            if tHotKeyData.edit ~= nil then
+              if not rkeys.isKeyModified(wparam) then
+                tHotKeyData.save = {tHotKeyData.edit, tKeys}
+                tHotKeyData.edit = nil
+                tKeys = {}
+                consumeWindowMessage(true, true)
+              end
+            end
+          end
+          reloadKeysList()
+          if tHotKeyData.edit ~= nil then
+            consumeWindowMessage(true, true)
+          end
+        elseif msg == wm.WM_KEYUP or msg == wm.WM_SYSKEYUP then
+          local num = module.getKeyNumber(wparam)
+          if num > - 1 then
+            tKeys[num] = nil
+          end
+          reloadKeysList()
+          if tHotKeyData.edit ~= nil then
+            consumeWindowMessage(true, true)
+          end
+        end
+      end
+    )
+
+    return module
+  end
+
+  function r_lib_encoding()
+
+
+    local iconv = require 'iconv'
+
+    local encoding = {
+      default = 'ASCII'
+    }
+
+    local aliases = {
+      UTF7 = 'UTF-7',
+      UTF8 = 'UTF-8',
+      UTF16 = 'UTF-16',
+      UTF32 = 'UTF-32'
+    }
+
+    local function normalize_encoding_name(e)
+      e = string.upper(string.gsub(e, '_', '-'))
+      if aliases[e] then return aliases[e] end
+      return e
+    end
+
+    local converter = {}
+    function converter.new(enc)
+      local private = {
+        encoder = {},
+        decoder = {},
+      }
+
+      local public = {
+        encoding = enc
+      }
+      function public:encode(str, enc)
+        if enc then enc = normalize_encoding_name(enc)
+        else enc = encoding.default
+        end
+        local cd = private.encoder[enc]
+        if not cd then
+          cd = iconv.new(self.encoding .. '//IGNORE', enc)
+          assert(cd)
+          private.encoder[enc] = cd
+        end
+        local encoded = cd:iconv(str)
+        return encoded
+      end
+
+      function public:decode(str, enc)
+        if enc then enc = normalize_encoding_name(enc)
+        else enc = encoding.default
+        end
+        local cd = private.decoder[enc]
+        if not cd then
+          cd = iconv.new(enc .. '//IGNORE', self.encoding)
+          assert(cd)
+          private.decoder[enc] = cd
+        end
+        local decoded = cd:iconv(str)
+        return decoded
+      end
+
+      local mt = {}
+      function mt:__call(str, enc)
+        return self:encode(str, enc)
+      end
+
+      setmetatable(public, mt)
+      return public
+    end
+
+    setmetatable(encoding, {
+      __index =
+      function(table, index)
+        assert(type(index) == 'string')
+        local enc = normalize_encoding_name(index)
+        local already_loaded = rawget(table, enc)
+        if already_loaded then
+          table[index] = already_loaded
+          return already_loaded
+        else
+          -- create new converter
+          local conv = converter.new(enc)
+          table[index] = conv
+          table[enc] = conv
+          return conv
+        end
+      end
+    })
+
+    return encoding
+  end
+end
 --------------------------------------VAR---------------------------------------
 function var_require()
   imgui = require 'imgui'
+  RPC = require 'lib.samp.events'
   inicfg = require "inicfg"
   dlstatus = require('moonloader').download_status
   as_action = require('moonloader').audiostream_state
-  RPC = require 'lib.samp.events'
-  inspect = require 'inspect'
-  key = require 'vkeys'
-  hk = require 'rkeys'
-  ihk = require 'lib.imcustom.hotkey'
-  encoding = require 'encoding'
+  key = r_lib_vkeys()
+  hk = r_lib_rkeys()
+  ihk = r_lib_imcustom_hotkey()
+  encoding = r_lib_encoding()
   encoding.default = 'CP1251'
   u8 = encoding.UTF8
   ihk._SETTINGS.noKeysMessage = u8("-")
@@ -658,7 +2558,7 @@ function RPC.onServerMessage(color, text)
     else
       smsafk[selecteddialogSMS] = "NOT AFK"
     end
-		return false
+    return false
   end
   if DEBUG then DEBUG_simulateSupport(text) end
   if text:find("SMS") then
@@ -1234,7 +3134,7 @@ function imgui_messanger_FO(mode)
           online = "Оффлайн"
         end
         selecteddialogSMS = LASTNICK_SMS
-				smsafk[selecteddialogSMS] = "CHECK AFK"
+        smsafk[selecteddialogSMS] = "CHECK AFK"
         keyboard = true
         cfg.messanger.mode = 2
         cfg.only.notepad = false
@@ -1645,7 +3545,7 @@ function imgui_messanger_sms_showdialogs(table, typ)
             selecteddialogSMS = k
             ScrollToDialogSMS = true
             online = "Онлайн"
-						smsafk[selecteddialogSMS] = "CHECK AFK"
+            smsafk[selecteddialogSMS] = "CHECK AFK"
             scroll = true
             keyboard = true
             SSDB1_trigger = true
@@ -1665,7 +3565,7 @@ function imgui_messanger_sms_showdialogs(table, typ)
           if imgui.Button(u8(k .. "[" .. pId .. "]"), imgui.ImVec2(-0.0001, 30)) then
             selecteddialogSMS = k
             ScrollToDialogSMS = true
-						smsafk[selecteddialogSMS] = "CHECK AFK"
+            smsafk[selecteddialogSMS] = "CHECK AFK"
             online = "Онлайн"
             scroll = true
             keyboard = true
@@ -1924,7 +3824,7 @@ function imgui_messanger_sms_header()
       imgui.Text(u8:encode("[Оффлайн] Ник: "..tostring(selecteddialogSMS)..". Всего сообщений: "..tostring(#sms[selecteddialogSMS]["Chat"]).."."))
     else
       imgui.Text(u8:encode("[Онлайн] Ник: "..selecteddialogSMS..". ID: "..tostring(shId)..". LVL: "..tostring(sampGetPlayerScore(tonumber(shId)))..". Всего сообщений: "..tostring(#sms[selecteddialogSMS]["Chat"]).."."))
-			if smsafk[selecteddialogSMS] == nil then smsafk[selecteddialogSMS] = "CHECK AFK" end
+      if smsafk[selecteddialogSMS] == nil then smsafk[selecteddialogSMS] = "CHECK AFK" end
       imgui.SameLine(imgui.GetContentRegionAvailWidth() - imgui.CalcTextSize(smsafk[selecteddialogSMS]).x)
       if smsafk[selecteddialogSMS]:find("s") then
         imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(255, 0, 0, 113):GetVec4())
