@@ -61,6 +61,7 @@ function var_cfg()
       fastrespondviachat = true,
       fastrespondviadialog = true,
       unanswereddialog = true,
+      fastrespondviadialoglastid = true,
     },
     log = {
       active = true,
@@ -77,8 +78,29 @@ function var_cfg()
     hkSupFRChat = {
       [1] = 49,
     },
+    hkFRbyBASE = {
+      [1] = 50
+    },
+    hkFO_notepad = {
+      [1] = 51
+    },
     hkMainMenu = {
       [1] = 90
+    },
+    hkm1 = {
+      [1] = 52
+    },
+    hkm2 = {
+      [1] = 53
+    },
+    hkm3 = {
+      [1] = 54
+    },
+    hkm4 = {
+      [1] = 55
+    },
+    hkm5 = {
+      [1] = 56
     },
     colors =
     {
@@ -98,6 +120,11 @@ function var_cfg()
     },
     messanger =
     {
+      hotkey1 = true,
+      hotkey2 = true,
+      hotkey3 = true,
+      hotkey4 = true,
+      hotkey5 = true,
       storesms = true,
       activesduty = true,
       iSMSfilterBool = false,
@@ -143,6 +170,7 @@ function var_cfg()
       text = "Тут можно писать.\\nEnter - новая строка.\\nCtrl + Enter - сохранить текст.\\nESC - отменить изменения.\\nTAB - табуляция.",
       fr = "1. Действие тарифа продлена до 03.07.\\n2. Проявить себя с наилучшей стороны и оставить заявление в курилке сервера.\\n3. Команда саппортов не имеет данной информации.\\n4. Следите за гос. новостями.\\n5. Не консультируем по рыночным ценам.\\n6. /gps 0 - 22, напротив SF News.\\n7. /addtq - доб. клиента, /tupdate - нач. тюнинг, /endtune - оконч. тюнинг\\n8. /pagesize and /fontsize\\n9. /showcmd >> /mm >> [5] Организация\\n10. /changecar - игроку, /sellcar - в гос.\\n11. /changehouse - игроку, /sellhouse - в гос\\n12. 1-2 лвл 5к, 3-5 лвл 5к, 6-15 лвл 10 к, 16 лвл и выше - 30к\\n13. Следите за новостями на форуме - Samp-Rp.Su >> новости\\n14. Hell's Angels MC, Outlaws MC, Bandidos MC, Mongols MC.\\n15. Для восстановления доступа нажмите клавишу 'F6' и введите '/restoreAccess'.\\n16. Все команды на форуме: Samp-Rp.Su >> Помощь по гире >> FAQ >> Список команд.\\n17. /dir - Лидеры профсоюзероа. Обращайтесь к ним, по поводу принятия в профсоюз.\\n18. Samp-Rp.Su >> Игровые обсуждения >> Жалобы на администрацию.\\n19. Команда для переноса аккаунта - /transferaccount.\\n20. - Перенос аккаунтов только с 01, 03, 04, 09 на новый сервер проекта - Legacy.\\n21. Мы отвечаем на вопросы, касаемые проекта Samp-Rp, не оффтопьте, пожалуйста.\\n22. Samp-Rp.Ru >> Донат.\\n23. На данные вопросы отвечает администрация - /aquestion\\n24. /pageseize - кол-во строк чата, /fontsize - размер шрифта\\n25. Грибы можно продовать в закусочных, /sellgrib - 1 гриб = 5 вирт\\n26. Прокачивая ранг, вы повышаете лимит ЗП и скидки на аренду\\n27. 10 = 5.000 / 20 = 15.000 / 30 = 50.000 / 40 = 500.000 / 50 = 5.000.000",
       lines = 10,
+      hotkey = true,
     }
   }, 'support')
 end
@@ -170,6 +198,13 @@ function var_imgui_ImBool()
   isupfr = imgui.ImBool(cfg.messanger.supfr)
   ifastrespondviachat = imgui.ImBool(cfg.supfuncs.fastrespondviachat)
   ifastrespondviadialog = imgui.ImBool(cfg.supfuncs.fastrespondviadialog)
+  ifastrespondviadialoglastid = imgui.ImBool(cfg.supfuncs.fastrespondviadialoglastid)
+  inotepadhk = imgui.ImBool(cfg.notepad.hotkey)
+  imhk1 = imgui.ImBool(cfg.messanger.hotkey1)
+  imhk2 = imgui.ImBool(cfg.messanger.hotkey2)
+  imhk3 = imgui.ImBool(cfg.messanger.hotkey3)
+  imhk4 = imgui.ImBool(cfg.messanger.hotkey4)
+  imhk5 = imgui.ImBool(cfg.messanger.hotkey5)
   iunanswereddialog = imgui.ImBool(cfg.supfuncs.unanswereddialog)
   iChangeScroll = imgui.ImBool(cfg.messanger.iChangeScroll)
   iSetKeyboard = imgui.ImBool(cfg.messanger.iSetKeyboard)
@@ -289,11 +324,13 @@ function var_main()
   players = {}
   iYears = {}
   iMessanger = {}
-  LASTID = 0
   countall = 0
   ScrollToDialogSDUTY = false
   ScrollToDialogSMS = false
   LASTNICK = " "
+  LASTID = -1
+  LASTNICK_SMS = " "
+  LASTID_SMS = -1
   PLAYA = false
   iAddSMS = false
   PLAYQ = false
@@ -409,6 +446,96 @@ function main_init_hotkeys()
       if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
         if DEBUG then First = false end
         main_window_state.v = not main_window_state.v
+      end
+    end
+  )
+
+  hotkeys["hkFRbyBASE"] = {}
+  for i = 1, #cfg.hkFRbyBASE do
+    table.insert(hotkeys["hkFRbyBASE"], cfg["hkFRbyBASE"][i])
+  end
+  hk.unRegisterHotKey(hotkeys["hkFRbyBASE"])
+  hk.registerHotKey(hotkeys["hkFRbyBASE"], true,
+    function()
+      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+        sup_FastRespond_via_dialog_LASTID()
+      end
+    end
+  )
+
+  hotkeys["hkFO_notepad"] = {}
+  for i = 1, #cfg.hkFO_notepad do
+    table.insert(hotkeys["hkFO_notepad"], cfg["hkFO_notepad"][i])
+  end
+  hk.unRegisterHotKey(hotkeys["hkFO_notepad"])
+  hk.registerHotKey(hotkeys["hkFO_notepad"], true,
+    function()
+      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+        imgui_notepad_FO()
+      end
+    end
+  )
+
+  hotkeys["hkm1"] = {}
+  for i = 1, #cfg.hkm1 do
+    table.insert(hotkeys["hkm1"], cfg["hkm1"][i])
+  end
+  hk.unRegisterHotKey(hotkeys["hkm1"])
+  hk.registerHotKey(hotkeys["hkm1"], true,
+    function()
+      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+        imgui_messanger_FO(1)
+      end
+    end
+  )
+
+  hotkeys["hkm2"] = {}
+  for i = 1, #cfg.hkm2 do
+    table.insert(hotkeys["hkm2"], cfg["hkm2"][i])
+  end
+  hk.unRegisterHotKey(hotkeys["hkm2"])
+  hk.registerHotKey(hotkeys["hkm2"], true,
+    function()
+      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+        imgui_messanger_FO(2)
+      end
+    end
+  )
+
+  hotkeys["hkm3"] = {}
+  for i = 1, #cfg.hkm3 do
+    table.insert(hotkeys["hkm3"], cfg["hkm3"][i])
+  end
+  hk.unRegisterHotKey(hotkeys["hkm3"])
+  hk.registerHotKey(hotkeys["hkm3"], true,
+    function()
+      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+        imgui_messanger_FO(3)
+      end
+    end
+  )
+  hotkeys["hkm4"] = {}
+  for i = 1, #cfg.hkm4 do
+    table.insert(hotkeys["hkm4"], cfg["hkm4"][i])
+  end
+  hk.unRegisterHotKey(hotkeys["hkm4"])
+  hk.registerHotKey(hotkeys["hkm4"], true,
+    function()
+      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+        imgui_messanger_FO(4)
+      end
+    end
+  )
+
+  hotkeys["hkm5"] = {}
+  for i = 1, #cfg.hkm5 do
+    table.insert(hotkeys["hkm5"], cfg["hkm5"][i])
+  end
+  hk.unRegisterHotKey(hotkeys["hkm5"])
+  hk.registerHotKey(hotkeys["hkm5"], true,
+    function()
+      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+        imgui_messanger_FO(5)
       end
     end
   )
@@ -530,6 +657,8 @@ function RPC.onServerMessage(color, text)
     text = string.gsub(text, "{FF8000}", "")
     local smsText, smsNick, smsId = string.match(text, "^ SMS%: (.*)%. Отправитель%: (.*)%[(%d+)%]")
     if smsText and smsNick and smsId then
+      LASTID_SMS = smsId
+      LASTNICK_SMS = smsNick
       if iSoundSmsIn.v then PLAYSMSIN = true end
       if sms[smsNick] and sms[smsNick].Chat then
 
@@ -555,6 +684,8 @@ function RPC.onServerMessage(color, text)
     end
     local smsText, smsNick, smsId = string.match(text, "^ SMS%: (.*)%. Получатель%: (.*)%[(%d+)%]")
     if smsText and smsNick and smsId then
+      LASTID_SMS = smsId
+      LASTNICK_SMS = smsNick
       if iSoundSmsOut.v then PLAYSMSOUT = true end
       local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
       if sms[smsNick] and sms[smsNick].Chat then
@@ -782,8 +913,14 @@ function sup_FastRespond_via_chat()
   end
 end
 
-function sup_FastRespond_via_dialog(param)
-  if cfg.supfuncs.fastrespondviadialog then
+function sup_FastRespond_via_dialog_LASTID()
+  if cfg.supfuncs.fastrespondviadialoglastid then
+    lua_thread.create(sup_FastRespond_via_dialog, LASTID, true)
+  end
+end
+
+function sup_FastRespond_via_dialog(param, mod)
+  if cfg.supfuncs.fastrespondviadialog or mod then
     if tonumber(param) ~= nil then
       id = tonumber(param)
       if sampIsPlayerConnected(id) then
@@ -813,6 +950,7 @@ end
 
 function sup_UnAnswered_via_samp_dialog()
   if cfg.supfuncs.unanswereddialog then
+    if main_window_state.v then main_window_state.v = false end
     local UNANindex = {}
     for k in pairs(iMessanger) do
       if #iMessanger[k]["A"] == 0 then table.insert(UNANindex, k) end
@@ -953,6 +1091,7 @@ function imgui.OnDrawFrame()
     imgui.End()
   end
 end
+
 function imgui_menu()
   imgui.BeginMenuBar()
   if imgui.MenuItem(u8'В меню') then
@@ -994,6 +1133,131 @@ function imgui_messanger()
   end
 end
 
+function imgui_messanger_FO(mode)
+  --mode = 1 => открыть sup
+  --mode = 2 => открыть sup на последнем вопросе
+  --mode = 3 => открыть sms
+  --mode = 4 => открыть смс на последней смс
+	--mode = 5 => открыть смс на создании диалога
+  if mode == 1 then
+    if not cfg.only.messanger then
+      main_window_state.v = true
+    elseif cfg.messanger.mode == 2 then
+      cfg.messanger.mode = 1
+    else
+      main_window_state.v = not main_window_state.v
+    end
+    if cfg.messanger.activesduty and cfg.messanger.hotkey1 then
+      cfg.only.messanger = true
+      cfg.messanger.mode = 1
+      cfg.only.notepad = false
+      cfg.only.logviewer = false
+      cfg.only.histogram = false
+      cfg.only.settings = false
+      inicfg.save(cfg, "support")
+    end
+  end
+  if mode == 2 then
+    if not cfg.only.messanger then
+      main_window_state.v = true
+    elseif cfg.messanger.mode == 2 then
+      cfg.messanger.mode = 1
+    elseif selecteddialogSDUTY ~= LASTNICK then
+      --do nothing
+      if not main_window_state.v then main_window_state.v = true end
+    else
+      main_window_state.v = not main_window_state.v
+    end
+    if cfg.messanger.activesduty and cfg.messanger.hotkey2 then
+      cfg.only.messanger = true
+      if sampIsPlayerConnected(LASTID) and sampGetPlayerNickname(LASTID) == LASTNICK then
+        online = "Онлайн"
+      else
+        online = "Оффлайн"
+      end
+      selecteddialogSDUTY = LASTNICK
+      keyboard = true
+      cfg.messanger.mode = 1
+      cfg.only.notepad = false
+      cfg.only.logviewer = false
+      cfg.only.histogram = false
+      cfg.only.settings = false
+      inicfg.save(cfg, "support")
+    end
+  end
+  if mode == 3 then
+    if not cfg.only.messanger then
+      main_window_state.v = true
+    elseif cfg.messanger.mode == 1 then
+      cfg.messanger.mode = 2
+    else
+      main_window_state.v = not main_window_state.v
+    end
+    if cfg.messanger.activesms and cfg.messanger.hotkey3 then
+      cfg.only.messanger = true
+      cfg.messanger.mode = 2
+      cfg.only.notepad = false
+      cfg.only.logviewer = false
+      cfg.only.histogram = false
+      cfg.only.settings = false
+      inicfg.save(cfg, "support")
+    end
+  end
+  if mode == 4 then
+    if LASTNICK_SMS == " " then
+      sampAddChatMessage("Ошибка: вам/вы ещё не писали смс.", color)
+    else
+      if not cfg.only.messanger then
+        main_window_state.v = true
+      elseif cfg.messanger.mode == 1 then
+        cfg.messanger.mode = 2
+      elseif selecteddialogSMS ~= LASTNICK_SMS then
+        --do nothing
+        if not main_window_state.v then main_window_state.v = true end
+      else
+        main_window_state.v = not main_window_state.v
+      end
+      if cfg.messanger.activesms and cfg.messanger.hotkey4 then
+				sampAddChatMessage("text", color)
+        cfg.only.messanger = true
+        if sampIsPlayerConnected(LASTID_SMS) and sampGetPlayerNickname(LASTID_SMS) == LASTNICK_SMS then
+          online = "Онлайн"
+        else
+          online = "Оффлайн"
+        end
+        selecteddialogSMS = LASTNICK_SMS
+        keyboard = true
+        cfg.messanger.mode = 2
+        cfg.only.notepad = false
+        cfg.only.logviewer = false
+        cfg.only.histogram = false
+        cfg.only.settings = false
+        inicfg.save(cfg, "support")
+      end
+    end
+  end
+	if mode == 5 then
+		if not cfg.only.messanger then
+			main_window_state.v = true
+		elseif cfg.messanger.mode == 1 then
+			cfg.messanger.mode = 2
+		else
+			main_window_state.v = not main_window_state.v
+		end
+		if cfg.messanger.activesms and cfg.messanger.hotkey5 then
+			cfg.only.messanger = true
+			iAddSMS = true
+			KeyboardFocusResetForNewDialog = true
+			cfg.messanger.mode = 2
+			cfg.only.notepad = false
+			cfg.only.logviewer = false
+			cfg.only.histogram = false
+			cfg.only.settings = false
+			inicfg.save(cfg, "support")
+		end
+	end
+end
+
 function imgui_messanger_content()
   imgui.Columns(2, nil, false)
   imgui.SetColumnWidth(-1, 200)
@@ -1015,7 +1279,7 @@ end
 function imgui_messanger_rightclick()
   if imgui.IsItemHovered(imgui.HoveredFlags.RootWindow) and imgui.IsMouseClicked(1) then
     cfg.only.messanger = true
-		inicfg.save(cfg, "support")
+    inicfg.save(cfg, "support")
   end
 end
 
@@ -1182,7 +1446,6 @@ function imgui_messanger_sms_player_list()
     end
   end
   imgui.BeginChild("список ников", imgui.ImVec2(192, playerlistY), true)
-
   smsindex_PINNED = {}
   smsindex_PINNEDVIEWED = {}
   smsindex_NEW = {}
@@ -1218,7 +1481,7 @@ function imgui_messanger_sms_player_list_filter(k)
       kolvo = 0
       if #sms[k]["Chat"] ~= 0 then
         for i, z in pairs(sms[k]["Chat"]) do
-          if z["type"] ~= "TO" and z["time"] > sms[k]["Checked"] then
+          if z["type"] == "FROM" and z["time"] > sms[k]["Checked"] then
             kolvo = kolvo + 1
           end
         end
@@ -1322,7 +1585,7 @@ function imgui_messanger_sms_showdialogs(table, typ)
       kolvo = 0
       if #v["Chat"] ~= 0 then
         for i, z in pairs(v["Chat"]) do
-          if z["type"] ~= "TO" and z["time"] > v["Checked"] then
+          if z["type"] == "FROM" and z["time"] > v["Checked"] then
             kolvo = kolvo + 1
           end
         end
@@ -1408,13 +1671,14 @@ function imgui_messanger_sms_showdialogs(table, typ)
           end
         end
       end
+      imgui.PopStyleColor()
       imgui_messanger_sms_player_list_contextmenu(k, typ)
       if typ == "Pinned" then
-        imgui.PopStyleColor(3)
+        imgui.PopStyleColor(2)
         imgui.PopID()
       end
       if typ == "NotPinned" then
-        imgui.PopStyleColor(3)
+        imgui.PopStyleColor(2)
         imgui.PopID()
       end
     end
@@ -1622,7 +1886,7 @@ function imgui_messanger_sup_header()
     else
       qtime = "-"
     end
-    imgui.Text(u8:encode("["..online.."] Ник: "..selecteddialogSDUTY..". ID: "..tonumber(sId)..". LVL: "..sampGetPlayerScore(tonumber(sId))..". Время: "..qtime.." сек."))
+    imgui.Text(u8:encode("["..tostring(online).."] Ник: "..selecteddialogSDUTY..". ID: "..tonumber(sId)..". LVL: "..sampGetPlayerScore(tonumber(sId))..". Время: "..qtime.." сек."))
     imgui.SameLine(imgui.GetContentRegionAvailWidth() - 10)
     if imgui.Checkbox("##iHideOtherAnswers", iHideOtherAnswers) then
       cfg.messanger.HideOthersAnswers = iHideOtherAnswers.v
@@ -2210,7 +2474,12 @@ function imgui_notepad()
 end
 
 function imgui_notepad_content()
-  if imgui.InputTextMultiline("##notepad", textNotepad, imgui.ImVec2(-1, imgui.GetTextLineHeight() * cfg.notepad.lines), imgui.InputTextFlags.EnterReturnsTrue + imgui.InputTextFlags.AllowTabInput) then
+  if cfg.only.notepad then
+    notY = imgui.GetContentRegionAvail().y
+  else
+    notY = imgui.GetTextLineHeight() * cfg.notepad.lines
+  end
+  if imgui.InputTextMultiline("##notepad", textNotepad, imgui.ImVec2(-1, notY), imgui.InputTextFlags.EnterReturnsTrue + imgui.InputTextFlags.AllowTabInput) then
     notepadtext = textNotepad.v
     notepadtext = string.gsub(notepadtext, "\n", "\\n")
     notepadtext = string.gsub(notepadtext, "\t", "\\t")
@@ -2223,10 +2492,26 @@ function imgui_notepad_content()
   end
 end
 
+function imgui_notepad_FO()
+  if not cfg.only.notepad then
+    main_window_state.v = true
+  else
+    main_window_state.v = not main_window_state.v
+  end
+  if cfg.notepad.active and cfg.notepad.hotkey then
+    cfg.only.messanger = false
+    cfg.only.notepad = true
+    cfg.only.logviewer = false
+    cfg.only.histogram = false
+    cfg.only.settings = false
+    inicfg.save(cfg, "support")
+  end
+end
+
 function imgui_notepad_rightclick()
   if imgui.IsItemHovered(imgui.HoveredFlags.RootWindow) and imgui.IsMouseClicked(1) then
     cfg.only.notepad = true
-		inicfg.save(cfg, "support")
+    inicfg.save(cfg, "support")
   end
 end
 
@@ -2288,11 +2573,11 @@ function imgui_log_content()
     imgui.NextColumn()
     imgui.Columns(1)
     if csvall[date] ~= nil then
-			if cfg.only.logviewer then
-				logY = imgui.GetContentRegionAvail().y
-			else
-				logY = cfg.log.height
-			end
+      if cfg.only.logviewer then
+        logY = imgui.GetContentRegionAvail().y
+      else
+        logY = cfg.log.height
+      end
       imgui.BeginChild("##scrollingregion", imgui.ImVec2(0, logY))
       imgui.Columns(6)
       imgui.Separator()
@@ -2347,7 +2632,7 @@ end
 function imgui_log_rightclick()
   if imgui.IsItemHovered(imgui.HoveredFlags.RootWindow) and imgui.IsMouseClicked(1) then
     cfg.only.logviewer = true
-		inicfg.save(cfg, "support")
+    inicfg.save(cfg, "support")
   end
 end
 
@@ -2380,11 +2665,11 @@ function imgui_histogram_content()
     end
     imgui.PopStyleColor()
     imgui_histogram_getMonthStats(iMonth.v, string.sub(iYears[iYear.v + 1], 3, 4))
-		if cfg.only.histogram then
-			histY = imgui.GetContentRegionAvail().y
-		else
-			histY = cfg.stats.height
-		end
+    if cfg.only.histogram then
+      histY = imgui.GetContentRegionAvail().y
+    else
+      histY = cfg.stats.height
+    end
     imgui.PlotHistogram("##Статистика", month_histogram, 0, u8:encode(iMonths[iMonth.v].." "..iYears[iYear.v + 1]), 0, math.max(unpack(month_histogram)) + math.max(unpack(month_histogram)) * 0.15, imgui.ImVec2(imgui.GetWindowContentRegionWidth(), histY))
   else
     imgui.Text(u8"Ошибка: лог пуст или невалиден.")
@@ -2450,7 +2735,7 @@ end
 function imgui_settings_rightclick()
   if imgui.IsItemHovered(imgui.HoveredFlags.RootWindow) and imgui.IsMouseClicked(1) then
     cfg.only.settings = true
-		inicfg.save(cfg, "support")
+    inicfg.save(cfg, "support")
   end
 end
 
@@ -2686,22 +2971,38 @@ function imgui_settings_3_sup_funcs()
     imgui.SetTooltip(u8"По нажатию хоткея открывается список с проигнорированными саппортами вопросами.\nВ поле можно ввести порядковый номер вопроса, либо порядковый номер, пробел, ответ.")
   end
 
+  if imgui.Checkbox("##fastrespondviadialoglastid", ifastrespondviadialoglastid) then
+    cfg.supfuncs.fastrespondviadialoglastid = ifastrespondviadialoglastid.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if ifastrespondviadialoglastid.v then
+    imgui.Text(u8("Быстрый ответ по базе на последний вопрос по базе ответов включен"))
+  else
+    imgui.TextDisabled(u8"Включить быстрый ответ на последний вопрос по базе ответов?")
+  end
+  imgui.SameLine()
+  imgui.TextDisabled("(?)")
+  if imgui.IsItemHovered() then
+    imgui.SetTooltip(u8"По нажатию хоткея открывается диалог с вариантами быстрого ответа на последний заданный вопрос.\nВопросы берутся из базы, заполненной заранее.")
+  end
+
   if imgui.Checkbox("##fastrespondviadialog", ifastrespondviadialog) then
     cfg.supfuncs.fastrespondviadialog = ifastrespondviadialog.v
     inicfg.save(cfg, "support")
   end
   imgui.SameLine()
   if ifastrespondviadialog.v then
-    imgui.Text(u8("Быстрый ответ по базе готовых ответов включен"))
+    imgui.Text(u8("Быстрый ответ по базе ответов включен"))
   else
-    imgui.TextDisabled(u8"Включить быстрый ответ по базе готовых ответов?")
+    imgui.TextDisabled(u8"Включить быстрый ответ по базе ответов?")
   end
   imgui.SameLine()
   imgui.TextDisabled("(?)")
   if imgui.IsItemHovered() then
     imgui.SetTooltip(u8"\" / pm id \" открывает диалог с вариантами быстрого ответа.\nВопросы берутся из базы, заполненной заранее.")
   end
-  if ifastrespondviadialog.v then
+  if ifastrespondviadialog.v or ifastrespondviadialoglastid.v then
     imgui_settings_extra_setupFRbase()
   end
 end
@@ -2726,6 +3027,39 @@ function imgui_settings_4_sup_messanger()
     if iMessangerHeight.v ~= cfg.messanger.Height then
       cfg.messanger.Height = iMessangerHeight.v
       inicfg.save(cfg, "support")
+    end
+
+    if imgui.Checkbox("##imhk1", imhk1) then
+      cfg.messanger.hotkey1 = imhk1.v
+      inicfg.save(cfg, "support")
+    end
+    imgui.SameLine()
+    if imhk1.v then
+      imgui.Text(u8("Хоткей открытия мессенджера sduty включен."))
+    else
+      imgui.TextDisabled(u8"Включить хоткей открытия мессенджера sduty?")
+    end
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается sduty мессенджер.")
+    end
+
+
+    if imgui.Checkbox("##imhk2", imhk2) then
+      cfg.messanger.hotkey2 = imhk2.v
+      inicfg.save(cfg, "support")
+    end
+    imgui.SameLine()
+    if imhk2.v then
+      imgui.Text(u8("Хоткей быстрого ответа через мессенджер sduty включен."))
+    else
+      imgui.TextDisabled(u8"Включить хоткей быстрого ответа через мессенджер sduty?")
+    end
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается/закрывается мессенджер sduty с последним вопросом.\nЕсли он уже открыт, то фокус меняется на последний вопрос.")
     end
     imgui.Text(u8("Цвета вопросов в диалогах:"))
     imgui.SameLine(210)
@@ -2947,6 +3281,57 @@ function imgui_settings_5_sms_messanger()
       inicfg.save(cfg, "support")
     end
 
+    if imgui.Checkbox("##imhk3", imhk3) then
+      cfg.messanger.hotkey3 = imhk3.v
+      inicfg.save(cfg, "support")
+    end
+    imgui.SameLine()
+    if imhk3.v then
+      imgui.Text(u8("Хоткей открытия мессенджера sms включен."))
+    else
+      imgui.TextDisabled(u8"Включить хоткей открытия мессенджера sms?")
+    end
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается sms мессенджер.")
+    end
+
+
+    if imgui.Checkbox("##imhk4", imhk4) then
+      cfg.messanger.hotkey4 = imhk4.v
+      inicfg.save(cfg, "support")
+    end
+    imgui.SameLine()
+    if imhk4.v then
+      imgui.Text(u8("Хоткей быстрого ответа через мессенджер sms включен."))
+    else
+      imgui.TextDisabled(u8"Включить хоткей быстрого ответа через мессенджер sms?")
+    end
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается/закрывается мессенджер sms с последним сообщением.\nЕсли он уже открыт, то фокус меняется на последнее сообщение.")
+    end
+
+
+    if imgui.Checkbox("##imhk5", imhk5) then
+      cfg.messanger.hotkey5 = imhk5.v
+      inicfg.save(cfg, "support")
+    end
+    imgui.SameLine()
+    if imhk5.v then
+      imgui.Text(u8("Хоткей создания диалога через sms мессенджер включен."))
+    else
+      imgui.TextDisabled(u8"Включить хоткей создания диалога через sms мессенджер?")
+    end
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается мессенджер смс с фокусом на ввод ника/id нового собеседника.")
+    end
+
+
     imgui.Text(u8("Цвета входящих смс в диалогах:"))
     imgui.SameLine(210)
     imgui.Text("")
@@ -3070,9 +3455,27 @@ function imgui_settings_6_notepad()
     cfg.notepad.active = iNotepadActive.v
     inicfg.save(cfg, "support")
   end
+
   if iNotepadActive.v then
     imgui.SameLine()
     imgui.Text(u8"Блокнот активирован!")
+
+    if imgui.Checkbox("##inotepadhk", inotepadhk) then
+      cfg.notepad.hotkey = inotepadhk.v
+      inicfg.save(cfg, "support")
+    end
+    imgui.SameLine()
+    if inotepadhk.v then
+      imgui.Text(u8("Хоткей для быстрого открытия блокнота включен."))
+    else
+      imgui.TextDisabled(u8"Включить хоткей для быстрого открытия блокнота?")
+    end
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается блокнот.")
+    end
+
     imgui.PushItemWidth(325)
     imgui.SliderInt(u8"Количество строк блокнота", iNotepadLines, 1, 50)
     if iNotepadLines.v ~= cfg.notepad.lines then
@@ -3274,6 +3677,32 @@ function imgui_settings_12_hotkeys()
   if imgui.IsItemHovered() then
     imgui.SetTooltip(u8"По нажатию хоткея открывается окно скрипта.")
   end
+  if iunanswereddialog.v then
+    hotk.v = {}
+    hotke.v = hotkeys["hkUnAn"]
+    if ihk.HotKey(u8"##hkUnAn", hotke, hotk, 100) then
+      if not hk.isHotKeyDefined(hotke.v) then
+        if hk.isHotKeyDefined(hotk.v) then
+          hk.unRegisterHotKey(hotk.v)
+        end
+      end
+      cfg.hkUnAn = {}
+      for k, v in pairs(hotke.v) do
+        table.insert(cfg.hkUnAn, v)
+      end
+      if cfg.hkUnAn == {} then cfg["hkUnAn"][1] = 112 end
+      inicfg.save(cfg, "support")
+      main_init_hotkeys()
+    end
+    imgui.SameLine()
+    imgui.Text(u8"Горячая клавиша списка проигнорированных вопросов.")
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается список с проигнорированными саппортами вопросами.\nВ поле можно ввести порядковый номер вопроса, либо порядковый номер, пробел, ответ.")
+    end
+  end
+
   if ifastrespondviachat.v then
     hotk.v = {}
     hotke.v = hotkeys["hkSupFRChat"]
@@ -3299,29 +3728,186 @@ function imgui_settings_12_hotkeys()
       imgui.SetTooltip(u8"По нажатию хоткея открывается чат с /pm id последнего вопроса.")
     end
   end
-  if iunanswereddialog.v then
+
+  if ifastrespondviadialoglastid.v then
     hotk.v = {}
-    hotke.v = hotkeys["hkUnAn"]
-    if ihk.HotKey(u8"##hkUnAn", hotke, hotk, 100) then
+    hotke.v = hotkeys["hkFRbyBASE"]
+    if ihk.HotKey(u8"##hkFRbyBASE", hotke, hotk, 100) then
       if not hk.isHotKeyDefined(hotke.v) then
         if hk.isHotKeyDefined(hotk.v) then
           hk.unRegisterHotKey(hotk.v)
         end
       end
-      cfg.hkUnAn = {}
+      cfg.hkFRbyBASE = {}
       for k, v in pairs(hotke.v) do
-        table.insert(cfg.hkUnAn, v)
+        table.insert(cfg.hkFRbyBASE, v)
       end
-      if cfg.hkUnAn == {} then cfg["hkUnAn"][1] = 112 end
+      if cfg.hkFRbyBASE == {} then cfg["hkFRbyBASE"][1] = 50 end
       inicfg.save(cfg, "support")
       main_init_hotkeys()
     end
     imgui.SameLine()
-    imgui.Text(u8"Горячая клавиша быстрого ответа по базе готовых ответов.")
+    imgui.Text(u8"Горячая клавиша быстрого ответа на последний вопрос по базе готовых ответов.")
     imgui.SameLine()
     imgui.TextDisabled("(?)")
     if imgui.IsItemHovered() then
       imgui.SetTooltip(u8"По нажатию хоткея открывается список с проигнорированными саппортами вопросами.\nВ поле можно ввести порядковый номер вопроса, либо порядковый номер, пробел, ответ.")
+    end
+  end
+
+  if inotepadhk.v then
+    hotk.v = {}
+    hotke.v = hotkeys["hkFO_notepad"]
+    if ihk.HotKey(u8"##hkFO_notepad", hotke, hotk, 100) then
+      if not hk.isHotKeyDefined(hotke.v) then
+        if hk.isHotKeyDefined(hotk.v) then
+          hk.unRegisterHotKey(hotk.v)
+        end
+      end
+      cfg.hkFO_notepad = {}
+      for k, v in pairs(hotke.v) do
+        table.insert(cfg.hkFO_notepad, v)
+      end
+      if cfg.hkFO_notepad == {} then cfg["hkFO_notepad"][1] = 51 end
+      inicfg.save(cfg, "support")
+      main_init_hotkeys()
+    end
+    imgui.SameLine()
+    imgui.Text(u8"Горячая клавиша открытия блокнота.")
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается/закрывается блокнот.")
+    end
+  end
+
+  if imhk1.v then
+    hotk.v = {}
+    hotke.v = hotkeys["hkm1"]
+    if ihk.HotKey(u8"##hkm1", hotke, hotk, 100) then
+      if not hk.isHotKeyDefined(hotke.v) then
+        if hk.isHotKeyDefined(hotk.v) then
+          hk.unRegisterHotKey(hotk.v)
+        end
+      end
+      cfg.hkm1 = {}
+      for k, v in pairs(hotke.v) do
+        table.insert(cfg.hkm1, v)
+      end
+      if cfg.hkm1 == {} then cfg["hkm1"][1] = 51 end
+      inicfg.save(cfg, "support")
+      main_init_hotkeys()
+    end
+    imgui.SameLine()
+    imgui.Text(u8"Горячая клавиша открытия мессенджера sduty.")
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается/закрывается мессенджер sduty.")
+    end
+  end
+
+  if imhk2.v then
+    hotk.v = {}
+    hotke.v = hotkeys["hkm2"]
+    if ihk.HotKey(u8"##hkm2", hotke, hotk, 100) then
+      if not hk.isHotKeyDefined(hotke.v) then
+        if hk.isHotKeyDefined(hotk.v) then
+          hk.unRegisterHotKey(hotk.v)
+        end
+      end
+      cfg.hkm2 = {}
+      for k, v in pairs(hotke.v) do
+        table.insert(cfg.hkm2, v)
+      end
+      if cfg.hkm2 == {} then cfg["hkm2"][2] = 52 end
+      inicfg.save(cfg, "support")
+      main_init_hotkeys()
+    end
+    imgui.SameLine()
+    imgui.Text(u8"Горячая клавиша быстрого ответа через мессенджер sduty.")
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается/закрывается мессенджер sduty с последним вопросом.\nЕсли он уже открыт, то фокус меняется на последний вопрос.")
+    end
+  end
+
+  if imhk3.v then
+    hotk.v = {}
+    hotke.v = hotkeys["hkm3"]
+    if ihk.HotKey(u8"##hkm3", hotke, hotk, 100) then
+      if not hk.isHotKeyDefined(hotke.v) then
+        if hk.isHotKeyDefined(hotk.v) then
+          hk.unRegisterHotKey(hotk.v)
+        end
+      end
+      cfg.hkm3 = {}
+      for k, v in pairs(hotke.v) do
+        table.insert(cfg.hkm3, v)
+      end
+      if cfg.hkm3 == {} then cfg["hkm3"][3] = 53 end
+      inicfg.save(cfg, "support")
+      main_init_hotkeys()
+    end
+    imgui.SameLine()
+    imgui.Text(u8"Горячая клавиша открытия мессенджера sms.")
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается sms мессенджер.")
+    end
+  end
+
+  if imhk4.v then
+    hotk.v = {}
+    hotke.v = hotkeys["hkm4"]
+    if ihk.HotKey(u8"##hkm4", hotke, hotk, 100) then
+      if not hk.isHotKeyDefined(hotke.v) then
+        if hk.isHotKeyDefined(hotk.v) then
+          hk.unRegisterHotKey(hotk.v)
+        end
+      end
+      cfg.hkm4 = {}
+      for k, v in pairs(hotke.v) do
+        table.insert(cfg.hkm4, v)
+      end
+      if cfg.hkm4 == {} then cfg["hkm4"][4] = 54 end
+      inicfg.save(cfg, "support")
+      main_init_hotkeys()
+    end
+    imgui.SameLine()
+    imgui.Text(u8"Горячая клавиша быстрого ответа через мессенджер sms.")
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается/закрывается мессенджер sms с последним сообщением.\nЕсли он уже открыт, то фокус меняется на последнее сообщение.")
+    end
+  end
+
+  if imhk5.v then
+    hotk.v = {}
+    hotke.v = hotkeys["hkm5"]
+    if ihk.HotKey(u8"##hkm5", hotke, hotk, 100) then
+      if not hk.isHotKeyDefined(hotke.v) then
+        if hk.isHotKeyDefined(hotk.v) then
+          hk.unRegisterHotKey(hotk.v)
+        end
+      end
+      cfg.hkm5 = {}
+      for k, v in pairs(hotke.v) do
+        table.insert(cfg.hkm5, v)
+      end
+      if cfg.hkm5 == {} then cfg["hkm5"][5] = 55 end
+      inicfg.save(cfg, "support")
+      main_init_hotkeys()
+    end
+    imgui.SameLine()
+    imgui.Text(u8"Горячая клавиша создания диалога через sms мессенджер.")
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается мессенджер смс с фокусом на ввод ника/id нового собеседника.")
     end
   end
 end
