@@ -298,6 +298,9 @@ end
 
 function var_main()
   hotkeys = {}
+  hotk = {}
+  hotke = {}
+  smsafk = {}
   iMonths = {
     [1] = "Январь",
     [2] = "Февраль",
@@ -350,8 +353,6 @@ var_imgui_ImFloat4_ImColor()
 var_imgui_ImInt()
 var_imgui_ImBuffer()
 var_main()
-hotk = {}
-hotke = {}
 -------------------------------------MAIN---------------------------------------
 function main()
   if not isSampfuncsLoaded() or not isSampLoaded() then return end
@@ -651,6 +652,14 @@ function RPC.onPlaySound(sound)
 end
 --говно
 function RPC.onServerMessage(color, text)
+  if main_window_state.v and text:match(" "..tostring(selecteddialogSMS).." %[(%d+)%]") then
+    if string.find(text, "AFK") then
+      smsafk[selecteddialogSMS] = "AFK "..string.match(text, "AFK: (%d+) сек").." s"
+    else
+      smsafk[selecteddialogSMS] = "NOT AFK"
+    end
+		return false
+  end
   if DEBUG then DEBUG_simulateSupport(text) end
   if text:find("SMS") then
     text = string.gsub(text, "{FFFF00}", "")
@@ -1138,7 +1147,7 @@ function imgui_messanger_FO(mode)
   --mode = 2 => открыть sup на последнем вопросе
   --mode = 3 => открыть sms
   --mode = 4 => открыть смс на последней смс
-	--mode = 5 => открыть смс на создании диалога
+  --mode = 5 => открыть смс на создании диалога
   if mode == 1 then
     if not cfg.only.messanger then
       main_window_state.v = true
@@ -1218,7 +1227,6 @@ function imgui_messanger_FO(mode)
         main_window_state.v = not main_window_state.v
       end
       if cfg.messanger.activesms and cfg.messanger.hotkey4 then
-				sampAddChatMessage("text", color)
         cfg.only.messanger = true
         if sampIsPlayerConnected(LASTID_SMS) and sampGetPlayerNickname(LASTID_SMS) == LASTNICK_SMS then
           online = "Онлайн"
@@ -1226,6 +1234,7 @@ function imgui_messanger_FO(mode)
           online = "Оффлайн"
         end
         selecteddialogSMS = LASTNICK_SMS
+				smsafk[selecteddialogSMS] = "CHECK AFK"
         keyboard = true
         cfg.messanger.mode = 2
         cfg.only.notepad = false
@@ -1236,26 +1245,26 @@ function imgui_messanger_FO(mode)
       end
     end
   end
-	if mode == 5 then
-		if not cfg.only.messanger then
-			main_window_state.v = true
-		elseif cfg.messanger.mode == 1 then
-			cfg.messanger.mode = 2
-		else
-			main_window_state.v = not main_window_state.v
-		end
-		if cfg.messanger.activesms and cfg.messanger.hotkey5 then
-			cfg.only.messanger = true
-			iAddSMS = true
-			KeyboardFocusResetForNewDialog = true
-			cfg.messanger.mode = 2
-			cfg.only.notepad = false
-			cfg.only.logviewer = false
-			cfg.only.histogram = false
-			cfg.only.settings = false
-			inicfg.save(cfg, "support")
-		end
-	end
+  if mode == 5 then
+    if not cfg.only.messanger then
+      main_window_state.v = true
+    elseif cfg.messanger.mode == 1 then
+      cfg.messanger.mode = 2
+    else
+      main_window_state.v = not main_window_state.v
+    end
+    if cfg.messanger.activesms and cfg.messanger.hotkey5 then
+      cfg.only.messanger = true
+      iAddSMS = true
+      KeyboardFocusResetForNewDialog = true
+      cfg.messanger.mode = 2
+      cfg.only.notepad = false
+      cfg.only.logviewer = false
+      cfg.only.histogram = false
+      cfg.only.settings = false
+      inicfg.save(cfg, "support")
+    end
+  end
 end
 
 function imgui_messanger_content()
@@ -1636,6 +1645,7 @@ function imgui_messanger_sms_showdialogs(table, typ)
             selecteddialogSMS = k
             ScrollToDialogSMS = true
             online = "Онлайн"
+						smsafk[selecteddialogSMS] = "CHECK AFK"
             scroll = true
             keyboard = true
             SSDB1_trigger = true
@@ -1655,6 +1665,7 @@ function imgui_messanger_sms_showdialogs(table, typ)
           if imgui.Button(u8(k .. "[" .. pId .. "]"), imgui.ImVec2(-0.0001, 30)) then
             selecteddialogSMS = k
             ScrollToDialogSMS = true
+						smsafk[selecteddialogSMS] = "CHECK AFK"
             online = "Онлайн"
             scroll = true
             keyboard = true
@@ -1913,6 +1924,20 @@ function imgui_messanger_sms_header()
       imgui.Text(u8:encode("[Оффлайн] Ник: "..tostring(selecteddialogSMS)..". Всего сообщений: "..tostring(#sms[selecteddialogSMS]["Chat"]).."."))
     else
       imgui.Text(u8:encode("[Онлайн] Ник: "..selecteddialogSMS..". ID: "..tostring(shId)..". LVL: "..tostring(sampGetPlayerScore(tonumber(shId)))..". Всего сообщений: "..tostring(#sms[selecteddialogSMS]["Chat"]).."."))
+			if smsafk[selecteddialogSMS] == nil then smsafk[selecteddialogSMS] = "CHECK AFK" end
+      imgui.SameLine(imgui.GetContentRegionAvailWidth() - imgui.CalcTextSize(smsafk[selecteddialogSMS]).x)
+      if smsafk[selecteddialogSMS]:find("s") then
+        imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(255, 0, 0, 113):GetVec4())
+      end
+      if smsafk[selecteddialogSMS]:find("NOT") then
+        imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 255, 0, 113):GetVec4())
+      end
+      if imgui.Button(smsafk[selecteddialogSMS]) then
+        sampSendChat("/id "..selecteddialogSMS)
+      end
+      if smsafk[selecteddialogSMS]:find("s") or smsafk[selecteddialogSMS]:find("NOT") then
+        imgui.PopStyleColor()
+      end
     end
   end
   imgui.EndChild()
@@ -4161,5 +4186,11 @@ do
       end
     end
     return tables[1]
+  end
+end
+
+function onScriptTerminate(scr)
+  if scr == script.this then
+    lockPlayerControl(false)
   end
 end
