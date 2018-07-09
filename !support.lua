@@ -1907,6 +1907,7 @@ end
 --------------------------------------VAR---------------------------------------
 function var_require()
   imgui = require 'imgui'
+  inspect = require 'inspect'
   RPC = require 'lib.samp.events'
   inicfg = require "inicfg"
   dlstatus = require('moonloader').download_status
@@ -1962,6 +1963,7 @@ function var_cfg()
       fastrespondviadialog = true,
       unanswereddialog = true,
       fastrespondviadialoglastid = true,
+      autosduty = true,
     },
     log = {
       active = true,
@@ -2060,7 +2062,9 @@ function var_cfg()
       iShowA1 = true,
       iShowA2 = true,
       iChangeScroll = true,
+      iChangeScrollSMS = true,
       iSetKeyboard = true,
+      iSetKeyboardSMS = true,
       iShowSHOWOFFLINESDUTY = true,
       iShowSHOWOFFLINESMS = true,
     },
@@ -2106,8 +2110,11 @@ function var_imgui_ImBool()
   imhk4 = imgui.ImBool(cfg.messanger.hotkey4)
   imhk5 = imgui.ImBool(cfg.messanger.hotkey5)
   iunanswereddialog = imgui.ImBool(cfg.supfuncs.unanswereddialog)
+  iautosduty = imgui.ImBool(cfg.supfuncs.unanswereddialog)
   iChangeScroll = imgui.ImBool(cfg.messanger.iChangeScroll)
+  iChangeScrollSMS = imgui.ImBool(cfg.messanger.iChangeScrollSMS)
   iSetKeyboard = imgui.ImBool(cfg.messanger.iSetKeyboard)
+  iSetKeyboardSMS = imgui.ImBool(cfg.messanger.iSetKeyboardSMS)
   iNotepadActive = imgui.ImBool(cfg.notepad.active)
   iMessangerActiveSDUTY = imgui.ImBool(cfg.messanger.activesduty)
   iMessangerActiveSMS = imgui.ImBool(cfg.messanger.activesms)
@@ -2181,7 +2188,13 @@ function var_imgui_ImInt()
   iMessangerHeight = imgui.ImInt(cfg.messanger.Height)
   iSettingsTab = imgui.ImInt(cfg.options.settingstab)
   iYear = imgui.ImInt(0)
-  iDay = imgui.ImInt(tonumber(os.date("%d")))
+
+  if os.date('%H', os.time()) == "00" or os.date('%H', os.time()) == "01" or os.date('%H', os.time()) == '02' or os.date('%H', os.time()) == "03" or os.date('%H', os.time()) == "04" then
+    iDay = imgui.ImInt(tonumber(os.date("%d", os.time() - 20000)))
+  else
+    iDay = imgui.ImInt(tonumber(os.date("%d")))
+  end
+
   iMonth = imgui.ImInt(tonumber(os.date("%m")))
 end
 
@@ -2253,6 +2266,7 @@ var_imgui_ImFloat4_ImColor()
 var_imgui_ImInt()
 var_imgui_ImBuffer()
 var_main()
+
 -------------------------------------MAIN---------------------------------------
 function main()
   if not isSampfuncsLoaded() or not isSampLoaded() then return end
@@ -2262,6 +2276,7 @@ function main()
   main_init_supfuncs()
   main_init_debug()
   main_init_hotkeys()
+  main_init_supdoc()
   main_ImColorToHEX()
   main_copyright()
   inicfg.save(cfg, "support")
@@ -2440,6 +2455,10 @@ function main_init_hotkeys()
       end
     end
   )
+end
+
+function main_init_supdoc()
+  --test = imgui.CreateTextureFromFile(getWorkingDirectory().."\\test.png")
 end
 
 function main_ImColorToHEX()
@@ -2701,6 +2720,14 @@ function RPC.onSendCommand(text)
           sup_AddA(text)
         end
       end
+    end
+  end
+end
+
+function RPC.onDisplayGameText(style, time, text)
+  if text:find("Welcome") then
+    if cfg.supfuncs.autosduty then
+      lua_thread.create(function() wait(1500) sampSendChat("/sduty") end)
     end
   end
 end
@@ -2973,7 +3000,6 @@ function sup_updateStats()
 end
 
 function imgui.OnDrawFrame()
-
   if main_window_state.v then
     imgui.SetNextWindowPos(imgui.ImVec2(cfg.menuwindow.PosX, cfg.menuwindow.PosY), imgui.Cond.FirstUseEver)
     imgui.SetNextWindowSize(imgui.ImVec2(cfg.menuwindow.Width, cfg.menuwindow.Height))
@@ -3242,7 +3268,7 @@ function imgui_messanger_sup_settings()
     inicfg.save(cfg, "support")
   end
   if imgui.IsItemHovered() then
-    imgui.SetTooltip(u8"Курсор на ввод текста при выборе?")
+    imgui.SetTooltip(u8"Курсор на ввод текста при выборе диалога?")
   end
   imgui.SameLine()
   if imgui.Checkbox("##iChangeScroll", iChangeScroll) then
@@ -3250,7 +3276,7 @@ function imgui_messanger_sup_settings()
     inicfg.save(cfg, "support")
   end
   if imgui.IsItemHovered() then
-    imgui.SetTooltip(u8"Менять позицию скролла?")
+    imgui.SetTooltip(u8"Менять позицию скролла в списке диалогов при выборе диалога?")
   end
   imgui.EndChild()
 end
@@ -3286,6 +3312,22 @@ function imgui_messanger_sms_settings()
     end
     if not iSMSfilterBool.v then
       imgui.SameLine()
+      if imgui.Checkbox("##iSetKeyboardSMS", iSetKeyboardSMS) then
+        cfg.messanger.iSetKeyboardSMS = iSetKeyboardSMS.v
+        inicfg.save(cfg, "support")
+      end
+      if imgui.IsItemHovered() then
+        imgui.SetTooltip(u8"Курсор на ввод текста при выборе диалога?")
+      end
+      imgui.SameLine()
+      if imgui.Checkbox("##iChangeScrollSMS", iChangeScrollSMS) then
+        cfg.messanger.iChangeScrollSMS = iChangeScrollSMS.v
+        inicfg.save(cfg, "support")
+      end
+      if imgui.IsItemHovered() then
+        imgui.SetTooltip(u8"Менять позицию скролла в списке диалогов при выборе диалога?")
+      end
+      imgui.SameLine()
       if imgui.Button(u8"Добавить", imgui.ImVec2(imgui.GetContentRegionAvailWidth() + 1, 20)) then
         iAddSMS = true
         KeyboardFocusResetForNewDialog = true
@@ -3296,6 +3338,7 @@ function imgui_messanger_sms_settings()
       createnewdialognick = iSMSAddDialog.v
       if iSMSAddDialog.v == "" then
         iAddSMS = false
+				lockPlayerControl(false)
       else
         iSMSAddDialog.v = ""
         for i = 0, sampGetMaxPlayerId() + 1 do
@@ -3321,7 +3364,12 @@ function imgui_messanger_sms_settings()
         end
       end
     end
-    if KeyboardFocusResetForNewDialog then imgui.SetKeyboardFocusHere() KeyboardFocusResetForNewDialog = false end
+		if imgui.IsKeyPressed(key.VK_ESCAPE) then
+			iSMSAddDialog.v = ""
+			iAddSMS = false
+			lockPlayerControl(false)
+		end
+    if KeyboardFocusResetForNewDialog then imgui.SetKeyboardFocusHere() lockPlayerControl(true) KeyboardFocusResetForNewDialog = false end
     if iSMSAddDialog.v ~= "" then
       for i = 0, sampGetMaxPlayerId() do
         if sampIsPlayerConnected(i) and i == tonumber(iSMSAddDialog.v) or sampIsPlayerConnected(i) and string.find(string.rlower(sampGetPlayerNickname(i)), string.rlower(iSMSAddDialog.v)) then
@@ -3334,6 +3382,7 @@ function imgui_messanger_sms_settings()
     if imgui.Button(u8"close", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 20)) then
       iSMSAddDialog.v = ""
       iAddSMS = false
+			lockPlayerControl(false)
     end
   end
   imgui.PopStyleColor()
@@ -3349,9 +3398,9 @@ function imgui_messanger_sms_player_list()
     end
   else
     if cfg.only.messanger then
-      playerlistY = imgui.GetContentRegionAvail().y - 74
+      playerlistY = imgui.GetContentRegionAvail().y + 4
     else
-      playerlistY = iMessangerHeight.v - 74
+      playerlistY = iMessangerHeight.v + 4
     end
   end
   imgui.BeginChild("список ников", imgui.ImVec2(192, playerlistY), true)
@@ -3427,9 +3476,9 @@ function imgui_messanger_sup_player_list()
     end
   else
     if cfg.only.messanger then
-      playerlistY = imgui.GetContentRegionAvail().y - 74
+      playerlistY = imgui.GetContentRegionAvail().y + 4
     else
-      playerlistY = iMessangerHeight.v - 74
+      playerlistY = iMessangerHeight.v + 4
     end
   end
   imgui.BeginChild("список ников", imgui.ImVec2(192, playerlistY), true)
@@ -3536,7 +3585,7 @@ function imgui_messanger_sms_showdialogs(table, typ)
           imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.26, 0.59, 0.98, 0.40))
         end
       end
-      if scroll and iChangeScroll.v then
+      if scroll and iChangeScrollSMS.v then
         imgui.SetScrollHere()
       end
       if kolvo > 0 then
@@ -3758,19 +3807,53 @@ end
 
 function imgui_messanger_switchmode()
   imgui.BeginChild("Переключатель режимов", imgui.ImVec2(192, 35), true)
+  kolvo1 = 0
+  for k in pairs(iMessanger) do
+    if #iMessanger[k]["A"] == 0 then
+      if #iMessanger[k]["Chat"] ~= 0 then
+        for i, z in pairs(iMessanger[k]["Chat"]) do
+          if z["type"] ~= "support" and z["time"] > iMessanger[k]["Checked"] then
+            kolvo1 = kolvo1 + 1
+          end
+        end
+      end
+    end
+  end
   if cfg.messanger.mode == 1 then
     imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 0, 0, 200):GetVec4())
+    imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(255, 255, 255, 255):GetVec4())
   else
+    if kolvo1 ~= nil and kolvo1 > 0 then
+      imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(0, 255, 0, 255):GetVec4())
+    else
+      imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(255, 255, 255, 255):GetVec4())
+    end
     imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.26, 0.59, 0.98, 0.40))
   end
   if imgui.Button(u8("SDUTY"), imgui.ImVec2(85, 20)) then
     cfg.messanger.mode = 1
     inicfg.save(cfg, "support")
   end
-  imgui.PopStyleColor()
+  imgui.PopStyleColor(2)
+  kolvo2 = 0
+  for k in pairs(sms) do
+    if #sms[k]["Chat"] ~= 0 then
+      for i, z in pairs(sms[k]["Chat"]) do
+        if z["type"] == "FROM" and z["time"] > sms[k]["Checked"] then
+          kolvo2 = kolvo2 + 1
+        end
+      end
+    end
+  end
   if cfg.messanger.mode == 2 then
     imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 0, 0, 200):GetVec4())
+    imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(255, 255, 255, 255):GetVec4())
   else
+    if kolvo2 ~= nil and kolvo2 > 0 then
+      imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(0, 255, 0, 255):GetVec4())
+    else
+      imgui.PushStyleColor(imgui.Col.Text, imgui.ImColor(255, 255, 255, 255):GetVec4())
+    end
     imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.26, 0.59, 0.98, 0.40))
   end
   imgui.SameLine()
@@ -3778,7 +3861,7 @@ function imgui_messanger_switchmode()
     cfg.messanger.mode = 2
     inicfg.save(cfg, "support")
   end
-  imgui.PopStyleColor()
+  imgui.PopStyleColor(2)
   imgui.EndChild()
 end
 
@@ -3836,7 +3919,7 @@ function imgui_messanger_sms_header()
         for i = 1, sampGetMaxPlayerId() do
           if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSMS then
             sampSendChat("/id "..i)
-						break
+            break
           end
         end
       end
@@ -3850,6 +3933,12 @@ end
 
 function imgui_messanger_sup_dialog()
   if cfg.messanger.activesduty and cfg.messanger.activesms then
+    if cfg.only.messanger then
+      dialogY = imgui.GetContentRegionAvail().y - 35
+    else
+      dialogY = iMessangerHeight.v - 35
+    end
+  else
     if cfg.only.messanger then
       dialogY = imgui.GetContentRegionAvail().y - 35
     else
@@ -3978,6 +4067,12 @@ end
 
 function imgui_messanger_sms_dialog()
   if cfg.messanger.activesduty and cfg.messanger.activesms then
+    if cfg.only.messanger then
+      dialogY = imgui.GetContentRegionAvail().y - 35
+    else
+      dialogY = iMessangerHeight.v - 35
+    end
+  else
     if cfg.only.messanger then
       dialogY = imgui.GetContentRegionAvail().y - 35
     else
@@ -4315,7 +4410,7 @@ function imgui_messanger_sms_keyboard()
       imgui.SetKeyboardFocusHere()
       KeyboardFocusReset = false
     end
-    if keyboard and iSetKeyboard.v then
+    if keyboard and iSetKeyboardSMS.v then
       imgui.SetKeyboardFocusHere()
       keyboard = false
     end
@@ -4420,6 +4515,11 @@ function imgui_notepad_content()
       printStringNow("Text not saved", 1000)
     end
   end
+	if imgui.IsItemActive() then
+		lockPlayerControl(true)
+	else
+		lockPlayerControl(false)
+	end
 end
 
 function imgui_notepad_FO()
@@ -4868,6 +4968,22 @@ function imgui_settings_2_sms_hideandcol()
 end
 
 function imgui_settings_3_sup_funcs()
+  if imgui.Checkbox("##autosduty", iautosduty) then
+    cfg.supfuncs.autosduty = iautosduty.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if iautosduty.v then
+    imgui.Text(u8("Авто /sduty включено."))
+  else
+    imgui.TextDisabled(u8"Включить авто /sduty?")
+  end
+  imgui.SameLine()
+  imgui.TextDisabled("(?)")
+  if imgui.IsItemHovered() then
+    imgui.SetTooltip(u8"Если включено, при входе в игру рабочий день саппорта начнется автоматически.\nРаботает не только при старте игры, но и при потере соединения/реконнекте.")
+  end
+
   if imgui.Checkbox("##ifastrespondviachat", ifastrespondviachat) then
     cfg.supfuncs.fastrespondviachat = ifastrespondviachat.v
     inicfg.save(cfg, "support")
