@@ -1114,7 +1114,7 @@ function main_checksounds()
     createDirectory(getGameDirectory().."\\moonloader\\resource\\sup")
   end
   for i = 1, 100 do
-    local file = getGameDirectory().."\\moonloader\\resource\\sup\\"..i..".mp3"
+    local file = getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\"..i..".mp3"
     if not doesFileExist(file) then
       downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support's%20heaven/resource/sup/"..i..".mp3", file)
     end
@@ -1625,7 +1625,7 @@ function sup_logger_writecsv(file, string)
 end
 
 function sup_ParseHouseTxt_hh()
-  local hhfile = getGameDirectory().."\\moonloader\\resource\\sup\\house.txt"
+  local hhfile = getGameDirectory().."\\moonloader\\resource\\sup\\samp-rp\\house.txt"
   if doesFileExist(hhfile) then
     gethh = {}
     for line in io.lines(hhfile) do
@@ -1635,7 +1635,7 @@ function sup_ParseHouseTxt_hh()
 end
 
 function sup_ParseVehicleTxt_hc()
-  local hcfile = getGameDirectory().."\\moonloader\\resource\\sup\\vehicle.txt"
+  local hcfile = getGameDirectory().."\\moonloader\\resource\\sup\\samp-rp\\vehicle.txt"
   if doesFileExist(hcfile) then
     gethc = {}
     for line in io.lines(hcfile) do
