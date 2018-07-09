@@ -1087,6 +1087,8 @@ var_imgui_ImInt()
 var_imgui_ImBuffer()
 var_main()
 
+
+mode = "Samp-Rp"
 -------------------------------------MAIN---------------------------------------
 function main()
   if not isSampfuncsLoaded() or not isSampLoaded() then return end
@@ -1116,7 +1118,7 @@ function main_checksounds()
   for i = 1, 100 do
     local file = getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\"..i..".mp3"
     if not doesFileExist(file) then
-      downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support's%20heaven/resource/sup/"..i..".mp3", file)
+      downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support's%20heaven/resource/sup/sounds/"..i..".mp3", file)
     end
   end
 end
@@ -1146,31 +1148,35 @@ function main_init_debug()
 end
 
 function main_init_hotkeys()
-  hotkeys["hkUnAn"] = {}
-  for i = 1, #cfg.hkUnAn do
-    table.insert(hotkeys["hkUnAn"], cfg["hkUnAn"][i])
-  end
-  hk.unRegisterHotKey(hotkeys["hkUnAn"])
-  hk.registerHotKey(hotkeys["hkUnAn"], true,
-    function()
-      if not sampIsChatInputActive() and not isSampfuncsConsoleActive() then
-        sup_UnAnswered_via_samp_dialog()
-      end
+  if cfg.supfuncs.unanswereddialog then
+    hotkeys["hkUnAn"] = {}
+    for i = 1, #cfg.hkUnAn do
+      table.insert(hotkeys["hkUnAn"], cfg["hkUnAn"][i])
     end
-  )
+    hk.unRegisterHotKey(hotkeys["hkUnAn"])
+    hk.registerHotKey(hotkeys["hkUnAn"], true,
+      function()
+        if not sampIsChatInputActive() and not isSampfuncsConsoleActive() then
+          sup_UnAnswered_via_samp_dialog()
+        end
+      end
+    )
+  end
 
-  hotkeys["hkSupFRChat"] = {}
-  for i = 1, #cfg.hkSupFRChat do
-    table.insert(hotkeys["hkSupFRChat"], cfg["hkSupFRChat"][i])
-  end
-  hk.unRegisterHotKey(hotkeys["hkSupFRChat"])
-  hk.registerHotKey(hotkeys["hkSupFRChat"], true,
-    function()
-      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
-        sup_FastRespond_via_chat()
-      end
+  if cfg.supfuncs.fastrespondviachat then
+    hotkeys["hkSupFRChat"] = {}
+    for i = 1, #cfg.hkSupFRChat do
+      table.insert(hotkeys["hkSupFRChat"], cfg["hkSupFRChat"][i])
     end
-  )
+    hk.unRegisterHotKey(hotkeys["hkSupFRChat"])
+    hk.registerHotKey(hotkeys["hkSupFRChat"], true,
+      function()
+        if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+          sup_FastRespond_via_chat()
+        end
+      end
+    )
+  end
 
   hotkeys["hkMainMenu"] = {}
   for i = 1, #cfg.hkMainMenu do
@@ -1185,96 +1191,105 @@ function main_init_hotkeys()
       end
     end
   )
+  if cfg.supfuncs.fastrespondviadialoglastid then
+    hotkeys["hkFRbyBASE"] = {}
+    for i = 1, #cfg.hkFRbyBASE do
+      table.insert(hotkeys["hkFRbyBASE"], cfg["hkFRbyBASE"][i])
+    end
+    hk.unRegisterHotKey(hotkeys["hkFRbyBASE"])
+    hk.registerHotKey(hotkeys["hkFRbyBASE"], true,
+      function()
+        if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+          sup_FastRespond_via_dialog_LASTID()
+        end
+      end
+    )
+  end
+  if cfg.notepad.active and cfg.notepad.hotkey then
+    hotkeys["hkFO_notepad"] = {}
+    for i = 1, #cfg.hkFO_notepad do
+      table.insert(hotkeys["hkFO_notepad"], cfg["hkFO_notepad"][i])
+    end
+    hk.unRegisterHotKey(hotkeys["hkFO_notepad"])
+    hk.registerHotKey(hotkeys["hkFO_notepad"], true,
+      function()
+        if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+          imgui_notepad_FO()
+        end
+      end
+    )
+  end
+  if cfg.messanger.activesduty and cfg.messanger.hotkey1 then
+    hotkeys["hkm1"] = {}
+    for i = 1, #cfg.hkm1 do
+      table.insert(hotkeys["hkm1"], cfg["hkm1"][i])
+    end
+    hk.unRegisterHotKey(hotkeys["hkm1"])
+    hk.registerHotKey(hotkeys["hkm1"], true,
+      function()
+        if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+          imgui_messanger_FO(1)
+        end
+      end
+    )
+  end
 
-  hotkeys["hkFRbyBASE"] = {}
-  for i = 1, #cfg.hkFRbyBASE do
-    table.insert(hotkeys["hkFRbyBASE"], cfg["hkFRbyBASE"][i])
-  end
-  hk.unRegisterHotKey(hotkeys["hkFRbyBASE"])
-  hk.registerHotKey(hotkeys["hkFRbyBASE"], true,
-    function()
-      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
-        sup_FastRespond_via_dialog_LASTID()
-      end
+  if cfg.messanger.activesduty and cfg.messanger.hotkey2 then
+    hotkeys["hkm2"] = {}
+    for i = 1, #cfg.hkm2 do
+      table.insert(hotkeys["hkm2"], cfg["hkm2"][i])
     end
-  )
-
-  hotkeys["hkFO_notepad"] = {}
-  for i = 1, #cfg.hkFO_notepad do
-    table.insert(hotkeys["hkFO_notepad"], cfg["hkFO_notepad"][i])
-  end
-  hk.unRegisterHotKey(hotkeys["hkFO_notepad"])
-  hk.registerHotKey(hotkeys["hkFO_notepad"], true,
-    function()
-      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
-        imgui_notepad_FO()
+    hk.unRegisterHotKey(hotkeys["hkm2"])
+    hk.registerHotKey(hotkeys["hkm2"], true,
+      function()
+        if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+          imgui_messanger_FO(2)
+        end
       end
-    end
-  )
-
-  hotkeys["hkm1"] = {}
-  for i = 1, #cfg.hkm1 do
-    table.insert(hotkeys["hkm1"], cfg["hkm1"][i])
+    )
   end
-  hk.unRegisterHotKey(hotkeys["hkm1"])
-  hk.registerHotKey(hotkeys["hkm1"], true,
-    function()
-      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
-        imgui_messanger_FO(1)
-      end
+  if cfg.messanger.activesms and cfg.messanger.hotkey3 then
+    hotkeys["hkm3"] = {}
+    for i = 1, #cfg.hkm3 do
+      table.insert(hotkeys["hkm3"], cfg["hkm3"][i])
     end
-  )
-
-  hotkeys["hkm2"] = {}
-  for i = 1, #cfg.hkm2 do
-    table.insert(hotkeys["hkm2"], cfg["hkm2"][i])
+    hk.unRegisterHotKey(hotkeys["hkm3"])
+    hk.registerHotKey(hotkeys["hkm3"], true,
+      function()
+        if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+          imgui_messanger_FO(3)
+        end
+      end
+    )
   end
-  hk.unRegisterHotKey(hotkeys["hkm2"])
-  hk.registerHotKey(hotkeys["hkm2"], true,
-    function()
-      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
-        imgui_messanger_FO(2)
-      end
+  if cfg.messanger.activesms and cfg.messanger.hotkey4 then
+    hotkeys["hkm4"] = {}
+    for i = 1, #cfg.hkm4 do
+      table.insert(hotkeys["hkm4"], cfg["hkm4"][i])
     end
-  )
-
-  hotkeys["hkm3"] = {}
-  for i = 1, #cfg.hkm3 do
-    table.insert(hotkeys["hkm3"], cfg["hkm3"][i])
+    hk.unRegisterHotKey(hotkeys["hkm4"])
+    hk.registerHotKey(hotkeys["hkm4"], true,
+      function()
+        if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+          imgui_messanger_FO(4)
+        end
+      end
+    )
   end
-  hk.unRegisterHotKey(hotkeys["hkm3"])
-  hk.registerHotKey(hotkeys["hkm3"], true,
-    function()
-      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
-        imgui_messanger_FO(3)
-      end
+  if cfg.messanger.activesms and cfg.messanger.hotkey5 then
+    hotkeys["hkm5"] = {}
+    for i = 1, #cfg.hkm5 do
+      table.insert(hotkeys["hkm5"], cfg["hkm5"][i])
     end
-  )
-  hotkeys["hkm4"] = {}
-  for i = 1, #cfg.hkm4 do
-    table.insert(hotkeys["hkm4"], cfg["hkm4"][i])
+    hk.unRegisterHotKey(hotkeys["hkm5"])
+    hk.registerHotKey(hotkeys["hkm5"], true,
+      function()
+        if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+          imgui_messanger_FO(5)
+        end
+      end
+    )
   end
-  hk.unRegisterHotKey(hotkeys["hkm4"])
-  hk.registerHotKey(hotkeys["hkm4"], true,
-    function()
-      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
-        imgui_messanger_FO(4)
-      end
-    end
-  )
-
-  hotkeys["hkm5"] = {}
-  for i = 1, #cfg.hkm5 do
-    table.insert(hotkeys["hkm5"], cfg["hkm5"][i])
-  end
-  hk.unRegisterHotKey(hotkeys["hkm5"])
-  hk.registerHotKey(hotkeys["hkm5"], true,
-    function()
-      if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
-        imgui_messanger_FO(5)
-      end
-    end
-  )
 end
 
 function main_init_supdoc()
@@ -3908,6 +3923,7 @@ function imgui_settings_3_sup_funcs()
 
   if imgui.Checkbox("##ifastrespondviachat", ifastrespondviachat) then
     cfg.supfuncs.fastrespondviachat = ifastrespondviachat.v
+    if cfg.supfuncs.fastrespondviachat then main_init_hotkeys() end
     inicfg.save(cfg, "support")
   end
   imgui.SameLine()
@@ -3926,6 +3942,7 @@ function imgui_settings_3_sup_funcs()
 
   if imgui.Checkbox("##iunanswereddialog", iunanswereddialog) then
     cfg.supfuncs.unanswereddialog = iunanswereddialog.v
+    if cfg.supfuncs.unanswereddialog then main_init_hotkeys() end
     inicfg.save(cfg, "support")
   end
   imgui.SameLine()
@@ -3941,6 +3958,7 @@ function imgui_settings_3_sup_funcs()
 
   if imgui.Checkbox("##fastrespondviadialoglastid", ifastrespondviadialoglastid) then
     cfg.supfuncs.fastrespondviadialoglastid = ifastrespondviadialoglastid.v
+    if cfg.supfuncs.fastrespondviadialoglastid then main_init_hotkeys() end
     inicfg.save(cfg, "support")
   end
   imgui.SameLine()
@@ -3985,6 +4003,7 @@ function imgui_settings_4_sup_messanger()
       end
     end
     cfg.messanger.activesduty = iMessangerActiveSDUTY.v
+    if cfg.messanger.activesduty then main_init_hotkeys() end
     inicfg.save(cfg, "support")
   end
   if iMessangerActiveSDUTY.v then
@@ -3999,6 +4018,7 @@ function imgui_settings_4_sup_messanger()
 
     if imgui.Checkbox("##imhk1", imhk1) then
       cfg.messanger.hotkey1 = imhk1.v
+      if cfg.messanger.hotkey1 then main_init_hotkeys() end
       inicfg.save(cfg, "support")
     end
     imgui.SameLine()
@@ -4016,6 +4036,7 @@ function imgui_settings_4_sup_messanger()
 
     if imgui.Checkbox("##imhk2", imhk2) then
       cfg.messanger.hotkey2 = imhk2.v
+      if cfg.messanger.hotkey2 then main_init_hotkeys() end
       inicfg.save(cfg, "support")
     end
     imgui.SameLine()
@@ -4237,6 +4258,7 @@ function imgui_settings_5_sms_messanger()
       end
     end
     cfg.messanger.activesms = iMessangerActiveSMS.v
+    if cfg.messanger.activesms then main_init_hotkeys() end
     inicfg.save(cfg, "support")
   end
   if iMessangerActiveSMS.v then
@@ -4251,6 +4273,7 @@ function imgui_settings_5_sms_messanger()
 
     if imgui.Checkbox("##imhk3", imhk3) then
       cfg.messanger.hotkey3 = imhk3.v
+      if cfg.messanger.hotkey3 then main_init_hotkeys() end
       inicfg.save(cfg, "support")
     end
     imgui.SameLine()
@@ -4268,6 +4291,7 @@ function imgui_settings_5_sms_messanger()
 
     if imgui.Checkbox("##imhk4", imhk4) then
       cfg.messanger.hotkey4 = imhk4.v
+      if cfg.messanger.hotkey4 then main_init_hotkeys() end
       inicfg.save(cfg, "support")
     end
     imgui.SameLine()
@@ -4285,6 +4309,7 @@ function imgui_settings_5_sms_messanger()
 
     if imgui.Checkbox("##imhk5", imhk5) then
       cfg.messanger.hotkey5 = imhk5.v
+      if cfg.messanger.hotkey5 then main_init_hotkeys() end
       inicfg.save(cfg, "support")
     end
     imgui.SameLine()
@@ -4421,6 +4446,7 @@ end
 function imgui_settings_6_notepad()
   if imgui.Checkbox("##включить блокнот", iNotepadActive) then
     cfg.notepad.active = iNotepadActive.v
+    if cfg.notepad.active then main_init_hotkeys() end
     inicfg.save(cfg, "support")
   end
 
@@ -4430,6 +4456,7 @@ function imgui_settings_6_notepad()
 
     if imgui.Checkbox("##inotepadhk", inotepadhk) then
       cfg.notepad.hotkey = inotepadhk.v
+      if cfg.notepad.hotkey then main_init_hotkeys() end
       inicfg.save(cfg, "support")
     end
     imgui.SameLine()
