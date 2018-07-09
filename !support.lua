@@ -1089,6 +1089,28 @@ var_main()
 
 
 mode = "Samp-Rp"
+
+--[[
+		МЕСТА, ДЛЯ РАСШИРЕНИЯ СКРИПТА, ИСКАТЬ ПО mode == ":
+		1. function main_init_supdoc() - инициализация картинок и метафайла для шпоры, у каждого проекта своя папка и свой метафайл.
+		2. function DEBUG_simulateSupport() - симуляция саппорта, на каждом проекте она разная.
+		3. function DEBUG_simulateSupportAnswer() - симуляция ответа саппорта, на каждом проекте своё.
+		4. function RPC.onPlaySound() - false на звук отправки сообщения при включенном уведомлении со стороны скрипт. У каждого проекта может быть свой звук/не быть его вообще.
+		5. RPC.onServerMessage() - проверка афк в мессенджере смс, парсинг входящих и исходящих смсок (+ подмена цвета, false), парсинг вопросов, ответов и чужих ответов (+подмена цвета, false).
+		6. RPC.onSendCommand(text) - работа с ответами хоста по /pm id.
+		7. RPC.onDisplayGameText() - при приветственном сообщении врубает рабочий день саппорта.
+	  8. sup_AddQ() - берём вопрос из чата и вносим в таблицу для функционирования скрипта.
+		9. sup_AddA() - берём ответ из чата и вносим в таблицу для функционирования скрипта.
+		10. sup_logger_HostAnswer() - логируем ответ хоста
+		11. sup_ParseHouseTxt_hh() - парсим файл из папки проекта с хинтами о домах.
+		12. sup_ParseVehicleTxt_hc() - парсим файл из папки проекта с хинтами о т/c.
+		13. sup_FastRespond_via_chat() - способ отправки ответа.
+		14. sup_FastRespond_via_dialog() - способ отправки ответа.
+		15. sup_UnAnswered_via_samp_dialog() - способ отправки ответа.
+		16. imgui_messanger_sms_header() - способ проверки собеседника на афк, св. с п. 5.
+		17. imgui_messanger_sup_keyboard() -  способ отправки ответа.
+		18. imgui_messanger_sms_keyboard() - способ отправки смс.
+]]
 -------------------------------------MAIN---------------------------------------
 function main()
   if not isSampfuncsLoaded() or not isSampLoaded() then return end
@@ -1293,7 +1315,9 @@ function main_init_hotkeys()
 end
 
 function main_init_supdoc()
-  --test = imgui.CreateTextureFromFile(getWorkingDirectory().."\\test.png")
+  if mode == "Samp-Rp" then
+    --test = imgui.CreateTextureFromFile(getWorkingDirectory().."\\test.png")
+  end
 end
 
 function main_ImColorToHEX()
@@ -1364,28 +1388,32 @@ end
 
 --симулируем саппорта
 function DEBUG_simulateSupport(text)
-  if not string.find(text, "недос") then
-    tempid = math.random(1, 10)
-    if sampIsPlayerConnected(tempid) then
-      if math.random(1, 10) ~= 1 then
-        if iSoundQuestion.v then PLAYQ = true end
-        text = "->Вопрос "..sampGetPlayerNickname(tempid).."["..tempid.."]: "..text
-        sampAddChatMessage(text, Qcolor_HEX)
-        sup_AddQ(text)
-      else
-        if iSoundAnswerOthers.v then PLAYA1 = true end
-        text = "<-FutureAdmin[228] to "..LASTNICK.."["..LASTID.."]: "..text
-        sampAddChatMessage(text, Acolor1_HEX)
-        sup_AddA(text)
+  if mode == "Samp-Rp" then
+    if not string.find(text, "недос") then
+      tempid = math.random(1, 10)
+      if sampIsPlayerConnected(tempid) then
+        if math.random(1, 10) ~= 1 then
+          if iSoundQuestion.v then PLAYQ = true end
+          text = "->Вопрос "..sampGetPlayerNickname(tempid).."["..tempid.."]: "..text
+          sampAddChatMessage(text, Qcolor_HEX)
+          sup_AddQ(text)
+        else
+          if iSoundAnswerOthers.v then PLAYA1 = true end
+          text = "<-FutureAdmin[228] to "..LASTNICK.."["..LASTID.."]: "..text
+          sampAddChatMessage(text, Acolor1_HEX)
+          sup_AddA(text)
+        end
+        if selecteddialogSDUTY == LASTNICK or selecteddialogSDUTY == sampGetPlayerNickname(tempid) then ScrollToDialogSDUTY = true end
       end
-      if selecteddialogSDUTY == LASTNICK or selecteddialogSDUTY == sampGetPlayerNickname(tempid) then ScrollToDialogSDUTY = true end
     end
   end
 end
 
 function DEBUG_simulateSupportAnswer(text)
-  sampAddChatMessage(text, Acolor_HEX)
-  sup_AddA(text)
+  if mode == "Samp-Rp" then
+    sampAddChatMessage(text, Acolor_HEX)
+    sup_AddA(text)
+  end
 end
 
 function DEBUG_toggle()
@@ -1400,101 +1428,89 @@ function DEBUG_toggle()
 end
 
 function RPC.onPlaySound(sound)
-  if sound == 1052 and iSoundSmsOut.v then
-    return false
+  if mode == "Samp-Rp" then
+    if sound == 1052 and iSoundSmsOut.v then
+      return false
+    end
   end
 end
 --говно
 function RPC.onServerMessage(color, text)
-  if main_window_state.v and text:match(" "..tostring(selecteddialogSMS).." %[(%d+)%]") then
-    if string.find(text, "AFK") then
-      smsafk[selecteddialogSMS] = "AFK "..string.match(text, "AFK: (%d+) сек").." s"
-    else
-      smsafk[selecteddialogSMS] = "NOT AFK"
-    end
-    return false
-  end
-  if DEBUG then DEBUG_simulateSupport(text) end
-  if text:find("SMS") then
-    text = string.gsub(text, "{FFFF00}", "")
-    text = string.gsub(text, "{FF8000}", "")
-    local smsText, smsNick, smsId = string.match(text, "^ SMS%: (.*)%. Отправитель%: (.*)%[(%d+)%]")
-    if smsText and smsNick and smsId then
-      LASTID_SMS = smsId
-      LASTNICK_SMS = smsNick
-      if iSoundSmsIn.v then PLAYSMSIN = true end
-      if sms[smsNick] and sms[smsNick].Chat then
-
+  if mode == "Samp-Rp" then
+    if main_window_state.v and text:match(" "..tostring(selecteddialogSMS).." %[(%d+)%]") then
+      if string.find(text, "AFK") then
+        smsafk[selecteddialogSMS] = "AFK "..string.match(text, "AFK: (%d+) сек").." s"
       else
-        sms[smsNick] = {}
-        sms[smsNick]["Chat"] = {}
-        sms[smsNick]["Checked"] = 0
-        sms[smsNick]["Pinned"] = 0
+        smsafk[selecteddialogSMS] = "NOT AFK"
       end
-      table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = smsNick, type = "FROM", time = os.time()})
-      if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
-      SSDB_trigger = true
-      if not iHideSmsIn.v then
-        if iReplaceSmsInColor.v then
-          sampAddChatMessage(text, SmsInColor_HEX)
-          return false
-        else
-          --do nothing
-        end
-      else
-        return false
-      end
-    end
-    local smsText, smsNick, smsId = string.match(text, "^ SMS%: (.*)%. Получатель%: (.*)%[(%d+)%]")
-    if smsText and smsNick and smsId then
-      LASTID_SMS = smsId
-      LASTNICK_SMS = smsNick
-      if iSoundSmsOut.v then PLAYSMSOUT = true end
-      local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
-      if sms[smsNick] and sms[smsNick].Chat then
-
-      else
-        sms[smsNick] = {}
-        sms[smsNick]["Chat"] = {}
-        sms[smsNick]["Checked"] = 0
-        sms[smsNick]["Pinned"] = 0
-      end
-      table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = sampGetPlayerNickname(myid), type = "TO", time = os.time()})
-      if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
-      SSDB_trigger = true
-      if not iHideSmsOut.v then
-        if iReplaceSmsOutColor.v then
-          sampAddChatMessage(text, SmsOutColor_HEX)
-          return false
-        else
-          --do nothing
-        end
-      else
-        return false
-      end
-    end
-  end
-  if text == " Сообщение доставлено" then
-    if iHideSmsReceived.v then return false end
-    if not iHideSmsReceived.v then
-      if iReplaceSmsReceivedColor.v then
-        sampAddChatMessage(text, SmsReceivedColor_HEX)
-        return false
-      else
-        --do nothing
-      end
-    else
       return false
     end
-  end
-  if color == -5963521 then
-    if text:find("->Вопрос", true) then
-      sup_AddQ(text)
-      if iSoundQuestion.v then PLAYQ = true end
+    if DEBUG then DEBUG_simulateSupport(text) end
+    if text:find("SMS") then
+      text = string.gsub(text, "{FFFF00}", "")
+      text = string.gsub(text, "{FF8000}", "")
+      local smsText, smsNick, smsId = string.match(text, "^ SMS%: (.*)%. Отправитель%: (.*)%[(%d+)%]")
+      if smsText and smsNick and smsId then
+        LASTID_SMS = smsId
+        LASTNICK_SMS = smsNick
+        if iSoundSmsIn.v then PLAYSMSIN = true end
+        if sms[smsNick] and sms[smsNick].Chat then
+
+        else
+          sms[smsNick] = {}
+          sms[smsNick]["Chat"] = {}
+          sms[smsNick]["Checked"] = 0
+          sms[smsNick]["Pinned"] = 0
+        end
+        table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = smsNick, type = "FROM", time = os.time()})
+        if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
+        SSDB_trigger = true
+        if not iHideSmsIn.v then
+          if iReplaceSmsInColor.v then
+            sampAddChatMessage(text, SmsInColor_HEX)
+            return false
+          else
+            --do nothing
+          end
+        else
+          return false
+        end
+      end
+      local smsText, smsNick, smsId = string.match(text, "^ SMS%: (.*)%. Получатель%: (.*)%[(%d+)%]")
+      if smsText and smsNick and smsId then
+        LASTID_SMS = smsId
+        LASTNICK_SMS = smsNick
+        if iSoundSmsOut.v then PLAYSMSOUT = true end
+        local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+        if sms[smsNick] and sms[smsNick].Chat then
+
+        else
+          sms[smsNick] = {}
+          sms[smsNick]["Chat"] = {}
+          sms[smsNick]["Checked"] = 0
+          sms[smsNick]["Pinned"] = 0
+        end
+        table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = sampGetPlayerNickname(myid), type = "TO", time = os.time()})
+        if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
+        SSDB_trigger = true
+        if not iHideSmsOut.v then
+          if iReplaceSmsOutColor.v then
+            sampAddChatMessage(text, SmsOutColor_HEX)
+            return false
+          else
+            --do nothing
+          end
+        else
+          return false
+        end
+      end
+    end
+    if text == " Сообщение доставлено" then
+      if iHideSmsReceived.v then return false end
       if not iHideSmsReceived.v then
         if iReplaceSmsReceivedColor.v then
           sampAddChatMessage(text, SmsReceivedColor_HEX)
-          return false -- ИСПРАВИТЬ
+          return false
         else
           --do nothing
         end
@@ -1502,28 +1518,14 @@ function RPC.onServerMessage(color, text)
         return false
       end
     end
-    if text:find("<-", true) and text:find("to", true) then
-      sup_AddA(text)
-      SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<%-(%a.+)%[(%d+)%] to ([%a_]+)%[(%d+)%]: (.+)")
-      asdsadasads, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
-      if SupportNick == sampGetPlayerNickname(myid) then
-        if iSoundAnswer.v then PLAYA = true end
-        if not iHideAnswer.v then
-          if iReplaceAnswerColor.v then
-            sampAddChatMessage(text, Acolor_HEX)
-            return false
-          else
-            --do nothing
-          end
-        else
-          return false
-        end
-      else
-        if iSoundAnswerOthers.v then PLAYA1 = true end
-        if not iHideAnswerOthers.v then
-          if iReplaceAnswerOthersColor.v then
-            sampAddChatMessage(text, Acolor1_HEX)
-            return false
+    if color == -5963521 then
+      if text:find("->Вопрос", true) then
+        sup_AddQ(text)
+        if iSoundQuestion.v then PLAYQ = true end
+        if not iHideSmsReceived.v then
+          if iReplaceSmsReceivedColor.v then
+            sampAddChatMessage(text, SmsReceivedColor_HEX)
+            return false -- ИСПРАВИТЬ
           else
             --do nothing
           end
@@ -1531,28 +1533,60 @@ function RPC.onServerMessage(color, text)
           return false
         end
       end
+      if text:find("<-", true) and text:find("to", true) then
+        sup_AddA(text)
+        SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<%-(%a.+)%[(%d+)%] to ([%a_]+)%[(%d+)%]: (.+)")
+        asdsadasads, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+        if SupportNick == sampGetPlayerNickname(myid) then
+          if iSoundAnswer.v then PLAYA = true end
+          if not iHideAnswer.v then
+            if iReplaceAnswerColor.v then
+              sampAddChatMessage(text, Acolor_HEX)
+              return false
+            else
+              --do nothing
+            end
+          else
+            return false
+          end
+        else
+          if iSoundAnswerOthers.v then PLAYA1 = true end
+          if not iHideAnswerOthers.v then
+            if iReplaceAnswerOthersColor.v then
+              sampAddChatMessage(text, Acolor1_HEX)
+              return false
+            else
+              --do nothing
+            end
+          else
+            return false
+          end
+        end
+      end
     end
+    if DEBUG then return false end -- исправить
   end
-  if DEBUG then return false end -- исправить
 end
 --считаем активность саппорта
 function RPC.onSendCommand(text)
-  if string.find(text, '/pm') then
-    if text:match('/pm (%d+) $') then
-      lua_thread.create(sup_FastRespond_via_dialog, text:match('/pm (%d+) $'))
-      return false
-    else
-      if string.match(text, "(%d+) (.+)") then
-        sup_logger_HostAnswer(text)
-        if iSoundAnswer.v then PLAYA = true end
-        id, text = string.match(text, "(%d+) (.+)")
-        if sampIsPlayerConnected(id) then
-          if selecteddialogSDUTY == sampGetPlayerNickname(id) then ScrollToDialogSDUTY = true end
-          if DEBUG then
-            local _asdasd, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
-            DEBUG_simulateSupportAnswer("<-"..sampGetPlayerNickname(myid).."["..myid.."]".." to "..sampGetPlayerNickname(id).."["..id.."]: "..text)
+  if mode == "Samp-Rp" then
+    if string.find(text, '/pm') then
+      if text:match('/pm (%d+) $') then
+        lua_thread.create(sup_FastRespond_via_dialog, text:match('/pm (%d+) $'))
+        return false
+      else
+        if string.match(text, "(%d+) (.+)") then
+          sup_logger_HostAnswer(text)
+          if iSoundAnswer.v then PLAYA = true end
+          id, text = string.match(text, "(%d+) (.+)")
+          if sampIsPlayerConnected(id) then
+            if selecteddialogSDUTY == sampGetPlayerNickname(id) then ScrollToDialogSDUTY = true end
+            if DEBUG then
+              local _asdasd, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+              DEBUG_simulateSupportAnswer("<-"..sampGetPlayerNickname(myid).."["..myid.."]".." to "..sampGetPlayerNickname(id).."["..id.."]: "..text)
+            end
+            sup_AddA(text)
           end
-          sup_AddA(text)
         end
       end
     end
@@ -1560,55 +1594,63 @@ function RPC.onSendCommand(text)
 end
 
 function RPC.onDisplayGameText(style, time, text)
-  if text:find("Welcome") then
-    if cfg.supfuncs.autosduty then
-      lua_thread.create(function() wait(1500) sampSendChat("/sduty") end)
+  if mode == "Samp-Rp" then
+    if text:find("Welcome") then
+      if cfg.supfuncs.autosduty then
+        lua_thread.create(function() wait(1500) sampSendChat("/sduty") end)
+      end
     end
   end
 end
 
 function sup_AddQ(text)
-  ClientNick, ClientID, Question = string.match(text, "->Вопрос ([%a_]+)%[(%d+)%]: (.+)")
-  if ClientNick ~= nil and ClientID ~= nil and Question ~= nil then
-    LASTID = ClientID
-    LASTNICK = ClientNick
-    if iMessanger[ClientNick] == nil then
-      iMessanger[ClientNick] = {}
-      iMessanger[ClientNick]["A"] = {}
-      iMessanger[ClientNick]["Q"] = {{Nick = ClientNick, ID = ClientID, Question = Question, time = os.time()}}
-      iMessanger[ClientNick]["Chat"] = {{Nick = ClientNick, type = "client", ID = ClientID, text = Question, time = os.time()}}
-      iMessanger[ClientNick]["Checked"] = 0
-    else
-      table.insert(iMessanger[ClientNick]["Q"], {Nick = ClientNick, ID = ClientID, Question = Question, time = os.time()})
-      table.insert(iMessanger[ClientNick]["Chat"], {Nick = ClientNick, type = "client", ID = ClientID, text = Question, time = os.time()})
+  if mode == "Samp-Rp" then
+    ClientNick, ClientID, Question = string.match(text, "->Вопрос ([%a_]+)%[(%d+)%]: (.+)")
+    if ClientNick ~= nil and ClientID ~= nil and Question ~= nil then
+      LASTID = ClientID
+      LASTNICK = ClientNick
+      if iMessanger[ClientNick] == nil then
+        iMessanger[ClientNick] = {}
+        iMessanger[ClientNick]["A"] = {}
+        iMessanger[ClientNick]["Q"] = {{Nick = ClientNick, ID = ClientID, Question = Question, time = os.time()}}
+        iMessanger[ClientNick]["Chat"] = {{Nick = ClientNick, type = "client", ID = ClientID, text = Question, time = os.time()}}
+        iMessanger[ClientNick]["Checked"] = 0
+      else
+        table.insert(iMessanger[ClientNick]["Q"], {Nick = ClientNick, ID = ClientID, Question = Question, time = os.time()})
+        table.insert(iMessanger[ClientNick]["Chat"], {Nick = ClientNick, type = "client", ID = ClientID, text = Question, time = os.time()})
+      end
     end
   end
 end
 
 function sup_AddA(text)
-  SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<%-(%a.+)%[(%d+)%] to ([%a_]+)%[(%d+)%]: (.+)")
-  if SupportNick ~= nil and SupportID ~= nil and ClientNick ~= nil and Answer ~= nil then
-    if iMessanger[ClientNick] == nil then
-      iMessanger[ClientNick] = {}
-      iMessanger[ClientNick]["A"] = {{From = SupportNick, FromID = SupportID, To = ClientNick, ToID = ClientID, Answer = Answer, time = os.time()}}
-      iMessanger[ClientNick]["Q"] = {}
-      iMessanger[ClientNick]["Chat"] = {{Nick = SupportNick, type = "support", ID = SupportID, text = Answer, time = os.time()}}
-      iMessanger[ClientNick]["Checked"] = 0
-    else
-      table.insert(iMessanger[ClientNick]["A"], {From = SupportNick, FromID = SupportID, To = ClientNick, ToID = ClientID, Answer = Answer, time = os.time()})
-      table.insert(iMessanger[ClientNick]["Chat"], {Nick = SupportNick, type = "support", ID = SupportID, text = Answer, time = os.time()})
+  if mode == "Samp-Rp" then
+    SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<%-(%a.+)%[(%d+)%] to ([%a_]+)%[(%d+)%]: (.+)")
+    if SupportNick ~= nil and SupportID ~= nil and ClientNick ~= nil and Answer ~= nil then
+      if iMessanger[ClientNick] == nil then
+        iMessanger[ClientNick] = {}
+        iMessanger[ClientNick]["A"] = {{From = SupportNick, FromID = SupportID, To = ClientNick, ToID = ClientID, Answer = Answer, time = os.time()}}
+        iMessanger[ClientNick]["Q"] = {}
+        iMessanger[ClientNick]["Chat"] = {{Nick = SupportNick, type = "support", ID = SupportID, text = Answer, time = os.time()}}
+        iMessanger[ClientNick]["Checked"] = 0
+      else
+        table.insert(iMessanger[ClientNick]["A"], {From = SupportNick, FromID = SupportID, To = ClientNick, ToID = ClientID, Answer = Answer, time = os.time()})
+        table.insert(iMessanger[ClientNick]["Chat"], {Nick = SupportNick, type = "support", ID = SupportID, text = Answer, time = os.time()})
+      end
     end
   end
 end
 
 function sup_logger_HostAnswer(text)
-  if iLogBool.v then
-    id, text = string.match(text, "(%d+) (.+)")
-    pattern = [[\"\',]]
-    if id ~= nil and tonumber(id) ~= nil and tonumber(id) <= sampGetMaxPlayerId() and sampIsPlayerConnected(id) and sampGetPlayerNickname(id) ~= nil then
-      string = string.format("%s,%s,%s,%s,%s,%s,%s", sup_logger_autoincrement(), sampGetPlayerNickname(id), string.gsub(sup_getLastQuestion(sampGetPlayerNickname(id)), "["..pattern.."]", ""),
-      string.gsub(text, "["..pattern.."]", ""), sup_getRespondTime(sampGetPlayerNickname(id), os.time()), os.date('%Y - %m - %d %X'), os.time())
-      sup_logger_writecsv(file, string)
+  if mode == "Samp-Rp" then
+    if iLogBool.v then
+      id, text = string.match(text, "(%d+) (.+)")
+      pattern = [[\"\',]]
+      if id ~= nil and tonumber(id) ~= nil and tonumber(id) <= sampGetMaxPlayerId() and sampIsPlayerConnected(id) and sampGetPlayerNickname(id) ~= nil then
+        string = string.format("%s,%s,%s,%s,%s,%s,%s", sup_logger_autoincrement(), sampGetPlayerNickname(id), string.gsub(sup_getLastQuestion(sampGetPlayerNickname(id)), "["..pattern.."]", ""),
+        string.gsub(text, "["..pattern.."]", ""), sup_getRespondTime(sampGetPlayerNickname(id), os.time()), os.date('%Y - %m - %d %X'), os.time())
+        sup_logger_writecsv(file, string)
+      end
     end
   end
 end
@@ -1640,21 +1682,25 @@ function sup_logger_writecsv(file, string)
 end
 
 function sup_ParseHouseTxt_hh()
-  local hhfile = getGameDirectory().."\\moonloader\\resource\\sup\\samp-rp\\house.txt"
-  if doesFileExist(hhfile) then
-    gethh = {}
-    for line in io.lines(hhfile) do
-      table.insert(gethh, line)
+  if mode == "Samp-Rp" then
+    local hhfile = getGameDirectory().."\\moonloader\\resource\\sup\\samp-rp\\house.txt"
+    if doesFileExist(hhfile) then
+      gethh = {}
+      for line in io.lines(hhfile) do
+        table.insert(gethh, line)
+      end
     end
   end
 end
 
 function sup_ParseVehicleTxt_hc()
-  local hcfile = getGameDirectory().."\\moonloader\\resource\\sup\\samp-rp\\vehicle.txt"
-  if doesFileExist(hcfile) then
-    gethc = {}
-    for line in io.lines(hcfile) do
-      table.insert(gethc, line)
+  if mode == "Samp-Rp" then
+    local hcfile = getGameDirectory().."\\moonloader\\resource\\sup\\samp-rp\\vehicle.txt"
+    if doesFileExist(hcfile) then
+      gethc = {}
+      for line in io.lines(hcfile) do
+        table.insert(gethc, line)
+      end
     end
   end
 end
@@ -1672,16 +1718,16 @@ function sup_ParseFastRespond_fr()
 end
 
 function sup_FastRespond_via_chat()
-  if cfg.supfuncs.fastrespondviachat then
-    if LASTID ~= -1 then
-      if sampIsPlayerConnected(LASTID) and sampGetPlayerNickname(LASTID) == LASTNICK then
-        sampSetChatInputEnabled(true)
-        sampSetChatInputText("/pm "..LASTID.." ")
-      else
-        sampAddChatMessage("Ошибка: игрок, задавший вопрос, отключился.", color)
+    if cfg.supfuncs.fastrespondviachat then
+      if LASTID ~= -1 then
+        if sampIsPlayerConnected(LASTID) and sampGetPlayerNickname(LASTID) == LASTNICK then
+          sampSetChatInputEnabled(true)
+            if mode == "Samp-Rp" then sampSetChatInputText("/pm "..LASTID.." ") end
+        else
+          sampAddChatMessage("Ошибка: игрок, задавший вопрос, отключился.", color)
+        end
       end
     end
-  end
 end
 
 function sup_FastRespond_via_dialog_LASTID()
@@ -1691,82 +1737,84 @@ function sup_FastRespond_via_dialog_LASTID()
 end
 
 function sup_FastRespond_via_dialog(param, mod)
-  if cfg.supfuncs.fastrespondviadialog or mod then
-    if tonumber(param) ~= nil then
-      id = tonumber(param)
-      if sampIsPlayerConnected(id) then
-        if getfr == {} then
-          sampShowDialog(8320, "{D2D2D2}Ответ для "..sampGetPlayerNickname(id).."["..id.."]", "База быстрых ответов пуста.\nПополнить базу можно в настройках.", "Ясно.")
-        else
-          FRtext_D = "{FFD700}Вопрос{40E0D0}:{FF9D00} "..sup_getLastQuestion(sampGetPlayerNickname(id)).."\n\n"
-          for k, v in pairs(getfr) do
-            FRtext_D = FRtext_D..string.format("{FFD700}%s {40E0D0}- {FF9D00}%s", k, v).."\n"
-          end
-          sampShowDialog(8320, "{D2D2D2}Ответ для "..sampGetPlayerNickname(id).."["..id.."]", FRtext_D, "Выбрать", "", 1)
-          while sampIsDialogActive() do wait(0) end
-          local result, button, list, input = sampHasDialogRespond(8320)
-          if button == 1 then
-            FRnumber_D = sampGetCurrentDialogEditboxText(8320)
-            if tonumber(FRnumber_D) ~= nil and getfr[tonumber(FRnumber_D)] ~= nil then
-              sampSendChat("/pm "..id.." "..getfr[tonumber(FRnumber_D)])
+    if cfg.supfuncs.fastrespondviadialog or mod then
+      if tonumber(param) ~= nil then
+        id = tonumber(param)
+        if sampIsPlayerConnected(id) then
+          if getfr == {} then
+            sampShowDialog(8320, "{D2D2D2}Ответ для "..sampGetPlayerNickname(id).."["..id.."]", "База быстрых ответов пуста.\nПополнить базу можно в настройках.", "Ясно.")
+          else
+            FRtext_D = "{FFD700}Вопрос{40E0D0}:{FF9D00} "..sup_getLastQuestion(sampGetPlayerNickname(id)).."\n\n"
+            for k, v in pairs(getfr) do
+              FRtext_D = FRtext_D..string.format("{FFD700}%s {40E0D0}- {FF9D00}%s", k, v).."\n"
+            end
+            sampShowDialog(8320, "{D2D2D2}Ответ для "..sampGetPlayerNickname(id).."["..id.."]", FRtext_D, "Выбрать", "", 1)
+            while sampIsDialogActive() do wait(0) end
+            local result, button, list, input = sampHasDialogRespond(8320)
+            if button == 1 then
+              FRnumber_D = sampGetCurrentDialogEditboxText(8320)
+              if tonumber(FRnumber_D) ~= nil and getfr[tonumber(FRnumber_D)] ~= nil then
+                  if mode == "Samp-Rp" then sampSendChat("/pm "..id.." "..getfr[tonumber(FRnumber_D)]) end
+              end
             end
           end
+        else
+          sampAddChatMessage("Ошибка: игрок с заданным id оффлайн.", color)
         end
-      else
-        sampAddChatMessage("Ошибка: игрок с заданным id оффлайн.", color)
       end
     end
-  end
 end
 
 function sup_UnAnswered_via_samp_dialog()
-  if cfg.supfuncs.unanswereddialog then
-    if main_window_state.v then main_window_state.v = false end
-    local UNANindex = {}
-    for k in pairs(iMessanger) do
-      if #iMessanger[k]["A"] == 0 then table.insert(UNANindex, k) end
-    end
-    table.sort(UNANindex, function(a, b) return iMessanger[a]["Chat"][#iMessanger[a]["Chat"]]["time"] < iMessanger[b]["Chat"][#iMessanger[b]["Chat"]]["time"] end)
-    UNANi = 1
-    UNANtext = ""
-    for k, v in pairs(UNANindex) do
-      for i = 1, sampGetMaxPlayerId() + 1 do
-        if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == v then
-          UNANsec = math.fmod(os.time() - iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["time"], 60)
-          if UNANsec < 10 then UNANsec = "0"..UNANsec end
-          UNANmin = math.floor((os.time() - iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["time"]) / 60)
-          UNANtext = UNANtext..string.format("{FFD700}%s {40E0D0}- {ADD8E6}[%s:%s] %s[%s]: {FF9D00}%s", UNANi, UNANmin, UNANsec, v, i, iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["text"]).."\n"
-          UNANi = UNANi + 1
-          break
-        else
-          if i == sampGetMaxPlayerId() + 1 then
+  if mode == "Samp-Rp" then
+    if cfg.supfuncs.unanswereddialog then
+      if main_window_state.v then main_window_state.v = false end
+      local UNANindex = {}
+      for k in pairs(iMessanger) do
+        if #iMessanger[k]["A"] == 0 then table.insert(UNANindex, k) end
+      end
+      table.sort(UNANindex, function(a, b) return iMessanger[a]["Chat"][#iMessanger[a]["Chat"]]["time"] < iMessanger[b]["Chat"][#iMessanger[b]["Chat"]]["time"] end)
+      UNANi = 1
+      UNANtext = ""
+      for k, v in pairs(UNANindex) do
+        for i = 1, sampGetMaxPlayerId() + 1 do
+          if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == v then
+            UNANsec = math.fmod(os.time() - iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["time"], 60)
+            if UNANsec < 10 then UNANsec = "0"..UNANsec end
+            UNANmin = math.floor((os.time() - iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["time"]) / 60)
+            UNANtext = UNANtext..string.format("{FFD700}%s {40E0D0}- {ADD8E6}[%s:%s] %s[%s]: {FF9D00}%s", UNANi, UNANmin, UNANsec, v, i, iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["text"]).."\n"
+            UNANi = UNANi + 1
             break
+          else
+            if i == sampGetMaxPlayerId() + 1 then
+              break
+            end
           end
         end
       end
-    end
-    if UNANtext == "" then
-      sampShowDialog(9899, "{D2D2D2}Вопросы без ответа", "Таких нет.", "Ясно.")
-    else
-      sampShowDialog(9899, "{D2D2D2}Вопросы без ответа (номер/номер ответ)", UNANtext, "Выбрать", "", 1)
-      while sampIsDialogActive() do wait(0) end
-      local result, button, list, input = sampHasDialogRespond(9899)
-      if button == 1 then
-        UNANanswer = sampGetCurrentDialogEditboxText(9899)
-        if string.find(UNANanswer, "(%d+) (.+)") then
-          UNID, UNANanswe = string.match(UNANanswer, "(%d+) (.+)")
-          UNANid = string.match(string.gsub(UNANtext, "{......}", ""), "%[(%d+)%]")
-          UNANid = string.match(UNANtext, UNID.." - .+%[(%d+)%].+\n")
-          if UNANid ~= nil and sampIsPlayerConnected(UNANid) then
-            sampSendChat("/pm "..tonumber(UNANid).." "..UNANanswe)
-          end
-        else
-          if tonumber(UNANanswer) ~= nil then
+      if UNANtext == "" then
+        sampShowDialog(9899, "{D2D2D2}Вопросы без ответа", "Таких нет.", "Ясно.")
+      else
+        sampShowDialog(9899, "{D2D2D2}Вопросы без ответа (номер/номер ответ)", UNANtext, "Выбрать", "", 1)
+        while sampIsDialogActive() do wait(0) end
+        local result, button, list, input = sampHasDialogRespond(9899)
+        if button == 1 then
+          UNANanswer = sampGetCurrentDialogEditboxText(9899)
+          if string.find(UNANanswer, "(%d+) (.+)") then
+            UNID, UNANanswe = string.match(UNANanswer, "(%d+) (.+)")
             UNANid = string.match(string.gsub(UNANtext, "{......}", ""), "%[(%d+)%]")
-            UNANid = string.match(UNANtext, tonumber(UNANanswer).." - .+%[(%d+)%].+\n")
-            if sampIsPlayerConnected(UNANid) then
-              sampSetChatInputEnabled(true)
-              sampSetChatInputText("/pm "..tonumber(UNANanswer).." ")
+            UNANid = string.match(UNANtext, UNID.." - .+%[(%d+)%].+\n")
+            if UNANid ~= nil and sampIsPlayerConnected(UNANid) then
+              if mode == "Samp-Rp" then  sampSendChat("/pm "..tonumber(UNANid).." "..UNANanswe) end
+            end
+          else
+            if tonumber(UNANanswer) ~= nil then
+              UNANid = string.match(string.gsub(UNANtext, "{......}", ""), "%[(%d+)%]")
+              UNANid = string.match(UNANtext, tonumber(UNANanswer).." - .+%[(%d+)%].+\n")
+              if sampIsPlayerConnected(UNANid) then
+                sampSetChatInputEnabled(true)
+                if mode == "Samp-Rp" then  sampSetChatInputText("/pm "..tonumber(UNANanswer).." ") end
+              end
             end
           end
         end
@@ -2761,7 +2809,9 @@ function imgui_messanger_sms_header()
       if imgui.Button(smsafk[selecteddialogSMS]) then
         for i = 1, sampGetMaxPlayerId() do
           if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSMS then
-            sampSendChat("/id "..i)
+            if mode == "Samp-Rp" then
+              sampSendChat("/id "..i)
+            end
             break
           end
         end
@@ -3058,8 +3108,10 @@ function imgui_messanger_sup_keyboard()
           if i == sampGetMaxPlayerId() then k = "-" end
         end
         if k ~= "-" then
-          sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSDUTY.v))
-          toAnswerSDUTY.v = ''
+          if mode == "Samp-Rp" then
+            sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSDUTY.v))
+            toAnswerSDUTY.v = ''
+          end
         end
         KeyboardFocusReset = true
       end
@@ -3089,7 +3141,9 @@ function imgui_messanger_sup_keyboard()
           if i == sampGetMaxPlayerId() then k = "-" end
         end
         if k ~= "-" then
-          sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSDUTY.v))
+          if mode == "Samp-Rp" then
+            sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSDUTY.v))
+          end
           toAnswerSDUTY.v = ''
         end
         KeyboardFocusReset = true
@@ -3264,8 +3318,10 @@ function imgui_messanger_sms_keyboard()
         if i == sampGetMaxPlayerId() then k = "-" end
       end
       if k ~= "-" then
-        sampSendChat("/t " .. k .. " " .. u8:decode(toAnswerSMS.v))
-        toAnswerSMS.v = ''
+        if mode == "Samp-Rp" then
+          sampSendChat("/t " .. k .. " " .. u8:decode(toAnswerSMS.v))
+          toAnswerSMS.v = ''
+        end
       end
       KeyboardFocusReset = true
     end
@@ -3282,8 +3338,10 @@ function imgui_messanger_sms_keyboard()
         if i == sampGetMaxPlayerId() then k = "-" end
       end
       if k ~= "-" then
-        sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSMS.v))
-        toAnswerSMS.v = ''
+        if mode == "Samp-Rp" then
+          sampSendChat("/t " .. k .. " " .. u8:decode(toAnswerSMS.v))
+          toAnswerSMS.v = ''
+        end
       end
       KeyboardFocusReset = true
     end
