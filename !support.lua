@@ -1110,8 +1110,8 @@ function main()
 end
 
 function main_checksounds()
-  if not doesDirectoryExist(getGameDirectory().."\\moonloader\\resource\\sup") then
-    createDirectory(getGameDirectory().."\\moonloader\\resource\\sup")
+  if not doesDirectoryExist(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\") then
+    createDirectory(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\")
   end
   for i = 1, 100 do
     local file = getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\"..i..".mp3"
@@ -1312,35 +1312,35 @@ end
 function main_while_playsounds()
   if PLAYQ then
     PLAYQ = false
-    a1 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundQuestionNumber.v..[[.mp3]])
+    a1 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\sounds\]]..iSoundQuestionNumber.v..[[.mp3]])
     if getAudioStreamState(a1) ~= as_action.PLAY then
       setAudioStreamState(a1, as_action.PLAY)
     end
   end
   if PLAYA1 then
     PLAYA1 = false
-    a2 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerOthersNumber.v..[[.mp3]])
+    a2 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\sounds\]]..iSoundAnswerOthersNumber.v..[[.mp3]])
     if getAudioStreamState(a2) ~= as_action.PLAY then
       setAudioStreamState(a2, as_action.PLAY)
     end
   end
   if PLAYA then
     PLAYA = false
-    a3 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundAnswerNumber.v..[[.mp3]])
+    a3 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\sounds\]]..iSoundAnswerNumber.v..[[.mp3]])
     if getAudioStreamState(a3) ~= as_action.PLAY then
       setAudioStreamState(a3, as_action.PLAY)
     end
   end
   if PLAYSMSIN then
     PLAYSMSIN = false
-    a4 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundSmsInNumber.v..[[.mp3]])
+    a4 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\sounds\]]..iSoundSmsInNumber.v..[[.mp3]])
     if getAudioStreamState(a4) ~= as_action.PLAY then
       setAudioStreamState(a4, as_action.PLAY)
     end
   end
   if PLAYSMSOUT then
     PLAYSMSOUT = false
-    a5 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\]]..iSoundSmsOutNumber.v..[[.mp3]])
+    a5 = loadAudioStream(getGameDirectory()..[[\moonloader\resource\sup\sounds\]]..iSoundSmsOutNumber.v..[[.mp3]])
     if getAudioStreamState(a5) ~= as_action.PLAY then
       setAudioStreamState(a5, as_action.PLAY)
     end
