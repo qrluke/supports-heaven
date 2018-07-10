@@ -711,6 +711,7 @@ do
   end
 end
 --------------------------------------VAR---------------------------------------
+mode = "Samp-Rp"
 function var_require()
   imgui = require 'imgui'
   inspect = require 'inspect'
@@ -732,6 +733,7 @@ function var_cfg()
     options =
     {
       ReplaceQuestionColor = true,
+      MouseDrawCursor = false,
       ReplaceAnswerColor = false,
       ReplaceAnswerOthersColor = false,
       ReplaceSmsInColor = true,
@@ -804,6 +806,9 @@ function var_cfg()
     hkMainMenu = {
       [1] = 90
     },
+    hkSpur = {
+      [1] = 88
+    },
     hkm1 = {
       [1] = 52
     },
@@ -834,6 +839,16 @@ function var_cfg()
       Height = 400,
       PosX = 80,
       PosY = 310,
+    },
+    spur = {
+      active = true,
+      autoresize = true,
+      Width = 800,
+      Height = 400,
+      PosX = 80,
+      PosY = 310,
+      tab = 1,
+      mode = 1,
     },
     messanger =
     {
@@ -896,6 +911,10 @@ end
 
 function var_imgui_ImBool()
   imgui.LockPlayer = false
+  imgui.GetIO().MouseDrawCursor = cfg.options.MouseDrawCursor
+  MouseDrawCursor = imgui.ImBool(cfg.options.MouseDrawCursor)
+  iAutoResize = imgui.ImBool(cfg.spur.autoresize)
+  read_only = imgui.ImBool(true)
   iReplaceQuestionColor = imgui.ImBool(cfg.options.ReplaceQuestionColor)
   iReplaceAnswerColor = imgui.ImBool(cfg.options.ReplaceAnswerColor)
   iReplaceAnswerOthersColor = imgui.ImBool(cfg.options.ReplaceAnswerOthersColor)
@@ -930,6 +949,7 @@ function var_imgui_ImBool()
   iChangeScrollSMS = imgui.ImBool(cfg.messanger.iChangeScrollSMS)
   iSetKeyboard = imgui.ImBool(cfg.messanger.iSetKeyboard)
   iSetKeyboardSMS = imgui.ImBool(cfg.messanger.iSetKeyboardSMS)
+  iSpurActive = imgui.ImBool(cfg.spur.active)
   iNotepadActive = imgui.ImBool(cfg.notepad.active)
   iMessangerActiveSDUTY = imgui.ImBool(cfg.messanger.activesduty)
   iMessangerActiveSMS = imgui.ImBool(cfg.messanger.activesms)
@@ -949,6 +969,7 @@ function var_imgui_ImBool()
   iSMSfilterBool = imgui.ImBool(cfg.messanger.iSMSfilterBool)
   iCounterActive = imgui.ImBool(cfg.counter.active)
   main_window_state = imgui.ImBool(false)
+  spur_windows_state = imgui.ImBool(false)
   iStats = imgui.ImBool(true)
 end
 
@@ -1003,6 +1024,7 @@ function var_imgui_ImInt()
   iStatsHeight = imgui.ImInt(cfg.stats.height)
   iMessangerHeight = imgui.ImInt(cfg.messanger.Height)
   iSettingsTab = imgui.ImInt(cfg.options.settingstab)
+  iSpurMode = imgui.ImInt(cfg.spur.mode)
   iYear = imgui.ImInt(0)
   cMin = imgui.ImInt(cfg.counter.minute)
   cHour = imgui.ImInt(cfg.counter.hour)
@@ -1024,6 +1046,7 @@ function var_imgui_ImBuffer()
   iSMSfilter = imgui.ImBuffer(64)
   iSMSAddDialog = imgui.ImBuffer(64)
   textNotepad = imgui.ImBuffer(65536)
+  textSpur = imgui.ImBuffer(65536)
   textNotepad.v = string.gsub(string.gsub(u8:encode(cfg.notepad.text), "\\n", "\n"), "\\t", "\t")
   fr = imgui.ImBuffer(65536)
   fr.v = string.gsub(string.gsub(u8:encode(cfg.notepad.fr), "\\n", "\n"), "\\t", "\t")
@@ -1076,6 +1099,7 @@ function var_main()
   SSDB_trigger = false
   SSDB1_trigger = false
   DEBUG = cfg.options.debug
+  spurtab = cfg.spur.tab
   math.randomseed(os.time())
 end
 --varload
@@ -1088,7 +1112,7 @@ var_imgui_ImBuffer()
 var_main()
 
 
-mode = "Samp-Rp"
+
 
 --[[
 		МЕСТА, ДЛЯ ДОБАВЛЕНИЯ ПОДДЕРЖКИ ДРУГИХ ПРОЕКТОВ, ИСКАТЬ ПО mode == ":
@@ -1131,7 +1155,7 @@ function main()
     wait(0)
     main_while_debug()
     main_while_playsounds()
-    imgui.Process = main_window_state.v
+    imgui.Process = main_window_state.v or spur_windows_state.v
   end
 end
 
@@ -1215,6 +1239,22 @@ function main_init_hotkeys()
       end
     end
   )
+
+  if cfg.spur.active then
+    hotkeys["hkSpur"] = {}
+    for i = 1, #cfg.hkMainMenu do
+      table.insert(hotkeys["hkSpur"], cfg["hkSpur"][i])
+    end
+    hk.unRegisterHotKey(hotkeys["hkSpur"])
+    hk.registerHotKey(hotkeys["hkSpur"], true,
+      function()
+        if not sampIsChatInputActive() and not sampIsDialogActive() and not isSampfuncsConsoleActive() then
+          spur_windows_state.v = not spur_windows_state.v
+        end
+      end
+    )
+  end
+
   if cfg.supfuncs.fastrespondviadialoglastid then
     hotkeys["hkFRbyBASE"] = {}
     for i = 1, #cfg.hkFRbyBASE do
@@ -1318,16 +1358,48 @@ end
 
 function main_init_supdoc()
   if mode == "Samp-Rp" then
+    local file = io.open( getGameDirectory().."\\moonloader\\resource\\sup\\"..mode.."\\spur.txt", "r" )
+    if file then
+      textSpur.v = u8:encode(file:read("*a"))
+      file:close()
+    end
     modpath = getGameDirectory().."\\moonloader\\resource\\sup\\samp-rp\\"
-    if doesDirectoryExist(modpath) and doesFileExist(modpath.."spur.txt") then
-      sampAddChatMessage("Загружаем текстуры шпор, это может занять время.", color)
-      spur = {}
-      for _ in io.lines(modpath.."spur.txt") do
-        local a, b = string.match(_, [["(.+)" = "(.+)"]])
-        local width, height = GetImageWidthHeight(modpath..a)
-        table.insert(spur, {img = imgui.CreateTextureFromFile(modpath..a), name = b, width = width, height = height})
+    if doesDirectoryExist(modpath) and doesFileExist(modpath.."spur.txt") and cfg.spur.active then
+      if cfg.spur.mode == 0 then
+        initsupdoctime = os.clock()
+        sampAddChatMessage("Загружаем текстуры шпор, это может занять время.", color)
       end
-      print(inspect(spur))
+      spur = {}
+      menu = {}
+      local id = 0
+      local mid = 0
+      for _ in io.lines(modpath.."spur.txt") do
+        local a, b, c = string.match(_, [["(.+)" = "(.+)" = "(.+)"]])
+        if doesFileExist(modpath..a) then
+          id = id + 1
+          local width, height = GetImageWidthHeight(modpath..a)
+          if menu[c] == nil then mid = mid + 1 menu[c] = {order = mid} end
+          table.insert(menu[c], {name = b, id = id})
+          if cfg.spur.mode == 0 then
+            table.insert(spur, {img = imgui.CreateTextureFromFile(modpath..a), path = modpath..a, name = b, width = width, height = height})
+          else
+            table.insert(spur, {img = "skip", path = modpath..a, name = b, width = width, height = height})
+          end
+        end
+      end
+      menuindex = {}
+      for k in pairs(menu) do
+        table.insert(menuindex, k)
+      end
+      table.sort(menuindex, function(a, b) return menu[a]["order"] < menu[b]["order"] end)
+    end
+    if cfg.spur.mode == 0 then
+
+      if os.clock() - initsupdoctime > 5 then
+        sampAddChatMessage("Загрузка шпор заняла "..math.ceil(os.clock() - initsupdoctime).." сек. Это много. Рекомендуется сменить режим в настройках.", color)
+      else
+        sampAddChatMessage("Загрузка текстур шпор заняла "..math.ceil(os.clock() - initsupdoctime).." сек.", color)
+      end
     end
   end
 end
@@ -1402,7 +1474,7 @@ end
 function DEBUG_simulateSupport(text)
   if mode == "Samp-Rp" then
     if not string.find(text, "недос") then
-      tempid = math.random(1, 10)
+      tempid = math.random(1, 100)
       if sampIsPlayerConnected(tempid) then
         if math.random(1, 10) ~= 1 then
           if iSoundQuestion.v then PLAYQ = true end
@@ -1895,6 +1967,11 @@ function sup_updateStats()
 end
 
 function imgui.OnDrawFrame()
+  imgui_main()
+  imgui_spur()
+end
+
+function imgui_main()
   if main_window_state.v then
     imgui.SetNextWindowPos(imgui.ImVec2(cfg.menuwindow.PosX, cfg.menuwindow.PosY), imgui.Cond.FirstUseEver)
     imgui.SetNextWindowSize(imgui.ImVec2(cfg.menuwindow.Width, cfg.menuwindow.Height))
@@ -1905,7 +1982,7 @@ function imgui.OnDrawFrame()
     end
     imgui.Begin(u8:encode(thisScript().name.." v"..thisScript().version), main_window_state, beginflags)
     imgui_saveposandsize()
-    if not cfg.only.messanger and not cfg.only.notepad and not cfg.only.logviewer and not cfg.only.histogramor and not cfg.only.counter and not cfg.only.settings then
+    if not cfg.only.messanger and not cfg.only.notepad and not cfg.only.logviewer and not cfg.only.histogram and not cfg.only.counter and not cfg.only.settings then
       if cfg.messanger.activesduty or cfg.messanger.activesms then imgui_messanger() end
       if cfg.notepad.active then imgui_notepad() end
       if cfg.log.active then imgui_log() end
@@ -1922,11 +1999,55 @@ function imgui.OnDrawFrame()
     end
     imgui.End()
   end
-  imgui.Begin("test window")
-  for k, v in pairs(spur) do
-    imgui.Image(v["img"], imgui.ImVec2(v["width"], v["height"]))
+end
+
+function imgui_spur()
+  if spur_windows_state.v and cfg.spur.active then
+    imgui.SetNextWindowPos(imgui.ImVec2(cfg.spur.PosX, cfg.spur.PosY), imgui.Cond.FirstUseEver)
+    imgui.SetNextWindowSize(imgui.ImVec2(cfg.spur.Width, cfg.spur.Height), imgui.Cond.FirstUseEver)
+    if cfg.spur.autoresize then
+      flagsSpur = imgui.WindowFlags.AlwaysAutoResize + imgui.WindowFlags.MenuBar + imgui.WindowFlags.HorizontalScrollbar
+    else
+      flagsSpur = imgui.WindowFlags.MenuBar + imgui.WindowFlags.HorizontalScrollbar
+    end
+    imgui.Begin("Spur mode: "..mode, nil, flagsSpur)
+    imgui_saveposandsize2()
+    imgui.BeginMenuBar()
+    for k, v in pairs(menuindex) do
+      if imgui.BeginMenu(u8:encode(v)) then
+        for z, i in ipairs(menu[v]) do
+          if imgui.MenuItem(u8:encode(i["name"])) then
+            spurtab = i["id"]
+            if cfg.spur.mode == 2 then
+              if spur[cfg.spur.tab]["img"] ~= "skip" then
+                imgui.ReleaseTexture(spur[cfg.spur.tab]["img"])
+                spur[cfg.spur.tab]["img"] = "skip"
+              end
+            end
+            cfg.spur.tab = i["id"]
+            inicfg.save(cfg, "support")
+          end
+        end
+        imgui.EndMenu()
+      end
+    end
+    if imgui.BeginMenu(u8"Настройки") then
+      if imgui.MenuItem(u8"Авторесайз", nil, cfg.spur.autoresize) then
+        cfg.spur.autoresize = not cfg.spur.autoresize
+        inicfg.save(cfg, "support")
+      end
+			imgui.EndMenu()
+    end
+    imgui.EndMenuBar()
+    if spurtab ~= nil then
+      if spur[spurtab]["img"] == "skip" then spur[spurtab]["img"] = imgui.CreateTextureFromFile(spur[spurtab]["path"]) end
+      imgui.Image(spur[spurtab]["img"], imgui.ImVec2(spur[spurtab]["width"], spur[spurtab]["height"]))
+      if imgui.IsItemHovered() then
+        imgui.SetTooltip(u8:encode(spur[spurtab]["name"]))
+      end
+    end
+    imgui.End()
   end
-  imgui.End()
 end
 
 function imgui_menu()
@@ -1952,6 +2073,19 @@ function imgui_saveposandsize()
   if cfg.menuwindow.PosX ~= imgui.GetWindowPos().x or cfg.menuwindow.PosY ~= imgui.GetWindowPos().y then
     cfg.menuwindow.PosX = imgui.GetWindowPos().x
     cfg.menuwindow.PosY = imgui.GetWindowPos().y
+    inicfg.save(cfg, "support")
+  end
+end
+
+function imgui_saveposandsize2()
+  if cfg.spur.Width ~= imgui.GetWindowWidth() or cfg.spur.Height ~= imgui.GetWindowHeight() then
+    cfg.spur.Width = imgui.GetWindowWidth()
+    cfg.spur.Height = imgui.GetWindowHeight()
+    inicfg.save(cfg, "support")
+  end
+  if cfg.spur.PosX ~= imgui.GetWindowPos().x or cfg.spur.PosY ~= imgui.GetWindowPos().y then
+    cfg.spur.PosX = imgui.GetWindowPos().x
+    cfg.spur.PosY = imgui.GetWindowPos().y
     inicfg.save(cfg, "support")
   end
 end
@@ -3753,7 +3887,7 @@ end
 
 function imgui_settings_content()
   imgui.PushItemWidth(imgui.GetContentRegionAvailWidth())
-  imgui.SliderInt(u8"##выбор вкладки настроек", iSettingsTab, 1, 13)
+  imgui.SliderInt(u8"##выбор вкладки настроек", iSettingsTab, 1, 15)
   if iSettingsTab.v ~= cfg.options.settingstab then
     cfg.options.settingstab = iSettingsTab.v
     inicfg.save(cfg, "support")
@@ -3762,16 +3896,18 @@ function imgui_settings_content()
   if iSettingsTab.v == 1 then imgui_settings_1_sup_hideandcol() end
   if iSettingsTab.v == 2 then imgui_settings_2_sms_hideandcol() end
   if iSettingsTab.v == 3 then imgui_settings_3_sup_funcs() end
-  if iSettingsTab.v == 4 then imgui_settings_4_sup_messanger() end
-  if iSettingsTab.v == 5 then imgui_settings_5_sms_messanger() end
-  if iSettingsTab.v == 6 then imgui_settings_6_notepad() end
-  if iSettingsTab.v == 7 then imgui_settings_7_logger() end
-  if iSettingsTab.v == 8 then imgui_settings_8_logviewer() end
-  if iSettingsTab.v == 9 then imgui_settings_9_histogram() end
-  if iSettingsTab.v == 10 then imgui_settings_10_counter() end
-  if iSettingsTab.v == 11 then imgui_settings_11_sup_sounds() end
-  if iSettingsTab.v == 12 then imgui_settings_12_sms_sounds() end
-  if iSettingsTab.v == 13 then imgui_settings_13_hotkeys() end
+  if iSettingsTab.v == 4 then imgui_settings_4_spur() end
+  if iSettingsTab.v == 5 then imgui_settings_5_sup_messanger() end
+  if iSettingsTab.v == 6 then imgui_settings_6_sms_messanger() end
+  if iSettingsTab.v == 7 then imgui_settings_7_notepad() end
+  if iSettingsTab.v == 8 then imgui_settings_8_logger() end
+  if iSettingsTab.v == 9 then imgui_settings_9_logviewer() end
+  if iSettingsTab.v == 10 then imgui_settings_10_histogram() end
+  if iSettingsTab.v == 11 then imgui_settings_11_counter() end
+  if iSettingsTab.v == 12 then imgui_settings_12_sup_sounds() end
+  if iSettingsTab.v == 13 then imgui_settings_13_sms_sounds() end
+  if iSettingsTab.v == 14 then imgui_settings_14_hotkeys() end
+  if iSettingsTab.v == 15 then imgui_settings_15_extra() end
 end
 
 function imgui_settings_rightclick()
@@ -4068,7 +4204,91 @@ function imgui_settings_3_sup_funcs()
   end
 end
 
-function imgui_settings_4_sup_messanger()
+function imgui_settings_4_spur()
+  if imgui.Checkbox("##включить spur", iSpurActive) then
+    cfg.spur.active = iSpurActive.v
+    main_init_hotkeys()
+    inicfg.save(cfg, "support")
+  end
+  if iSpurActive.v then
+    imgui.SameLine()
+    imgui.Text(u8("Шпора активирована!"))
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8:encode("По нажатию хоткея открывает отдельное окно с изображениями.\nИнформация об изображениях и категориях берётся из файла spur.txt\nЭтот файл находится в папке moonloder\\resource\\sup\\"..mode.."\nОбычно в картинках содержится информация о моде."))
+    end
+    if imgui.RadioButton(u8"Загружать все изображения при старте игры", iSpurMode, 0) then
+      cfg.spur.mode = iSpurMode.v
+      inicfg.save(cfg, "support")
+    end
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8:encode("Рекомендуется для мощных ПК. Загружает все изображения при старте игры."))
+    end
+    if imgui.RadioButton(u8"Загружать изображения при активации", iSpurMode, 1) then
+      cfg.spur.mode = iSpurMode.v
+      inicfg.save(cfg, "support")
+    end
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8:encode("Рекомендуется для слабых ПК. Загружает изображения только тогда, когда их нужно показать."))
+    end
+    if imgui.RadioButton(u8"Загружать каждое изображение при активации", iSpurMode, 2) then
+      cfg.spur.mode = iSpurMode.v
+      inicfg.save(cfg, "support")
+    end
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8:encode("Рекомендуется для очень слабых ПК. Загружает изображение только тогда, когда нужно его показать.\nПосле использования выгружает из паияти."))
+    end
+
+    imgui.Checkbox("Read-only", read_only)
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Как настроить?")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8:encode([[Файл заполняется так:
+"картинка" = "имя в подменю" = "меню"
+Заполняйте в том порядке, в каком хотите, чтобы у вас отображалось в меню.
+Сохранить - Ctrl + Enter, отменить изменения - Esc.]]))
+    end
+    if read_only.v then
+      flagsS = imgui.InputTextFlags.EnterReturnsTrue + imgui.InputTextFlags.ReadOnly
+    else
+      flagsS = imgui.InputTextFlags.EnterReturnsTrue
+    end
+    if imgui.InputTextMultiline("##notepad4", textSpur, imgui.ImVec2(-1, imgui.GetContentRegionAvail().y), flagsS) then
+      local file = io.open( getGameDirectory().."\\moonloader\\resource\\sup\\"..mode.."\\spur.txt", "w" )
+      if file then
+        file:write(u8:decode(textSpur.v))
+        printStringNow("Text saved", 1000)
+        file:close()
+        main_init_supdoc()
+      else
+        printStringNow("Text not saved", 1000)
+      end
+    end
+    if imgui.IsItemActive() then
+      lockPlayerControl(true)
+    else
+      lockPlayerControl(false)
+    end
+  else
+    imgui.SameLine()
+    imgui.TextDisabled(u8"Включить шпору?")
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8:encode("По нажатию хоткея открывает отдельное окно с изображениями.\nИнформация об изображениях и категориях берётся из файла spur.txt\nЭтот файл находится в папке moonloder\\resource\\sup\\"..mode.."\nОбычно в картинках содержится информация о моде."))
+    end
+  end
+
+end
+
+function imgui_settings_5_sup_messanger()
   if imgui.Checkbox("##включить мессенджер", iMessangerActiveSDUTY) then
     if iMessangerActiveSDUTY.v then
       cfg.messanger.mode = 1
@@ -4322,7 +4542,7 @@ function imgui_settings_4_sup_messanger()
   end
 end
 
-function imgui_settings_5_sms_messanger()
+function imgui_settings_6_sms_messanger()
   if imgui.Checkbox("##включить sms мессенджер", iMessangerActiveSMS) then
     if iMessangerActiveSMS.v then
       cfg.messanger.mode = 2
@@ -4518,7 +4738,7 @@ function imgui_settings_5_sms_messanger()
   end
 end
 
-function imgui_settings_6_notepad()
+function imgui_settings_7_notepad()
   if imgui.Checkbox("##включить блокнот", iNotepadActive) then
     cfg.notepad.active = iNotepadActive.v
     if cfg.notepad.active then main_init_hotkeys() end
@@ -4558,7 +4778,7 @@ function imgui_settings_6_notepad()
   end
 end
 
-function imgui_settings_7_logger()
+function imgui_settings_8_logger()
   if imgui.Checkbox("##включить логгер", iLogBool) then
     if cfg.log.logger == false then sup_updateStats() end
     cfg.log.logger = iLogBool.v
@@ -4590,7 +4810,7 @@ function imgui_settings_7_logger()
   end
 end
 
-function imgui_settings_8_logviewer()
+function imgui_settings_9_logviewer()
 
   if imgui.Checkbox("##включить лог", iLogActive) then
     cfg.log.active = iLogActive.v
@@ -4611,7 +4831,7 @@ function imgui_settings_8_logviewer()
   end
 end
 
-function imgui_settings_9_histogram()
+function imgui_settings_10_histogram()
   if imgui.Checkbox("##включить Гистограмма", iStatsActive) then
     cfg.stats.active = iStatsActive.v
     inicfg.save(cfg, "support")
@@ -4631,7 +4851,7 @@ function imgui_settings_9_histogram()
   end
 end
 
-function imgui_settings_10_counter()
+function imgui_settings_11_counter()
   if imgui.Checkbox("##включить Счётчик", iCounterActive) then
     cfg.counter.active = iCounterActive.v
     inicfg.save(cfg, "support")
@@ -4663,7 +4883,7 @@ function imgui_settings_10_counter()
   end
 end
 
-function imgui_settings_11_sup_sounds()
+function imgui_settings_12_sup_sounds()
   if imgui.Checkbox("##SoundQuestion", iSoundQuestion) then
     cfg.options.SoundQuestion = iSoundQuestion.v
     inicfg.save(cfg, "support")
@@ -4717,7 +4937,7 @@ function imgui_settings_11_sup_sounds()
   end
 end
 
-function imgui_settings_12_sms_sounds()
+function imgui_settings_13_sms_sounds()
   if imgui.Checkbox("##SoundSmsIn", iSoundSmsIn) then
     cfg.options.SoundSmsIn = iSoundSmsIn.v
     inicfg.save(cfg, "support")
@@ -4755,7 +4975,7 @@ function imgui_settings_12_sms_sounds()
   end
 end
 
-function imgui_settings_13_hotkeys()
+function imgui_settings_14_hotkeys()
   hotk.v = {}
   hotke.v = hotkeys["hkMainMenu"]
   if ihk.HotKey("##hkMainMenu", hotke, hotk, 100) then
@@ -4778,6 +4998,31 @@ function imgui_settings_13_hotkeys()
   imgui.TextDisabled("(?)")
   if imgui.IsItemHovered() then
     imgui.SetTooltip(u8"По нажатию хоткея открывается окно скрипта.")
+  end
+  if cfg.spur.active then
+    hotk.v = {}
+    hotke.v = hotkeys["hkSpur"]
+    if ihk.HotKey("##hkSpur", hotke, hotk, 100) then
+      if not hk.isHotKeyDefined(hotke.v) then
+        if hk.isHotKeyDefined(hotk.v) then
+          hk.unRegisterHotKey(hotk.v)
+        end
+      end
+      cfg.hkSpur = {}
+      for k, v in pairs(hotke.v) do
+        table.insert(cfg.hkSpur, v)
+      end
+      if cfg.hkSpur == {} then cfg["hkSpur"][1] = 88 end
+      inicfg.save(cfg, "support")
+      main_init_hotkeys()
+    end
+    imgui.SameLine()
+    imgui.Text(u8"Горячая клавиша активации шпоры.")
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"По нажатию хоткея открывается окно шпоры.")
+    end
   end
   if iunanswereddialog.v then
     hotk.v = {}
@@ -5011,6 +5256,20 @@ function imgui_settings_13_hotkeys()
     if imgui.IsItemHovered() then
       imgui.SetTooltip(u8"По нажатию хоткея открывается мессенджер смс с фокусом на ввод ника/id нового собеседника.")
     end
+  end
+
+end
+
+function imgui_settings_15_extra()
+  if imgui.Checkbox(u8"Рендерить курсор силами gta?", MouseDrawCursor) then
+    cfg.options.MouseDrawCursor = MouseDrawCursor.v
+    imgui.GetIO().MouseDrawCursor = MouseDrawCursor.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  imgui.TextDisabled("(?)")
+  if imgui.IsItemHovered() then
+    imgui.SetTooltip(u8"Если включить, курсор будет отображаться на скринах.\nМинус: курсор будет немного лагать.")
   end
 end
 
