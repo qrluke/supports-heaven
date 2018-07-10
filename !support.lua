@@ -849,6 +849,9 @@ function var_cfg()
       PosY = 310,
       tab = 1,
       mode = 1,
+      proportion = true,
+      lupa = true,
+      onlyresized = true,
     },
     messanger =
     {
@@ -2036,19 +2039,71 @@ function imgui_spur()
         cfg.spur.autoresize = not cfg.spur.autoresize
         inicfg.save(cfg, "support")
       end
-			imgui.EndMenu()
+      if imgui.MenuItem(u8"Сохранять пропорции при ресайзе", nil, cfg.spur.proportion) then
+        cfg.spur.proportion = not cfg.spur.proportion
+        inicfg.save(cfg, "support")
+      end
+      if not cfg.spur.lupa then
+        if imgui.MenuItem(u8"Лупа", nil, cfg.spur.lupa) then
+          cfg.spur.lupa = not cfg.spur.lupa
+          inicfg.save(cfg, "support")
+        end
+      else
+        if imgui.BeginMenu(u8"Лупа") then
+          if imgui.MenuItem(u8"Лупа", nil, cfg.spur.lupa) then
+            cfg.spur.lupa = not cfg.spur.lupa
+            inicfg.save(cfg, "support")
+          end
+          if imgui.MenuItem(u8"Только в сжатых", nil, cfg.spur.onlyresized) then
+            cfg.spur.onlyresized = not cfg.spur.onlyresized
+            inicfg.save(cfg, "support")
+          end
+          imgui.EndMenu()
+        end
+      end
+      imgui.EndMenu()
     end
     imgui.EndMenuBar()
-    if spurtab ~= nil then
+    if spurtab ~= nil and spur[spurtab] ~= nil then
       if spur[spurtab]["img"] == "skip" then spur[spurtab]["img"] = imgui.CreateTextureFromFile(spur[spurtab]["path"]) end
-      imgui.Image(spur[spurtab]["img"], imgui.ImVec2(spur[spurtab]["width"], spur[spurtab]["height"]))
-      if imgui.IsItemHovered() then
-        imgui.SetTooltip(u8:encode(spur[spurtab]["name"]))
+      local width, height = spur[spurtab]["width"], spur[spurtab]["height"]
+      if not cfg.spur.autoresize and cfg.spur.proportion and width > imgui.GetContentRegionAvailWidth() then
+        width = imgui.GetContentRegionAvailWidth()
+        height = spur[spurtab]["height"] / spur[spurtab]["width"] * imgui.GetContentRegionAvailWidth()
+      end
+      imgui.Image(spur[spurtab]["img"], imgui.ImVec2(width, height))
+      pos = imgui.GetCursorScreenPos()
+      if cfg.spur.lupa and imgui.IsItemHovered() then
+        if spur[spurtab]["width"] > imgui.GetContentRegionAvailWidth() or not cfg.spur.onlyresized then
+          my_tex_h = height
+          my_tex_w = width
+          imgui.BeginTooltip()
+          local region_sz = 64
+          local region_x = imgui.GetIO().MousePos.x - pos.x - region_sz * 0.5
+          if region_x < 0.0 then
+            region_x = 0.0
+          elseif region_x > my_tex_w - region_sz then
+            region_x = my_tex_w - region_sz
+          end
+          local region_y = my_tex_h - ( imgui.GetIO().MousePos.y - pos.y - region_sz * 0.5) * - 1
+          if region_y < 0.0 then
+            region_y = 0.0
+          elseif region_y > my_tex_h - region_sz then
+            region_y = my_tex_h - region_sz
+          end
+          local zoom = 2.0
+          uv0 = imgui.ImVec2((region_x) / my_tex_w, (region_y) / my_tex_h)
+          uv1 = imgui.ImVec2((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h)
+          imgui.Image(spur[spurtab]["img"], imgui.ImVec2(region_sz * zoom, region_sz * zoom), uv0, uv1, imgui.ImColor(255, 255, 255, 255), imgui.ImColor(255, 255, 255, 128))
+          imgui.EndTooltip()
+        end
       end
     end
     imgui.End()
   end
 end
+
+
 
 function imgui_menu()
   imgui.BeginMenuBar()
