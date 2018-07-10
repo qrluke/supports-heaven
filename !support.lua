@@ -714,10 +714,8 @@ end
 mode = "Samp-Rp"
 function var_require()
   imgui = require 'imgui'
-  inspect = require 'inspect'
   RPC = require 'lib.samp.events'
   inicfg = require "inicfg"
-  dlstatus = require('moonloader').download_status
   as_action = require('moonloader').audiostream_state
   key = r_lib_vkeys()
   hk = r_lib_rkeys()
@@ -1077,7 +1075,7 @@ function var_main()
   russian_characters = {
     [168] = 'Ё', [184] = 'ё', [192] = 'А', [193] = 'Б', [194] = 'В', [195] = 'Г', [196] = 'Д', [197] = 'Е', [198] = 'Ж', [199] = 'З', [200] = 'И', [201] = 'Й', [202] = 'К', [203] = 'Л', [204] = 'М', [205] = 'Н', [206] = 'О', [207] = 'П', [208] = 'Р', [209] = 'С', [210] = 'Т', [211] = 'У', [212] = 'Ф', [213] = 'Х', [214] = 'Ц', [215] = 'Ч', [216] = 'Ш', [217] = 'Щ', [218] = 'Ъ', [219] = 'Ы', [220] = 'Ь', [221] = 'Э', [222] = 'Ю', [223] = 'Я', [224] = 'а', [225] = 'б', [226] = 'в', [227] = 'г', [228] = 'д', [229] = 'е', [230] = 'ж', [231] = 'з', [232] = 'и', [233] = 'й', [234] = 'к', [235] = 'л', [236] = 'м', [237] = 'н', [238] = 'о', [239] = 'п', [240] = 'р', [241] = 'с', [242] = 'т', [243] = 'у', [244] = 'ф', [245] = 'х', [246] = 'ц', [247] = 'ч', [248] = 'ш', [249] = 'щ', [250] = 'ъ', [251] = 'ы', [252] = 'ь', [253] = 'э', [254] = 'ю', [255] = 'я',
   }
-  file = getGameDirectory()..'\\moonloader\\support.csv'
+  file = getGameDirectory()..'\\moonloader\\resource\\sup\\suplog.csv'
   color = 0xffa500
   selected = 1
   selecteddialogSDUTY = ""
@@ -1105,17 +1103,9 @@ function var_main()
   spurtab = cfg.spur.tab
   math.randomseed(os.time())
 end
---varload
-var_require()
-var_cfg()
-var_imgui_ImBool()
-var_imgui_ImFloat4_ImColor()
-var_imgui_ImInt()
-var_imgui_ImBuffer()
-var_main()
 
-
-
+RPC = {}
+imgui = {}
 
 --[[
 		МЕСТА, ДЛЯ ДОБАВЛЕНИЯ ПОДДЕРЖКИ ДРУГИХ ПРОЕКТОВ, ИСКАТЬ ПО mode == ":
@@ -1139,30 +1129,62 @@ var_main()
 		18. imgui_messanger_sms_keyboard() - способ отправки смс.
 ]]
 
-
 -------------------------------------MAIN---------------------------------------
 function main()
   if not isSampfuncsLoaded() or not isSampLoaded() then return end
   while not isSampAvailable() do wait(100) end
-  main_checksounds()
-  main_init_sms()
-  main_init_supfuncs()
-  main_init_debug()
-  main_init_hotkeys()
-  main_init_supdoc()
-  main_ImColorToHEX()
-  main_copyright()
-	lua_thread.create(imgui_messanger_scrollkostil)
-  inicfg.save(cfg, "support")
-  if DEBUG then First = true end
-  while true do
-    wait(0)
-    main_while_debug()
-    main_while_playsounds()
-    imgui.Process = main_window_state.v or spur_windows_state.v
+  PROVERKA = true
+  if PROVERKA == true then
+
+
+    var_require()
+    var_cfg()
+    var_imgui_ImBool()
+    var_imgui_ImFloat4_ImColor()
+    var_imgui_ImInt()
+    var_imgui_ImBuffer()
+    var_main()
+    apply_custom_style()
+    main_checksounds()
+    main_init_sms()
+    main_init_supfuncs()
+    main_init_debug()
+    main_init_hotkeys()
+    main_init_supdoc()
+    main_ImColorToHEX()
+    main_copyright()
+    sampRegisterChatCommand("sup",
+      function()
+        main_window_state.v = not main_window_state.v
+      end
+    )
+    sampRegisterChatCommand("smsblacklist",
+      function()
+        blockedlist = "Для удаления из списка создайте диалог в мессендежере и разблокируйте собеседника по правой кнопке мыши.\n\nСписок:\n"
+        i = 0
+        for k, v in pairs(sms) do
+          if v["Blocked"] == 1 then i = i + 1 blockedlist = blockedlist..i..". "..tostring(k).."\n" end
+        end
+        if blockedlist == "Для удаления из списка создайте диалог в мессендежере и разблокируйте собеседника по правой кнопке мыши.\n\nСписок:\n" then
+          blockedlist = "Список пуст"
+        end
+        sampShowDialog(1231, "Чёрный список sms", blockedlist, "Ок")
+      end
+    )
+    lua_thread.create(imgui_messanger_scrollkostil)
+    inicfg.save(cfg, "support")
+    if DEBUG then First = true end
+    while true do
+      wait(0)
+      main_while_debug()
+      main_while_playsounds()
+      imgui.Process = main_window_state.v or spur_windows_state.v
+    end
+  else
+    sampAddChatMessage("Проверка лицензии не пройдена", - 1)
+    print(131 > true)
   end
 end
-
 function main_checksounds()
   if not doesDirectoryExist(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\") then
     createDirectory(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\")
@@ -1550,6 +1572,7 @@ function RPC.onServerMessage(color, text)
           sms[smsNick]["Checked"] = 0
           sms[smsNick]["Pinned"] = 0
         end
+        if sms[smsNick]["Blocked"] ~= nil and sms[smsNick]["Blocked"] == 1 then return false end
         table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = smsNick, type = "FROM", time = os.time()})
         if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
         SSDB_trigger = true
@@ -2069,8 +2092,8 @@ function imgui_spur()
       if spur[spurtab]["img"] == "skip" then spur[spurtab]["img"] = imgui.CreateTextureFromFile(spur[spurtab]["path"]) end
       local width, height = spur[spurtab]["width"], spur[spurtab]["height"]
       if not cfg.spur.autoresize and cfg.spur.proportion and width > imgui.GetContentRegionAvailWidth() then
-        width = imgui.GetContentRegionAvailWidth()
-        height = spur[spurtab]["height"] / spur[spurtab]["width"] * imgui.GetContentRegionAvailWidth()
+        width = imgui.GetContentRegionAvailWidth() - imgui.GetStyle().ScrollbarSize
+        height = spur[spurtab]["height"] / spur[spurtab]["width"] * (imgui.GetContentRegionAvailWidth() - imgui.GetStyle().ScrollbarSize)
       end
       imgui.Image(spur[spurtab]["img"], imgui.ImVec2(width, height))
       pos = imgui.GetCursorScreenPos()
@@ -2164,7 +2187,7 @@ function imgui_messanger_scrollkostil()
     wait(0)
     if scroll then
       wait(100)
-			scroll = false
+      scroll = false
     end
   end
 end
@@ -2217,6 +2240,7 @@ function imgui_messanger_FO(mode)
       cfg.messanger.mode = 1
       cfg.only.notepad = false
       cfg.only.logviewer = false
+      ScrollToDialogSDUTY = true
       cfg.only.histogram = false
       cfg.only.settings = false
       cfg.only.counter = false
@@ -2268,6 +2292,7 @@ function imgui_messanger_FO(mode)
         keyboard = true
         cfg.messanger.mode = 2
         cfg.only.notepad = false
+        ScrollToDialogSMS = true
         cfg.only.logviewer = false
         cfg.only.histogram = false
         cfg.only.counter = false
@@ -4622,6 +4647,11 @@ function imgui_settings_6_sms_messanger()
   if iMessangerActiveSMS.v then
     imgui.SameLine()
     imgui.Text(u8("Мессенджер sms активирован!"))
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"/smsblacklist - просмотреть чёрный список смс")
+    end
     imgui.PushItemWidth(325)
     imgui.SliderInt(u8"Высота мессенджера##1", iMessangerHeight, 100, 1000)
     if iMessangerHeight.v ~= cfg.messanger.Height then
@@ -4798,6 +4828,11 @@ function imgui_settings_6_sms_messanger()
   else
     imgui.SameLine()
     imgui.TextDisabled(u8"Включить sms мессенджер?")
+    imgui.SameLine()
+    imgui.TextDisabled("(?)")
+    if imgui.IsItemHovered() then
+      imgui.SetTooltip(u8"/smsblacklist - просмотреть чёрный список смс")
+    end
   end
 end
 
@@ -4849,7 +4884,7 @@ function imgui_settings_8_logger()
   end
   if iLogBool.v then
     imgui.SameLine()
-    imgui.Text(u8:encode("Ответы пишутся в support.csv! Записей в логе: "..countall.."."))
+    imgui.Text(u8:encode("Ответы пишутся в suplog.csv! Записей в логе: "..countall.."."))
   else
     imgui.SameLine()
     imgui.TextDisabled(u8"Включить запись ответов в лог?")
@@ -4858,6 +4893,7 @@ function imgui_settings_8_logger()
       imgui.SameLine()
       if imgui.Button(u8("Удалить лог")) then
         os.remove(file)
+        countall = 0
       end
     end
   end
@@ -5436,7 +5472,6 @@ function apply_custom_style()
   colors[clr.ModalWindowDarkening] = ImVec4(0.80, 0.80, 0.80, 0.35)
 end
 
-apply_custom_style()
 ----------------------------------HELPERS---------------------------------------
 do
   function join_argb(a, r, g, b)
