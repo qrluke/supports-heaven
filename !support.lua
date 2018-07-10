@@ -1,7 +1,7 @@
 --meta
 script_name("Support's Heaven")
 script_author("rubbishman")
-script_version(' preview')
+script_version(os.date("%x"))
 script_dependencies('SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 --require
 do
@@ -1152,6 +1152,7 @@ function main()
   main_init_supdoc()
   main_ImColorToHEX()
   main_copyright()
+	lua_thread.create(imgui_messanger_scrollkostil)
   inicfg.save(cfg, "support")
   if DEBUG then First = true end
   while true do
@@ -2013,7 +2014,7 @@ function imgui_spur()
     else
       flagsSpur = imgui.WindowFlags.MenuBar + imgui.WindowFlags.HorizontalScrollbar
     end
-    imgui.Begin("Spur mode: "..mode, nil, flagsSpur)
+    imgui.Begin("Spur mode: "..mode, spur_windows_state, flagsSpur)
     imgui_saveposandsize2()
     imgui.BeginMenuBar()
     for k, v in pairs(menuindex) do
@@ -2103,8 +2104,6 @@ function imgui_spur()
   end
 end
 
-
-
 function imgui_menu()
   imgui.BeginMenuBar()
   if imgui.MenuItem(u8'В меню') then
@@ -2157,6 +2156,16 @@ function imgui_messanger()
   else
     imgui_menu()
     imgui_messanger_content()
+  end
+end
+
+function imgui_messanger_scrollkostil()
+  while true do
+    wait(0)
+    if scroll then
+      wait(100)
+			scroll = false
+    end
   end
 end
 
@@ -2526,7 +2535,6 @@ function imgui_messanger_sms_player_list()
   if iShowUA2.v then imgui_messanger_sms_showdialogs(smsindex_PINNEDVIEWED, "Pinned") end
   if iShowA1.v then imgui_messanger_sms_showdialogs(smsindex_NEW, "NotPinned") end
   if iShowA2.v then imgui_messanger_sms_showdialogs(smsindex_NEWVIEWED, "NotPinned") end
-  if scroll then scroll = false end
   imgui.EndChild()
 end
 
@@ -2622,7 +2630,6 @@ function imgui_messanger_sup_player_list()
   if iShowUA2.v then imgui_messanger_sup_showdialogs(chatindexNEW_V, "UnAnswered") end
   if iShowA1.v then imgui_messanger_sup_showdialogs(chatindex_NV, "Answered") end
   if iShowA2.v then imgui_messanger_sup_showdialogs(chatindex_V, "Answered") end
-  if scroll then scroll = false end
   imgui.EndChild()
 end
 
@@ -2682,9 +2689,7 @@ function imgui_messanger_sms_showdialogs(table, typ)
           imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.26, 0.59, 0.98, 0.40))
         end
       end
-      if scroll and iChangeScrollSMS.v then
-        imgui.SetScrollHere()
-      end
+
       if kolvo > 0 then
         if pId ~= nil and sampIsPlayerConnected(pId) and sampGetPlayerNickname(pId) == k then
           if imgui.Button(u8(k .. "[" .. pId .. "] - "..kolvo), imgui.ImVec2(-0.0001, 30)) then
@@ -2727,6 +2732,9 @@ function imgui_messanger_sms_showdialogs(table, typ)
             SSDB1_trigger = true
           end
         end
+      end
+      if scroll and selecteddialogSMS == k and iChangeScrollSMS.v then
+        imgui.SetScrollHere()
       end
       imgui.PopStyleColor()
       imgui_messanger_sms_player_list_contextmenu(k, typ)
@@ -2850,7 +2858,7 @@ function imgui_messanger_sup_showdialogs(table, typ)
           imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.26, 0.59, 0.98, 0.40))
         end
       end
-      if scroll and iChangeScroll.v then
+      if scroll and selecteddialogSDUTY == k and iChangeScroll.v then
         imgui.SetScrollHere()
       end
       if kolvo > 0 then
@@ -2886,9 +2894,9 @@ function imgui_messanger_sup_showdialogs(table, typ)
           end
         end
       end
+
       if imgui.IsItemHovered() and imgui.IsMouseClicked(1) then
         iMessanger[k] = nil
-
       end
       if typ == "UnAnswered" then
         imgui.PopStyleColor(3)
