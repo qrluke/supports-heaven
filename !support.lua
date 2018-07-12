@@ -2,9 +2,199 @@
 script_name("Support's Heaven")
 script_author("rubbishman")
 script_version(os.date("%x"))
-script_dependencies('SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
+script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
+script_moonloader(025)
 --require
 do
+  function r_smart_cleo_and_sampfuncs()
+    if isSampfuncsLoaded() == false then
+      while not isPlayerPlaying(PLAYER_HANDLE) do wait(100) end
+      wait(1000)
+      setPlayerControl(PLAYER_HANDLE, false)
+      setGxtEntry('CMLUTTL', 'Support\'s Heaven')
+      setGxtEntry('CMLUMSG', 'Skriptu nuzhen SAMPFUNCS.asi dlya raboty.~n~~w~Esli net CLEO, to tozhe budet ustanovlen.~n~~w~Hotite chtoby ya ego skachal?~n~~w~')
+      setGxtEntry('CMLUYES', 'Da!')
+      setGxtEntry('CMLUY', 'Ne, otkroy ssylku, ia sam!')
+      setGxtEntry('CMLUNO', 'Net!')
+      local menu = createMenu('CMLUTTL', 120, 110, 400, 1, true, true, 1)
+      local dummy = 'DUMMY'
+      setMenuColumn(menu, 0, 'CMLUMSG', dummy, dummy, dummy, dummy, 'CMLUYES', 'CMLUY', 'CMLUNO', dummy, dummy, dummy, dummy, dummy, dummy)
+      setActiveMenuItem(menu, 5)
+      while true do
+        wait(0)
+        if isButtonPressed(PLAYER_HANDLE, 15) then
+          if getMenuItemSelected(menu) == 4 then
+            pass = true
+            if not isCleoLoaded() then
+              pass = false
+              downloadUrlToFile("http://rubbishman.ru/dev/moonloader/cleo.asi", getGameDirectory().."\\cleo.asi",
+                function(id, status, p1, p2)
+                  if status == 5 then
+                    printStringNow(string.format("CLEO.asi: %d KB / %d KB", p1 / 1000, p2 / 1000), 5000)
+                  elseif status == 58 then
+                    printStringNow("CLEO.asi installed.", 5000)
+                    pass = true
+                  end
+                end
+              )
+            end
+            while pass ~= true do wait(100) end
+            downloadUrlToFile("http://rubbishman.ru/dev/moonloader/SAMPFUNCS.asi", getGameDirectory().."\\SAMPFUNCS.asi",
+              function(id, status, p1, p2)
+                if status == 5 then
+                  printStringNow(string.format("SAMPFUNCS.asi: %d KB / %d KB", p1 / 1000, p2 / 1000), 5000)
+                elseif status == 58 then
+                  printStringNow("Installed. You must reload the game!", 5000)
+                  thisScript():unload()
+                end
+              end
+            )
+          end
+          if getMenuItemSelected(menu) == 5 then
+            local ffi = require 'ffi'
+            ffi.cdef [[
+							void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
+							uint32_t __stdcall CoInitializeEx(void*, uint32_t);
+						]]
+            local shell32 = ffi.load 'Shell32'
+            local ole32 = ffi.load 'Ole32'
+            ole32.CoInitializeEx(nil, 2 + 4) -- COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE
+            print(shell32.ShellExecuteA(nil, 'open', 'https://blast.hk/threads/17/', nil, nil, 1))
+            thisScript():unload()
+          end
+          break
+        end
+      end
+      wait(0)
+      deleteMenu(menu)
+      setPlayerControl(PLAYER_HANDLE, true)
+    end
+  end
+  function r_smart_lib_imgui()
+    if not pcall(function() imgui = require 'imgui' end) then
+      waiter = true
+      local prefix = "[Support's Heaven]: "
+      local color = 0xffa500
+      sampAddChatMessage(prefix.."Модуль Dear ImGui загружен неудачно. Для работы скрипта этот модуль обязателен.", color)
+      sampAddChatMessage(prefix.."Средство автоматического исправления ошибок может попробовать скачать модуль за вас.", color)
+      sampAddChatMessage(prefix.."Нажмите F2, чтобы запустить средство автоматического исправления ошибок.", color)
+      while not wasKeyPressed(113) do wait(10) end
+      if wasKeyPressed(113) then
+        sampAddChatMessage(prefix.."Запускаю средство автоматического исправления ошибок.", color)
+        local imguifiles = {
+          [getGameDirectory().."\\moonloader\\lib\\imgui.lua"] = "http://rubbishman.ru/dev/moonloader/lib/imgui.lua",
+          [getGameDirectory().."\\moonloader\\lib\\MoonImGui.dll"] = "http://rubbishman.ru/dev/moonloader/lib/MoonImGui.dll"
+        }
+        createDirectory(getGameDirectory().."\\moonloader\\lib\\")
+        for k, v in pairs(imguifiles) do
+          if doesFileExist(k) then
+            sampAddChatMessage(prefix.."Файл "..k.." найден.", color)
+            sampAddChatMessage(prefix.."Удаляю "..k.." и скачиваю последнюю доступную версию.", color)
+            os.remove(k)
+          else
+            sampAddChatMessage(prefix.."Файл "..k.." не найден.", color)
+          end
+          sampAddChatMessage(prefix.."Ссылка: "..v..". Пробую скачать.", color)
+          pass = false
+          wait(1500)
+          downloadUrlToFile(v, k,
+            function(id, status, p1, p2)
+              if status == 5 then
+                sampAddChatMessage(string.format(prefix..k..' - Загружено %d KB из %d KB.', p1 / 1000, p2 / 1000), color)
+              elseif status == 58 then
+                sampAddChatMessage(prefix..k..' - Загрузка завершена.', color)
+                pass = true
+              end
+            end
+          )
+          while pass == false do wait(1) end
+        end
+        sampAddChatMessage(prefix.."Кажется, все файлы загружены. Попробую запустить модуль Dear ImGui ещё раз.", color)
+        local status, err = pcall(function() imgui = require 'imgui' end)
+        if status then
+          sampAddChatMessage(prefix.."Модуль Dear ImGui успешно загружен!", color)
+          waiter = false
+          waitforreload = true
+        else
+          sampAddChatMessage(prefix.."Модуль Dear ImGui загружен неудачно!", color)
+          sampAddChatMessage(prefix.."Обратитесь в поддержку скрипта (vk.me/qrlk.mods), приложив файл moonloader.log", color)
+          print(err)
+          for k, v in pairs(imguifiles) do
+            print(k.." - "..tostring(doesFileExist(k)).." from "..v)
+          end
+          thisScript():unload()
+        end
+      end
+    end
+    while waiter do wait(100) end
+  end
+
+  function r_smart_lib_samp_events()
+    if not pcall(function() RPC = require 'lib.samp.events' end) then
+      waiter = true
+      local prefix = "[Support's Heaven]: "
+      local color = 0xffa500
+      sampAddChatMessage(prefix.."Модуль SAMP.Lua загружен неудачно. Для работы скрипта этот модуль обязателен.", color)
+      sampAddChatMessage(prefix.."Средство автоматического исправления ошибок может попробовать скачать модуль за вас.", color)
+      sampAddChatMessage(prefix.."Нажмите F2, чтобы запустить средство автоматического исправления ошибок.", color)
+      while not wasKeyPressed(113) do wait(10) end
+      if wasKeyPressed(113) then
+        sampAddChatMessage(prefix.."Запускаю средство автоматического исправления ошибок.", color)
+        local sampluafiles = {
+          [getGameDirectory().."\\moonloader\\lib\\samp\\events.lua"] = "https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events.lua",
+          [getGameDirectory().."\\moonloader\\lib\\samp\\raknet.lua"] = "https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/raknet.lua",
+          [getGameDirectory().."\\moonloader\\lib\\samp\\synchronization.lua"] = "https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/synchronization.lua",
+          [getGameDirectory().."\\moonloader\\lib\\samp\\events\\bitstream_io.lua"] = "https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/bitstream_io.lua",
+          [getGameDirectory().."\\moonloader\\lib\\samp\\events\\core.lua"] = "https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/core.lua",
+          [getGameDirectory().."\\moonloader\\lib\\samp\\events\\bitstream_io.lua"] = "https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/bitstream_io.lua",
+          [getGameDirectory().."\\moonloader\\lib\\samp\\events\\extra_types.lua"] = "https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/extra_types.lua",
+          [getGameDirectory().."\\moonloader\\lib\\samp\\events\\handlers.lua"] = "https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/handlers.lua",
+          [getGameDirectory().."\\moonloader\\lib\\samp\\events\\utils.lua"] = "https://raw.githubusercontent.com/THE-FYP/SAMP.Lua/master/samp/events/utils.lua",
+        }
+        createDirectory(getGameDirectory().."\\moonloader\\lib\\samp\\events")
+        for k, v in pairs(sampluafiles) do
+          if doesFileExist(k) then
+            sampAddChatMessage(prefix.."Файл "..k.." найден.", color)
+            sampAddChatMessage(prefix.."Удаляю "..k.." и скачиваю последнюю доступную версию.", color)
+            os.remove(k)
+          else
+            sampAddChatMessage(prefix.."Файл "..k.." не найден.", color)
+          end
+          sampAddChatMessage(prefix.."Ссылка: "..v..". Пробую скачать.", color)
+          pass = false
+          wait(1500)
+          downloadUrlToFile(v, k,
+            function(id, status, p1, p2)
+              if status == 5 then
+                sampAddChatMessage(string.format(prefix..k..' - Загружено %d KB из %d KB.', p1 / 1000, p2 / 1000), color)
+              elseif status == 58 then
+                sampAddChatMessage(prefix..k..' - Загрузка завершена.', color)
+                pass = true
+              end
+            end
+          )
+          while pass == false do wait(1) end
+        end
+        sampAddChatMessage(prefix.."Кажется, все файлы загружены. Попробую запустить модуль SAMP.Lua ещё раз.", color)
+        local _, err = pcall(function() RPC = require 'lib.samp.events' end)
+        if _ then
+          sampAddChatMessage(prefix.."Модуль SAMP.Lua успешно загружен!", color)
+          waiter = false
+          waitforreload = true
+        else
+          sampAddChatMessage(prefix.."Модуль SAMP.Lua загружен неудачно!", color)
+          sampAddChatMessage(prefix.."Обратитесь в поддержку скрипта (vk.me/qrlk.mods), приложив файл moonloader.log", color)
+          print(err)
+          for k, v in pairs(sampluafiles) do
+            print(k.." - "..tostring(doesFileExist(k)).." from "..v)
+          end
+          thisScript():unload()
+        end
+      end
+    end
+    while waiter do wait(100) end
+  end
+
   function r_lib_vkeys()
     -- This file is part of SA MoonLoader package.
     -- Licensed under the MIT License.
@@ -482,7 +672,6 @@ do
   end
 
   function r_lib_imcustom_hotkey()
-    local imgui = require 'imgui'
     local vkeys = r_lib_vkeys()
     local rkeys = r_lib_rkeys()
     local wm = r_lib_window_message()
@@ -713,11 +902,14 @@ end
 --------------------------------------VAR---------------------------------------
 mode = "Samp-Rp"
 function var_require()
-  imgui = require 'imgui'
-  inspect = require 'inspect'
-  RPC = require 'lib.samp.events'
+  r_smart_cleo_and_sampfuncs()
+  while isSampfuncsLoaded() ~= true do wait(100) end
+  while not isSampAvailable() do  wait(100) end
+  --Проверка лицензии
+  r_smart_lib_imgui()
+  imgui_init()
+  wait(500)
   inicfg = require "inicfg"
-  dlstatus = require('moonloader').download_status
   as_action = require('moonloader').audiostream_state
   key = r_lib_vkeys()
   hk = r_lib_rkeys()
@@ -726,6 +918,16 @@ function var_require()
   encoding.default = 'CP1251'
   u8 = encoding.UTF8
   ihk._SETTINGS.noKeysMessage = u8("-")
+  wait(200)
+  var_cfg()
+  var_imgui_ImBool()
+  var_imgui_ImFloat4_ImColor()
+  var_imgui_ImInt()
+  var_imgui_ImBuffer()
+  var_main()
+  apply_custom_style()
+  r_smart_lib_samp_events()
+  RPC_init()
 end
 
 function var_cfg()
@@ -1105,16 +1307,6 @@ function var_main()
   spurtab = cfg.spur.tab
   math.randomseed(os.time())
 end
---varload
-var_require()
-var_cfg()
-var_imgui_ImBool()
-var_imgui_ImFloat4_ImColor()
-var_imgui_ImInt()
-var_imgui_ImBuffer()
-var_main()
-
-
 
 
 --[[
@@ -1144,6 +1336,8 @@ var_main()
 function main()
   if not isSampfuncsLoaded() or not isSampLoaded() then return end
   while not isSampAvailable() do wait(100) end
+  while require_status:status() ~= "dead" do wait(10) end
+  if waitforreload then thisScript():reload() wait(1000) end
   PROVERKA = true
   if PROVERKA == true then
     main_checksounds()
@@ -1538,106 +1732,92 @@ function DEBUG_toggle()
   inicfg.save(cfg, "support")
 end
 
-function RPC.onPlaySound(sound)
-  if mode == "Samp-Rp" then
-    if sound == 1052 and iSoundSmsOut.v then
-      return false
-    end
-  end
-end
---говно
-function RPC.onServerMessage(color, text)
-  if mode == "Samp-Rp" then
-    if main_window_state.v and text:match(" "..tostring(selecteddialogSMS).." %[(%d+)%]") then
-      if string.find(text, "AFK") then
-        smsafk[selecteddialogSMS] = "AFK "..string.match(text, "AFK: (%d+) сек").." s"
-      else
-        smsafk[selecteddialogSMS] = "NOT AFK"
-      end
-      return false
-    end
-    if DEBUG then DEBUG_simulateSupport(text) end
-    if text:find("SMS") then
-      text = string.gsub(text, "{FFFF00}", "")
-      text = string.gsub(text, "{FF8000}", "")
-      local smsText, smsNick, smsId = string.match(text, "^ SMS%: (.*)%. Отправитель%: (.*)%[(%d+)%]")
-      if smsText and smsNick and smsId then
-        LASTID_SMS = smsId
-        LASTNICK_SMS = smsNick
-        if iSoundSmsIn.v then PLAYSMSIN = true end
-        if sms[smsNick] and sms[smsNick].Chat then
-
-        else
-          sms[smsNick] = {}
-          sms[smsNick]["Chat"] = {}
-          sms[smsNick]["Checked"] = 0
-          sms[smsNick]["Pinned"] = 0
-        end
-        if sms[smsNick]["Blocked"] ~= nil and sms[smsNick]["Blocked"] == 1 then return false end
-        table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = smsNick, type = "FROM", time = os.time()})
-        if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
-        SSDB_trigger = true
-        if not iHideSmsIn.v then
-          if iReplaceSmsInColor.v then
-            sampAddChatMessage(text, SmsInColor_HEX)
-            return false
-          else
-            --do nothing
-          end
-        else
-          return false
-        end
-      end
-      local smsText, smsNick, smsId = string.match(text, "^ SMS%: (.*)%. Получатель%: (.*)%[(%d+)%]")
-      if smsText and smsNick and smsId then
-        LASTID_SMS = smsId
-        LASTNICK_SMS = smsNick
-        if iSoundSmsOut.v then PLAYSMSOUT = true end
-        local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
-        if sms[smsNick] and sms[smsNick].Chat then
-
-        else
-          sms[smsNick] = {}
-          sms[smsNick]["Chat"] = {}
-          sms[smsNick]["Checked"] = 0
-          sms[smsNick]["Pinned"] = 0
-        end
-        table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = sampGetPlayerNickname(myid), type = "TO", time = os.time()})
-        if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
-        SSDB_trigger = true
-        if not iHideSmsOut.v then
-          if iReplaceSmsOutColor.v then
-            sampAddChatMessage(text, SmsOutColor_HEX)
-            return false
-          else
-            --do nothing
-          end
-        else
-          return false
-        end
-      end
-    end
-    if text == " Сообщение доставлено" then
-      if iHideSmsReceived.v then return false end
-      if not iHideSmsReceived.v then
-        if iReplaceSmsReceivedColor.v then
-          sampAddChatMessage(text, SmsReceivedColor_HEX)
-          return false
-        else
-          --do nothing
-        end
-      else
+function RPC_init()
+  function RPC.onPlaySound(sound)
+    if mode == "Samp-Rp" then
+      if sound == 1052 and iSoundSmsOut.v then
         return false
       end
     end
-    if color == -5963521 then
-      if text:find("->Вопрос", true) then
-        sup_AddQ(text)
-        if iSoundQuestion.v then PLAYQ = true end
+  end
+  --говно
+  function RPC.onServerMessage(color, text)
+    if mode == "Samp-Rp" then
+      if main_window_state.v and text:match(" "..tostring(selecteddialogSMS).." %[(%d+)%]") then
+        if string.find(text, "AFK") then
+          smsafk[selecteddialogSMS] = "AFK "..string.match(text, "AFK: (%d+) сек").." s"
+        else
+          smsafk[selecteddialogSMS] = "NOT AFK"
+        end
+        return false
+      end
+      if DEBUG then DEBUG_simulateSupport(text) end
+      if text:find("SMS") then
+        text = string.gsub(text, "{FFFF00}", "")
+        text = string.gsub(text, "{FF8000}", "")
+        local smsText, smsNick, smsId = string.match(text, "^ SMS%: (.*)%. Отправитель%: (.*)%[(%d+)%]")
+        if smsText and smsNick and smsId then
+          LASTID_SMS = smsId
+          LASTNICK_SMS = smsNick
+          if iSoundSmsIn.v then PLAYSMSIN = true end
+          if sms[smsNick] and sms[smsNick].Chat then
+
+          else
+            sms[smsNick] = {}
+            sms[smsNick]["Chat"] = {}
+            sms[smsNick]["Checked"] = 0
+            sms[smsNick]["Pinned"] = 0
+          end
+          if sms[smsNick]["Blocked"] ~= nil and sms[smsNick]["Blocked"] == 1 then return false end
+          table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = smsNick, type = "FROM", time = os.time()})
+          if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
+          SSDB_trigger = true
+          if not iHideSmsIn.v then
+            if iReplaceSmsInColor.v then
+              sampAddChatMessage(text, SmsInColor_HEX)
+              return false
+            else
+              --do nothing
+            end
+          else
+            return false
+          end
+        end
+        local smsText, smsNick, smsId = string.match(text, "^ SMS%: (.*)%. Получатель%: (.*)%[(%d+)%]")
+        if smsText and smsNick and smsId then
+          LASTID_SMS = smsId
+          LASTNICK_SMS = smsNick
+          if iSoundSmsOut.v then PLAYSMSOUT = true end
+          local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+          if sms[smsNick] and sms[smsNick].Chat then
+
+          else
+            sms[smsNick] = {}
+            sms[smsNick]["Chat"] = {}
+            sms[smsNick]["Checked"] = 0
+            sms[smsNick]["Pinned"] = 0
+          end
+          table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = sampGetPlayerNickname(myid), type = "TO", time = os.time()})
+          if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
+          SSDB_trigger = true
+          if not iHideSmsOut.v then
+            if iReplaceSmsOutColor.v then
+              sampAddChatMessage(text, SmsOutColor_HEX)
+              return false
+            else
+              --do nothing
+            end
+          else
+            return false
+          end
+        end
+      end
+      if text == " Сообщение доставлено" then
+        if iHideSmsReceived.v then return false end
         if not iHideSmsReceived.v then
           if iReplaceSmsReceivedColor.v then
             sampAddChatMessage(text, SmsReceivedColor_HEX)
-            return false -- ИСПРАВИТЬ
+            return false
           else
             --do nothing
           end
@@ -1645,71 +1825,87 @@ function RPC.onServerMessage(color, text)
           return false
         end
       end
-      if text:find("<-", true) and text:find("to", true) then
-        sup_AddA(text)
-        SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<%-(%a.+)%[(%d+)%] to ([%a_]+)%[(%d+)%]: (.+)")
-        asdsadasads, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
-        if SupportNick == sampGetPlayerNickname(myid) then
-          if iSoundAnswer.v then PLAYA = true end
-          if not iHideAnswer.v then
-            if iReplaceAnswerColor.v then
-              sampAddChatMessage(text, Acolor_HEX)
-              return false
+      if color == -5963521 then
+        if text:find("->Вопрос", true) then
+          sup_AddQ(text)
+          if iSoundQuestion.v then PLAYQ = true end
+          if not iHideSmsReceived.v then
+            if iReplaceSmsReceivedColor.v then
+              sampAddChatMessage(text, SmsReceivedColor_HEX)
+              return false -- ИСПРАВИТЬ
             else
               --do nothing
             end
           else
             return false
           end
+        end
+        if text:find("<-", true) and text:find("to", true) then
+          sup_AddA(text)
+          SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<%-(%a.+)%[(%d+)%] to ([%a_]+)%[(%d+)%]: (.+)")
+          asdsadasads, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+          if SupportNick == sampGetPlayerNickname(myid) then
+            if iSoundAnswer.v then PLAYA = true end
+            if not iHideAnswer.v then
+              if iReplaceAnswerColor.v then
+                sampAddChatMessage(text, Acolor_HEX)
+                return false
+              else
+                --do nothing
+              end
+            else
+              return false
+            end
+          else
+            if iSoundAnswerOthers.v then PLAYA1 = true end
+            if not iHideAnswerOthers.v then
+              if iReplaceAnswerOthersColor.v then
+                sampAddChatMessage(text, Acolor1_HEX)
+                return false
+              else
+                --do nothing
+              end
+            else
+              return false
+            end
+          end
+        end
+      end
+      if DEBUG then return false end -- исправить
+    end
+  end
+  --считаем активность саппорта
+  function RPC.onSendCommand(text)
+    if mode == "Samp-Rp" then
+      if string.find(text, '/pm') then
+        if text:match('/pm (%d+) $') then
+          lua_thread.create(sup_FastRespond_via_dialog, text:match('/pm (%d+) $'))
+          return false
         else
-          if iSoundAnswerOthers.v then PLAYA1 = true end
-          if not iHideAnswerOthers.v then
-            if iReplaceAnswerOthersColor.v then
-              sampAddChatMessage(text, Acolor1_HEX)
-              return false
-            else
-              --do nothing
+          if string.match(text, "(%d+) (.+)") then
+            sup_logger_HostAnswer(text)
+            if iSoundAnswer.v then PLAYA = true end
+            id, text = string.match(text, "(%d+) (.+)")
+            if sampIsPlayerConnected(id) then
+              if selecteddialogSDUTY == sampGetPlayerNickname(id) then ScrollToDialogSDUTY = true end
+              if DEBUG then
+                local _asdasd, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+                DEBUG_simulateSupportAnswer("<-"..sampGetPlayerNickname(myid).."["..myid.."]".." to "..sampGetPlayerNickname(id).."["..id.."]: "..text)
+              end
+              sup_AddA(text)
             end
-          else
-            return false
-          end
-        end
-      end
-    end
-    if DEBUG then return false end -- исправить
-  end
-end
---считаем активность саппорта
-function RPC.onSendCommand(text)
-  if mode == "Samp-Rp" then
-    if string.find(text, '/pm') then
-      if text:match('/pm (%d+) $') then
-        lua_thread.create(sup_FastRespond_via_dialog, text:match('/pm (%d+) $'))
-        return false
-      else
-        if string.match(text, "(%d+) (.+)") then
-          sup_logger_HostAnswer(text)
-          if iSoundAnswer.v then PLAYA = true end
-          id, text = string.match(text, "(%d+) (.+)")
-          if sampIsPlayerConnected(id) then
-            if selecteddialogSDUTY == sampGetPlayerNickname(id) then ScrollToDialogSDUTY = true end
-            if DEBUG then
-              local _asdasd, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
-              DEBUG_simulateSupportAnswer("<-"..sampGetPlayerNickname(myid).."["..myid.."]".." to "..sampGetPlayerNickname(id).."["..id.."]: "..text)
-            end
-            sup_AddA(text)
           end
         end
       end
     end
   end
-end
 
-function RPC.onDisplayGameText(style, time, text)
-  if mode == "Samp-Rp" then
-    if text:find("Welcome") then
-      if cfg.supfuncs.autosduty then
-        lua_thread.create(function() wait(1500) sampSendChat("/sduty") end)
+  function RPC.onDisplayGameText(style, time, text)
+    if mode == "Samp-Rp" then
+      if text:find("Welcome") then
+        if cfg.supfuncs.autosduty then
+          lua_thread.create(function() wait(1500) sampSendChat("/sduty") end)
+        end
       end
     end
   end
@@ -1994,9 +2190,11 @@ function sup_updateStats()
   end
 end
 
-function imgui.OnDrawFrame()
-  imgui_main()
-  imgui_spur()
+function imgui_init()
+  function imgui.OnDrawFrame()
+    imgui_main()
+    imgui_spur()
+  end
 end
 
 function imgui_main()
@@ -5473,7 +5671,7 @@ function apply_custom_style()
   colors[clr.ModalWindowDarkening] = ImVec4(0.80, 0.80, 0.80, 0.35)
 end
 
-apply_custom_style()
+
 ----------------------------------HELPERS---------------------------------------
 do
   function join_argb(a, r, g, b)
@@ -5623,22 +5821,7 @@ do
     end
     return tables[1]
   end
-  --[[
-Get Image Size
-By: MikuAuahDark
-Allows you to get image/video size from most files.
-Supported Image/Video Files(by priority order):
-1. Portable Network Graphics
-2. Windows Bitmap
-3. JPEG
-4. GIF
-5. Photoshop Document
-6. Truevision TGA
-7. JPEG XR/TIFF*
-8. MP4
-9. AVI
-(*) = experimental
-]]
+
 
   function GetImageWidthHeight(file)
     local fileinfo = type(file)
@@ -5821,3 +6004,5 @@ function onScriptTerminate(scr)
     lockPlayerControl(false)
   end
 end
+--start script here
+require_status = lua_thread.create(var_require)
