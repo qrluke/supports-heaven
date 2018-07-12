@@ -22,7 +22,7 @@ do
       setActiveMenuItem(menu, 5)
       while true do
         wait(0)
-        if isButtonPressed(PLAYER_HANDLE, 15) then
+        if isButtonPressed(PLAYER_HANDLE, 15) or isButtonPressed(PLAYER_HANDLE, 16) then
           if getMenuItemSelected(menu) == 4 then
             pass = true
             if not isCleoLoaded() then
@@ -70,6 +70,7 @@ do
       setPlayerControl(PLAYER_HANDLE, true)
     end
   end
+
   function r_smart_lib_imgui()
     if not pcall(function() imgui = require 'imgui' end) then
       waiter = true
@@ -176,8 +177,8 @@ do
           while pass == false do wait(1) end
         end
         sampAddChatMessage(prefix.."Кажется, все файлы загружены. Попробую запустить модуль SAMP.Lua ещё раз.", color)
-        local _, err = pcall(function() RPC = require 'lib.samp.events' end)
-        if _ then
+        local status1, err = pcall(function() RPC = require 'lib.samp.events' end)
+        if status1 then
           sampAddChatMessage(prefix.."Модуль SAMP.Lua успешно загружен!", color)
           waiter = false
           waitforreload = true
@@ -193,6 +194,76 @@ do
       end
     end
     while waiter do wait(100) end
+  end
+
+  function r_smart_get_projectresources()
+    if not doesDirectoryExist(getGameDirectory().."\\moonloader\\resource\\sup\\"..mode) then
+      local prefix = "[Support's Heaven]: "
+      local color = 0xffa500
+      sampAddChatMessage(prefix.."Для работы скрипта нужна папка с ресурсами, заготовленными для вашего проекта.", color)
+      sampAddChatMessage(prefix.."Нажмите F2, чтобы запустить скачивание файлов для проекта "..mode, color)
+      while not wasKeyPressed(113) do wait(10) end
+      if wasKeyPressed(113) then
+        createDirectory(getGameDirectory().."\\moonloader\\resource\\sup\\"..mode)
+        local path = getGameDirectory().."\\moonloader\\resource\\sup\\"..mode.."\\"
+        local webpath = "http://rubbishman.ru/dev/moonloader/support's_heaven/resource/sup/"..mode.."/"
+        resourcesf = {
+          [path.."house.txt"] = webpath.."house.txt",
+          [path.."vehicle.txt"] = webpath.."vehicle.txt",
+          [path.."spur.txt"] = webpath.."spur.txt",
+        }
+        for k, v in pairs(resourcesf) do
+          sampAddChatMessage(prefix..v.." -> "..k, color)
+          pass = false
+          wait(100)
+          downloadUrlToFile(v, k,
+            function(id, status, p1, p2)
+              if status == 5 then
+                sampAddChatMessage(string.format(prefix..k..' - Загружено %d KB из %d KB.', p1 / 1000, p2 / 1000), color)
+              elseif status == 58 then
+                sampAddChatMessage(prefix..k..' - Загрузка завершена.', color)
+                pass = true
+              end
+            end
+          )
+          while pass == false do wait(1) end
+        end
+        kol = 0
+        for _ in io.lines(path.."spur.txt") do
+          kol = kol + 1
+        end
+        for i = 1, kol do
+          k = path..i..".png"
+          v = webpath..i..".png"
+          sampAddChatMessage(prefix..v.." -> "..k, color)
+          pass = false
+          wait(100)
+          downloadUrlToFile(v, k,
+            function(id, status, p1, p2)
+              if status == 5 then
+                sampAddChatMessage(string.format(prefix..k..' - Загружено %d KB из %d KB.', p1 / 1000, p2 / 1000), color)
+              elseif status == 58 then
+                sampAddChatMessage(prefix..k..' - Загрузка завершена.', color)
+                pass = true
+              end
+            end
+          )
+          while pass == false do wait(1) end
+        end
+      end
+    end
+  end
+
+  function r_smart_get_sounds()
+    if not doesDirectoryExist(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\") then
+      createDirectory(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\")
+    end
+    for i = 1, 100 do
+      local file = getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\"..i..".mp3"
+      if not doesFileExist(file) then
+        downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support's_heaven/resource/sup/sounds/"..i..".mp3", file)
+      end
+    end
   end
 
   function r_lib_vkeys()
@@ -900,12 +971,14 @@ do
   end
 end
 --------------------------------------VAR---------------------------------------
-mode = "Samp-Rp"
 function var_require()
   r_smart_cleo_and_sampfuncs()
   while isSampfuncsLoaded() ~= true do wait(100) end
-  while not isSampAvailable() do  wait(100) end
+  while not isSampAvailable() do wait(100) end
   --Проверка лицензии
+  mode = "samp-rp"
+  r_smart_get_projectresources()
+  r_smart_get_sounds()
   r_smart_lib_imgui()
   imgui_init()
   wait(500)
@@ -1331,7 +1404,6 @@ end
 		18. imgui_messanger_sms_keyboard() - способ отправки смс.
 ]]
 
-
 -------------------------------------MAIN---------------------------------------
 function main()
   if not isSampfuncsLoaded() or not isSampLoaded() then return end
@@ -1340,7 +1412,6 @@ function main()
   if waitforreload then thisScript():reload() wait(1000) end
   PROVERKA = true
   if PROVERKA == true then
-    main_checksounds()
     main_init_sms()
     main_init_supfuncs()
     main_init_debug()
@@ -1377,18 +1448,6 @@ function main()
     end
   else
     sampAddChatMessage(12 > true)
-  end
-end
-
-function main_checksounds()
-  if not doesDirectoryExist(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\") then
-    createDirectory(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\")
-  end
-  for i = 1, 100 do
-    local file = getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\"..i..".mp3"
-    if not doesFileExist(file) then
-      downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support's%20heaven/resource/sup/sounds/"..i..".mp3", file)
-    end
   end
 end
 
@@ -1578,7 +1637,7 @@ function main_init_hotkeys()
 end
 
 function main_init_supdoc()
-  if mode == "Samp-Rp" then
+  if mode == "samp-rp" then
     local file = io.open( getGameDirectory().."\\moonloader\\resource\\sup\\"..mode.."\\spur.txt", "r" )
     if file then
       textSpur.v = u8:encode(file:read("*a"))
@@ -1693,7 +1752,7 @@ end
 
 --симулируем саппорта
 function DEBUG_simulateSupport(text)
-  if mode == "Samp-Rp" then
+  if mode == "samp-rp" then
     if not string.find(text, "недос") then
       tempid = math.random(1, 100)
       if sampIsPlayerConnected(tempid) then
@@ -1715,7 +1774,7 @@ function DEBUG_simulateSupport(text)
 end
 
 function DEBUG_simulateSupportAnswer(text)
-  if mode == "Samp-Rp" then
+  if mode == "samp-rp" then
     sampAddChatMessage(text, Acolor_HEX)
     sup_AddA(text)
   end
@@ -1734,7 +1793,7 @@ end
 
 function RPC_init()
   function RPC.onPlaySound(sound)
-    if mode == "Samp-Rp" then
+    if mode == "samp-rp" then
       if sound == 1052 and iSoundSmsOut.v then
         return false
       end
@@ -1742,7 +1801,7 @@ function RPC_init()
   end
   --говно
   function RPC.onServerMessage(color, text)
-    if mode == "Samp-Rp" then
+    if mode == "samp-rp" then
       if main_window_state.v and text:match(" "..tostring(selecteddialogSMS).." %[(%d+)%]") then
         if string.find(text, "AFK") then
           smsafk[selecteddialogSMS] = "AFK "..string.match(text, "AFK: (%d+) сек").." s"
@@ -1876,7 +1935,7 @@ function RPC_init()
   end
   --считаем активность саппорта
   function RPC.onSendCommand(text)
-    if mode == "Samp-Rp" then
+    if mode == "samp-rp" then
       if string.find(text, '/pm') then
         if text:match('/pm (%d+) $') then
           lua_thread.create(sup_FastRespond_via_dialog, text:match('/pm (%d+) $'))
@@ -1901,7 +1960,7 @@ function RPC_init()
   end
 
   function RPC.onDisplayGameText(style, time, text)
-    if mode == "Samp-Rp" then
+    if mode == "samp-rp" then
       if text:find("Welcome") then
         if cfg.supfuncs.autosduty then
           lua_thread.create(function() wait(1500) sampSendChat("/sduty") end)
@@ -1912,7 +1971,7 @@ function RPC_init()
 end
 
 function sup_AddQ(text)
-  if mode == "Samp-Rp" then
+  if mode == "samp-rp" then
     ClientNick, ClientID, Question = string.match(text, "->Вопрос ([%a_]+)%[(%d+)%]: (.+)")
     if ClientNick ~= nil and ClientID ~= nil and Question ~= nil then
       LASTID = ClientID
@@ -1932,7 +1991,7 @@ function sup_AddQ(text)
 end
 
 function sup_AddA(text)
-  if mode == "Samp-Rp" then
+  if mode == "samp-rp" then
     SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<%-(%a.+)%[(%d+)%] to ([%a_]+)%[(%d+)%]: (.+)")
     if SupportNick ~= nil and SupportID ~= nil and ClientNick ~= nil and Answer ~= nil then
       if iMessanger[ClientNick] == nil then
@@ -1950,7 +2009,7 @@ function sup_AddA(text)
 end
 
 function sup_logger_HostAnswer(text)
-  if mode == "Samp-Rp" then
+  if mode == "samp-rp" then
     if iLogBool.v then
       id, text = string.match(text, "(%d+) (.+)")
       pattern = [[\"\',]]
@@ -1990,7 +2049,7 @@ function sup_logger_writecsv(file, string)
 end
 
 function sup_ParseHouseTxt_hh()
-  if mode == "Samp-Rp" then
+  if mode == "samp-rp" then
     local hhfile = getGameDirectory().."\\moonloader\\resource\\sup\\samp-rp\\house.txt"
     if doesFileExist(hhfile) then
       gethh = {}
@@ -2002,7 +2061,7 @@ function sup_ParseHouseTxt_hh()
 end
 
 function sup_ParseVehicleTxt_hc()
-  if mode == "Samp-Rp" then
+  if mode == "samp-rp" then
     local hcfile = getGameDirectory().."\\moonloader\\resource\\sup\\samp-rp\\vehicle.txt"
     if doesFileExist(hcfile) then
       gethc = {}
@@ -2030,7 +2089,7 @@ function sup_FastRespond_via_chat()
     if LASTID ~= -1 then
       if sampIsPlayerConnected(LASTID) and sampGetPlayerNickname(LASTID) == LASTNICK then
         sampSetChatInputEnabled(true)
-        if mode == "Samp-Rp" then sampSetChatInputText("/pm "..LASTID.." ") end
+        if mode == "samp-rp" then sampSetChatInputText("/pm "..LASTID.." ") end
       else
         sampAddChatMessage("Ошибка: игрок, задавший вопрос, отключился.", color)
       end
@@ -2062,7 +2121,7 @@ function sup_FastRespond_via_dialog(param, mod)
           if button == 1 then
             FRnumber_D = sampGetCurrentDialogEditboxText(8320)
             if tonumber(FRnumber_D) ~= nil and getfr[tonumber(FRnumber_D)] ~= nil then
-              if mode == "Samp-Rp" then sampSendChat("/pm "..id.." "..getfr[tonumber(FRnumber_D)]) end
+              if mode == "samp-rp" then sampSendChat("/pm "..id.." "..getfr[tonumber(FRnumber_D)]) end
             end
           end
         end
@@ -2074,7 +2133,7 @@ function sup_FastRespond_via_dialog(param, mod)
 end
 
 function sup_UnAnswered_via_samp_dialog()
-  if mode == "Samp-Rp" then
+  if mode == "samp-rp" then
     if cfg.supfuncs.unanswereddialog then
       if main_window_state.v then main_window_state.v = false end
       local UNANindex = {}
@@ -2113,7 +2172,7 @@ function sup_UnAnswered_via_samp_dialog()
             UNANid = string.match(string.gsub(UNANtext, "{......}", ""), "%[(%d+)%]")
             UNANid = string.match(UNANtext, UNID.." - .+%[(%d+)%].+\n")
             if UNANid ~= nil and sampIsPlayerConnected(UNANid) then
-              if mode == "Samp-Rp" then sampSendChat("/pm "..tonumber(UNANid).." "..UNANanswe) end
+              if mode == "samp-rp" then sampSendChat("/pm "..tonumber(UNANid).." "..UNANanswe) end
             end
           else
             if tonumber(UNANanswer) ~= nil then
@@ -2121,7 +2180,7 @@ function sup_UnAnswered_via_samp_dialog()
               UNANid = string.match(UNANtext, tonumber(UNANanswer).." - .+%[(%d+)%].+\n")
               if sampIsPlayerConnected(UNANid) then
                 sampSetChatInputEnabled(true)
-                if mode == "Samp-Rp" then sampSetChatInputText("/pm "..tonumber(UNANanswer).." ") end
+                if mode == "samp-rp" then sampSetChatInputText("/pm "..tonumber(UNANanswer).." ") end
               end
             end
           end
@@ -3247,7 +3306,7 @@ function imgui_messanger_sms_header()
       if imgui.Button(smsafk[selecteddialogSMS]) then
         for i = 1, sampGetMaxPlayerId() do
           if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSMS then
-            if mode == "Samp-Rp" then
+            if mode == "samp-rp" then
               sampSendChat("/id "..i)
             end
             break
@@ -3546,7 +3605,7 @@ function imgui_messanger_sup_keyboard()
           if i == sampGetMaxPlayerId() then k = "-" end
         end
         if k ~= "-" then
-          if mode == "Samp-Rp" then
+          if mode == "samp-rp" then
             sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSDUTY.v))
             toAnswerSDUTY.v = ''
           end
@@ -3579,7 +3638,7 @@ function imgui_messanger_sup_keyboard()
           if i == sampGetMaxPlayerId() then k = "-" end
         end
         if k ~= "-" then
-          if mode == "Samp-Rp" then
+          if mode == "samp-rp" then
             sampSendChat("/pm " .. k .. " " .. u8:decode(toAnswerSDUTY.v))
           end
           toAnswerSDUTY.v = ''
@@ -3756,7 +3815,7 @@ function imgui_messanger_sms_keyboard()
         if i == sampGetMaxPlayerId() then k = "-" end
       end
       if k ~= "-" then
-        if mode == "Samp-Rp" then
+        if mode == "samp-rp" then
           sampSendChat("/t " .. k .. " " .. u8:decode(toAnswerSMS.v))
           toAnswerSMS.v = ''
         end
@@ -3776,7 +3835,7 @@ function imgui_messanger_sms_keyboard()
         if i == sampGetMaxPlayerId() then k = "-" end
       end
       if k ~= "-" then
-        if mode == "Samp-Rp" then
+        if mode == "samp-rp" then
           sampSendChat("/t " .. k .. " " .. u8:decode(toAnswerSMS.v))
           toAnswerSMS.v = ''
         end
