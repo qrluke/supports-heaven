@@ -714,8 +714,10 @@ end
 mode = "Samp-Rp"
 function var_require()
   imgui = require 'imgui'
+  inspect = require 'inspect'
   RPC = require 'lib.samp.events'
   inicfg = require "inicfg"
+  dlstatus = require('moonloader').download_status
   as_action = require('moonloader').audiostream_state
   key = r_lib_vkeys()
   hk = r_lib_rkeys()
@@ -1103,9 +1105,17 @@ function var_main()
   spurtab = cfg.spur.tab
   math.randomseed(os.time())
 end
+--varload
+var_require()
+var_cfg()
+var_imgui_ImBool()
+var_imgui_ImFloat4_ImColor()
+var_imgui_ImInt()
+var_imgui_ImBuffer()
+var_main()
 
-RPC = {}
-imgui = {}
+
+
 
 --[[
 		ÌÅÑÒÀ, ÄËß ÄÎÁÀÂËÅÍÈß ÏÎÄÄÅÐÆÊÈ ÄÐÓÃÈÕ ÏÐÎÅÊÒÎÂ, ÈÑÊÀÒÜ ÏÎ mode == ":
@@ -1129,22 +1139,13 @@ imgui = {}
 		18. imgui_messanger_sms_keyboard() - ñïîñîá îòïðàâêè ñìñ.
 ]]
 
+
 -------------------------------------MAIN---------------------------------------
 function main()
   if not isSampfuncsLoaded() or not isSampLoaded() then return end
   while not isSampAvailable() do wait(100) end
   PROVERKA = true
   if PROVERKA == true then
-
-
-    var_require()
-    var_cfg()
-    var_imgui_ImBool()
-    var_imgui_ImFloat4_ImColor()
-    var_imgui_ImInt()
-    var_imgui_ImBuffer()
-    var_main()
-    apply_custom_style()
     main_checksounds()
     main_init_sms()
     main_init_supfuncs()
@@ -1181,10 +1182,10 @@ function main()
       imgui.Process = main_window_state.v or spur_windows_state.v
     end
   else
-    sampAddChatMessage("Ïðîâåðêà ëèöåíçèè íå ïðîéäåíà", - 1)
-    print(131 > true)
+    sampAddChatMessage(12 > true)
   end
 end
+
 function main_checksounds()
   if not doesDirectoryExist(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\") then
     createDirectory(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\")
@@ -5472,6 +5473,7 @@ function apply_custom_style()
   colors[clr.ModalWindowDarkening] = ImVec4(0.80, 0.80, 0.80, 0.35)
 end
 
+apply_custom_style()
 ----------------------------------HELPERS---------------------------------------
 do
   function join_argb(a, r, g, b)
