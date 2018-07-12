@@ -19,7 +19,7 @@ do
       local menu = createMenu('CMLUTTL', 120, 110, 400, 1, true, true, 1)
       local dummy = 'DUMMY'
       setMenuColumn(menu, 0, 'CMLUMSG', dummy, dummy, dummy, dummy, 'CMLUYES', 'CMLUY', 'CMLUNO', dummy, dummy, dummy, dummy, dummy, dummy)
-      setActiveMenuItem(menu, 5)
+      setActiveMenuItem(menu, 4)
       while true do
         wait(0)
         if isButtonPressed(PLAYER_HANDLE, 15) or isButtonPressed(PLAYER_HANDLE, 16) then
@@ -44,7 +44,7 @@ do
                 if status == 5 then
                   printStringNow(string.format("SAMPFUNCS.asi: %d KB / %d KB", p1 / 1000, p2 / 1000), 5000)
                 elseif status == 58 then
-                  printStringNow("Installed. You must reload the game!", 5000)
+                  printStringNow("Installed. You MUST RESTART the game!", 5000)
                   thisScript():unload()
                 end
               end
@@ -969,6 +969,1026 @@ do
 
     return encoding
   end
+  function r_lib_lockbox()
+    local Lockbox = {};
+
+    --[[
+		package.path =  "./?.lua;"
+						.. "./cipher/?.lua;"
+						.. "./digest/?.lua;"
+						.. "./kdf/?.lua;"
+						.. "./mac/?.lua;"
+						.. "./padding/?.lua;"
+						.. "./test/?.lua;"
+						.. "./util/?.lua;"
+						.. package.path;
+		]]--
+    Lockbox.ALLOW_INSECURE = false;
+
+    Lockbox.insecure = function()
+      assert(Lockbox.ALLOW_INSECURE, "This module is insecure!  It should not be used in production.  If you really want to use it, set Lockbox.ALLOW_INSECURE to true before importing it");
+    end
+
+    return Lockbox;
+  end
+
+  function r_lockbox_util_queue()
+    local Queue = function()
+      local queue = {};
+      local tail = 0;
+      local head = 0;
+
+      local public = {};
+
+      public.push = function(obj)
+        queue[head] = obj;
+        head = head + 1;
+        return;
+      end
+
+      public.pop = function()
+        if tail < head
+        then
+          local obj = queue[tail];
+          queue[tail] = nil;
+          tail = tail + 1;
+          return obj;
+        else
+          return nil;
+        end
+      end
+
+      public.size = function()
+        return head - tail;
+      end
+
+      public.getHead = function()
+        return head;
+      end
+
+      public.getTail = function()
+        return tail;
+      end
+
+      public.reset = function()
+        queue = {};
+        head = 0;
+        tail = 0;
+      end
+
+      return public;
+    end
+
+    return Queue;
+  end
+
+  function r_lockbox_util_stream()
+    local Queue = r_lockbox_util_queue()
+
+    local Stream = {};
+
+
+    Stream.fromString = function(string)
+      local i = 0;
+      return function()
+        i = i + 1;
+        if(i <= string.len(string)) then
+          return string.byte(string, i);
+        else
+          return nil;
+        end
+      end
+    end
+
+
+    Stream.toString = function(stream)
+      local array = {};
+      local i = 1;
+
+      local byte = stream();
+      while byte ~= nil do
+        array[i] = string.char(byte);
+        i = i + 1;
+        byte = stream();
+      end
+
+      return table.concat(array, "");
+    end
+
+
+    Stream.fromArray = function(array)
+      local queue = Queue();
+      local i = 1;
+
+      local byte = array[i];
+      while byte ~= nil do
+        queue.push(byte);
+        i = i + 1;
+        byte = array[i];
+      end
+
+      return queue.pop;
+    end
+
+
+    Stream.toArray = function(stream)
+      local array = {};
+      local i = 1;
+
+      local byte = stream();
+      while byte ~= nil do
+        array[i] = byte;
+        i = i + 1;
+        byte = stream();
+      end
+
+      return array;
+    end
+
+
+    local fromHexTable = {};
+    for i = 0, 255 do
+      fromHexTable[string.format("%02X", i)] = i;
+      fromHexTable[string.format("%02x", i)] = i;
+    end
+
+    Stream.fromHex = function(hex)
+      local queue = Queue();
+
+      for i = 1, string.len(hex) / 2 do
+        local h = string.sub(hex, i * 2 - 1, i * 2);
+        queue.push(fromHexTable[h]);
+      end
+
+      return queue.pop;
+    end
+
+
+
+    local toHexTable = {};
+    for i = 0, 255 do
+      toHexTable[i] = string.format("%02X", i);
+    end
+
+    Stream.toHex = function(stream)
+      local hex = {};
+      local i = 1;
+
+      local byte = stream();
+      while byte ~= nil do
+        hex[i] = toHexTable[byte];
+        i = i + 1;
+        byte = stream();
+      end
+
+      return table.concat(hex, "");
+    end
+
+    return Stream;
+  end
+
+  function r_lib_lockbox_util_bit()
+    local ok, e
+    if not ok then
+      ok, e = pcall(require, "bit") -- the LuaJIT one ?
+    end
+    if not ok then
+      ok, e = pcall(require, "bit32") -- Lua 5.2
+    end
+    if not ok then
+      ok, e = pcall(require, "bit.numberlua") -- for Lua 5.1, https://github.com/tst2005/lua-bit-numberlua/
+    end
+    if not ok then
+      error("no bitwise support found", 2)
+    end
+    assert(type(e) == "table", "invalid bit module")
+
+    -- Workaround to support Lua 5.2 bit32 API with the LuaJIT bit one
+    if e.rol and not e.lrotate then
+      e.lrotate = e.rol
+    end
+    if e.ror and not e.rrotate then
+      e.rrotate = e.ror
+    end
+
+    return e
+  end
+
+  function r_lib_lockbox_util_array()
+    local Bit = r_lib_lockbox_util_bit()
+    local XOR = Bit.bxor;
+
+    local Array = {};
+
+    Array.size = function(array)
+      return #array;
+    end
+
+    Array.fromString = function(string)
+      local bytes = {};
+
+      local i = 1;
+      local byte = string.byte(string, i);
+      while byte ~= nil do
+        bytes[i] = byte;
+        i = i + 1;
+        byte = string.byte(string, i);
+      end
+
+      return bytes;
+
+    end
+
+    Array.toString = function(bytes)
+      local chars = {};
+      local i = 1;
+
+      local byte = bytes[i];
+      while byte ~= nil do
+        chars[i] = string.char(byte);
+        i = i + 1;
+        byte = bytes[i];
+      end
+
+      return table.concat(chars, "");
+    end
+
+    Array.fromStream = function(stream)
+      local array = {};
+      local i = 1;
+
+      local byte = stream();
+      while byte ~= nil do
+        array[i] = byte;
+        i = i + 1;
+        byte = stream();
+      end
+
+      return array;
+    end
+
+    Array.readFromQueue = function(queue, size)
+      local array = {};
+
+      for i = 1, size do
+        array[i] = queue.pop();
+      end
+
+      return array;
+    end
+
+    Array.writeToQueue = function(queue, array)
+      local size = Array.size(array);
+
+      for i = 1, size do
+        queue.push(array[i]);
+      end
+    end
+
+    Array.toStream = function(array)
+      local queue = Queue();
+      local i = 1;
+
+      local byte = array[i];
+      while byte ~= nil do
+        queue.push(byte);
+        i = i + 1;
+        byte = array[i];
+      end
+
+      return queue.pop;
+    end
+
+
+    local fromHexTable = {};
+    for i = 0, 255 do
+      fromHexTable[string.format("%02X", i)] = i;
+      fromHexTable[string.format("%02x", i)] = i;
+    end
+
+    Array.fromHex = function(hex)
+      local array = {};
+
+      for i = 1, string.len(hex) / 2 do
+        local h = string.sub(hex, i * 2 - 1, i * 2);
+        array[i] = fromHexTable[h];
+      end
+
+      return array;
+    end
+
+
+    local toHexTable = {};
+    for i = 0, 255 do
+      toHexTable[i] = string.format("%02X", i);
+    end
+
+    Array.toHex = function(array)
+      local hex = {};
+      local i = 1;
+
+      local byte = array[i];
+      while byte ~= nil do
+        hex[i] = toHexTable[byte];
+        i = i + 1;
+        byte = array[i];
+      end
+
+      return table.concat(hex, "");
+
+    end
+
+    Array.concat = function(a, b)
+      local concat = {};
+      local out = 1;
+
+      local i = 1;
+      local byte = a[i];
+      while byte ~= nil do
+        concat[out] = byte;
+        i = i + 1;
+        out = out + 1;
+        byte = a[i];
+      end
+
+      local i = 1;
+      local byte = b[i];
+      while byte ~= nil do
+        concat[out] = byte;
+        i = i + 1;
+        out = out + 1;
+        byte = b[i];
+      end
+
+      return concat;
+    end
+
+    Array.truncate = function(a, newSize)
+      local x = {};
+
+      for i = 1, newSize do
+        x[i] = a[i];
+      end
+
+      return x;
+    end
+
+    Array.XOR = function(a, b)
+      local x = {};
+
+      for k, v in pairs(a) do
+        x[k] = XOR(v, b[k]);
+      end
+
+      return x;
+    end
+
+    Array.substitute = function(input, sbox)
+      local out = {};
+
+      for k, v in pairs(input) do
+        out[k] = sbox[v];
+      end
+
+      return out;
+    end
+
+    Array.permute = function(input, pbox)
+      local out = {};
+
+      for k, v in pairs(pbox) do
+        out[k] = input[v];
+      end
+
+      return out;
+    end
+
+    Array.copy = function(input)
+      local out = {};
+
+      for k, v in pairs(input) do
+        out[k] = v;
+      end
+      return out;
+    end
+
+    Array.slice = function(input, start, stop)
+      local out = {};
+
+      for i = start, stop do
+        out[i - start + 1] = input[i];
+      end
+      return out;
+    end
+
+    return Array;
+  end
+
+  function r_lib_lockbox_cipher_aes128()
+    local Stream = r_lockbox_util_stream()
+    local Array = r_lib_lockbox_util_array()
+    local Bit = r_lib_lockbox_util_bit()
+    local Math = require("math");
+
+
+    local AND = Bit.band;
+    local OR = Bit.bor;
+    local NOT = Bit.bnot;
+    local XOR = Bit.bxor;
+    local LROT = Bit.lrotate;
+    local RROT = Bit.rrotate;
+    local LSHIFT = Bit.lshift;
+    local RSHIFT = Bit.rshift;
+
+    local SBOX = {
+      [0] = 0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
+      0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
+      0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC, 0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15,
+      0x04, 0xC7, 0x23, 0xC3, 0x18, 0x96, 0x05, 0x9A, 0x07, 0x12, 0x80, 0xE2, 0xEB, 0x27, 0xB2, 0x75,
+      0x09, 0x83, 0x2C, 0x1A, 0x1B, 0x6E, 0x5A, 0xA0, 0x52, 0x3B, 0xD6, 0xB3, 0x29, 0xE3, 0x2F, 0x84,
+      0x53, 0xD1, 0x00, 0xED, 0x20, 0xFC, 0xB1, 0x5B, 0x6A, 0xCB, 0xBE, 0x39, 0x4A, 0x4C, 0x58, 0xCF,
+      0xD0, 0xEF, 0xAA, 0xFB, 0x43, 0x4D, 0x33, 0x85, 0x45, 0xF9, 0x02, 0x7F, 0x50, 0x3C, 0x9F, 0xA8,
+      0x51, 0xA3, 0x40, 0x8F, 0x92, 0x9D, 0x38, 0xF5, 0xBC, 0xB6, 0xDA, 0x21, 0x10, 0xFF, 0xF3, 0xD2,
+      0xCD, 0x0C, 0x13, 0xEC, 0x5F, 0x97, 0x44, 0x17, 0xC4, 0xA7, 0x7E, 0x3D, 0x64, 0x5D, 0x19, 0x73,
+      0x60, 0x81, 0x4F, 0xDC, 0x22, 0x2A, 0x90, 0x88, 0x46, 0xEE, 0xB8, 0x14, 0xDE, 0x5E, 0x0B, 0xDB,
+      0xE0, 0x32, 0x3A, 0x0A, 0x49, 0x06, 0x24, 0x5C, 0xC2, 0xD3, 0xAC, 0x62, 0x91, 0x95, 0xE4, 0x79,
+      0xE7, 0xC8, 0x37, 0x6D, 0x8D, 0xD5, 0x4E, 0xA9, 0x6C, 0x56, 0xF4, 0xEA, 0x65, 0x7A, 0xAE, 0x08,
+      0xBA, 0x78, 0x25, 0x2E, 0x1C, 0xA6, 0xB4, 0xC6, 0xE8, 0xDD, 0x74, 0x1F, 0x4B, 0xBD, 0x8B, 0x8A,
+      0x70, 0x3E, 0xB5, 0x66, 0x48, 0x03, 0xF6, 0x0E, 0x61, 0x35, 0x57, 0xB9, 0x86, 0xC1, 0x1D, 0x9E,
+      0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
+    0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16};
+
+    local ISBOX = {
+      [0] = 0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB,
+      0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87, 0x34, 0x8E, 0x43, 0x44, 0xC4, 0xDE, 0xE9, 0xCB,
+      0x54, 0x7B, 0x94, 0x32, 0xA6, 0xC2, 0x23, 0x3D, 0xEE, 0x4C, 0x95, 0x0B, 0x42, 0xFA, 0xC3, 0x4E,
+      0x08, 0x2E, 0xA1, 0x66, 0x28, 0xD9, 0x24, 0xB2, 0x76, 0x5B, 0xA2, 0x49, 0x6D, 0x8B, 0xD1, 0x25,
+      0x72, 0xF8, 0xF6, 0x64, 0x86, 0x68, 0x98, 0x16, 0xD4, 0xA4, 0x5C, 0xCC, 0x5D, 0x65, 0xB6, 0x92,
+      0x6C, 0x70, 0x48, 0x50, 0xFD, 0xED, 0xB9, 0xDA, 0x5E, 0x15, 0x46, 0x57, 0xA7, 0x8D, 0x9D, 0x84,
+      0x90, 0xD8, 0xAB, 0x00, 0x8C, 0xBC, 0xD3, 0x0A, 0xF7, 0xE4, 0x58, 0x05, 0xB8, 0xB3, 0x45, 0x06,
+      0xD0, 0x2C, 0x1E, 0x8F, 0xCA, 0x3F, 0x0F, 0x02, 0xC1, 0xAF, 0xBD, 0x03, 0x01, 0x13, 0x8A, 0x6B,
+      0x3A, 0x91, 0x11, 0x41, 0x4F, 0x67, 0xDC, 0xEA, 0x97, 0xF2, 0xCF, 0xCE, 0xF0, 0xB4, 0xE6, 0x73,
+      0x96, 0xAC, 0x74, 0x22, 0xE7, 0xAD, 0x35, 0x85, 0xE2, 0xF9, 0x37, 0xE8, 0x1C, 0x75, 0xDF, 0x6E,
+      0x47, 0xF1, 0x1A, 0x71, 0x1D, 0x29, 0xC5, 0x89, 0x6F, 0xB7, 0x62, 0x0E, 0xAA, 0x18, 0xBE, 0x1B,
+      0xFC, 0x56, 0x3E, 0x4B, 0xC6, 0xD2, 0x79, 0x20, 0x9A, 0xDB, 0xC0, 0xFE, 0x78, 0xCD, 0x5A, 0xF4,
+      0x1F, 0xDD, 0xA8, 0x33, 0x88, 0x07, 0xC7, 0x31, 0xB1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xEC, 0x5F,
+      0x60, 0x51, 0x7F, 0xA9, 0x19, 0xB5, 0x4A, 0x0D, 0x2D, 0xE5, 0x7A, 0x9F, 0x93, 0xC9, 0x9C, 0xEF,
+      0xA0, 0xE0, 0x3B, 0x4D, 0xAE, 0x2A, 0xF5, 0xB0, 0xC8, 0xEB, 0xBB, 0x3C, 0x83, 0x53, 0x99, 0x61,
+    0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D};
+
+    local ROW_SHIFT = { 1, 6, 11, 16, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, };
+    local IROW_SHIFT = { 1, 14, 11, 8, 5, 2, 15, 12, 9, 6, 3, 16, 13, 10, 7, 4, };
+
+    local ETABLE = {
+      [0] = 0x01, 0x03, 0x05, 0x0F, 0x11, 0x33, 0x55, 0xFF, 0x1A, 0x2E, 0x72, 0x96, 0xA1, 0xF8, 0x13, 0x35,
+      0x5F, 0xE1, 0x38, 0x48, 0xD8, 0x73, 0x95, 0xA4, 0xF7, 0x02, 0x06, 0x0A, 0x1E, 0x22, 0x66, 0xAA,
+      0xE5, 0x34, 0x5C, 0xE4, 0x37, 0x59, 0xEB, 0x26, 0x6A, 0xBE, 0xD9, 0x70, 0x90, 0xAB, 0xE6, 0x31,
+      0x53, 0xF5, 0x04, 0x0C, 0x14, 0x3C, 0x44, 0xCC, 0x4F, 0xD1, 0x68, 0xB8, 0xD3, 0x6E, 0xB2, 0xCD,
+      0x4C, 0xD4, 0x67, 0xA9, 0xE0, 0x3B, 0x4D, 0xD7, 0x62, 0xA6, 0xF1, 0x08, 0x18, 0x28, 0x78, 0x88,
+      0x83, 0x9E, 0xB9, 0xD0, 0x6B, 0xBD, 0xDC, 0x7F, 0x81, 0x98, 0xB3, 0xCE, 0x49, 0xDB, 0x76, 0x9A,
+      0xB5, 0xC4, 0x57, 0xF9, 0x10, 0x30, 0x50, 0xF0, 0x0B, 0x1D, 0x27, 0x69, 0xBB, 0xD6, 0x61, 0xA3,
+      0xFE, 0x19, 0x2B, 0x7D, 0x87, 0x92, 0xAD, 0xEC, 0x2F, 0x71, 0x93, 0xAE, 0xE9, 0x20, 0x60, 0xA0,
+      0xFB, 0x16, 0x3A, 0x4E, 0xD2, 0x6D, 0xB7, 0xC2, 0x5D, 0xE7, 0x32, 0x56, 0xFA, 0x15, 0x3F, 0x41,
+      0xC3, 0x5E, 0xE2, 0x3D, 0x47, 0xC9, 0x40, 0xC0, 0x5B, 0xED, 0x2C, 0x74, 0x9C, 0xBF, 0xDA, 0x75,
+      0x9F, 0xBA, 0xD5, 0x64, 0xAC, 0xEF, 0x2A, 0x7E, 0x82, 0x9D, 0xBC, 0xDF, 0x7A, 0x8E, 0x89, 0x80,
+      0x9B, 0xB6, 0xC1, 0x58, 0xE8, 0x23, 0x65, 0xAF, 0xEA, 0x25, 0x6F, 0xB1, 0xC8, 0x43, 0xC5, 0x54,
+      0xFC, 0x1F, 0x21, 0x63, 0xA5, 0xF4, 0x07, 0x09, 0x1B, 0x2D, 0x77, 0x99, 0xB0, 0xCB, 0x46, 0xCA,
+      0x45, 0xCF, 0x4A, 0xDE, 0x79, 0x8B, 0x86, 0x91, 0xA8, 0xE3, 0x3E, 0x42, 0xC6, 0x51, 0xF3, 0x0E,
+      0x12, 0x36, 0x5A, 0xEE, 0x29, 0x7B, 0x8D, 0x8C, 0x8F, 0x8A, 0x85, 0x94, 0xA7, 0xF2, 0x0D, 0x17,
+    0x39, 0x4B, 0xDD, 0x7C, 0x84, 0x97, 0xA2, 0xFD, 0x1C, 0x24, 0x6C, 0xB4, 0xC7, 0x52, 0xF6, 0x01};
+
+    local LTABLE = {
+      [0] = 0x00, 0x00, 0x19, 0x01, 0x32, 0x02, 0x1A, 0xC6, 0x4B, 0xC7, 0x1B, 0x68, 0x33, 0xEE, 0xDF, 0x03,
+      0x64, 0x04, 0xE0, 0x0E, 0x34, 0x8D, 0x81, 0xEF, 0x4C, 0x71, 0x08, 0xC8, 0xF8, 0x69, 0x1C, 0xC1,
+      0x7D, 0xC2, 0x1D, 0xB5, 0xF9, 0xB9, 0x27, 0x6A, 0x4D, 0xE4, 0xA6, 0x72, 0x9A, 0xC9, 0x09, 0x78,
+      0x65, 0x2F, 0x8A, 0x05, 0x21, 0x0F, 0xE1, 0x24, 0x12, 0xF0, 0x82, 0x45, 0x35, 0x93, 0xDA, 0x8E,
+      0x96, 0x8F, 0xDB, 0xBD, 0x36, 0xD0, 0xCE, 0x94, 0x13, 0x5C, 0xD2, 0xF1, 0x40, 0x46, 0x83, 0x38,
+      0x66, 0xDD, 0xFD, 0x30, 0xBF, 0x06, 0x8B, 0x62, 0xB3, 0x25, 0xE2, 0x98, 0x22, 0x88, 0x91, 0x10,
+      0x7E, 0x6E, 0x48, 0xC3, 0xA3, 0xB6, 0x1E, 0x42, 0x3A, 0x6B, 0x28, 0x54, 0xFA, 0x85, 0x3D, 0xBA,
+      0x2B, 0x79, 0x0A, 0x15, 0x9B, 0x9F, 0x5E, 0xCA, 0x4E, 0xD4, 0xAC, 0xE5, 0xF3, 0x73, 0xA7, 0x57,
+      0xAF, 0x58, 0xA8, 0x50, 0xF4, 0xEA, 0xD6, 0x74, 0x4F, 0xAE, 0xE9, 0xD5, 0xE7, 0xE6, 0xAD, 0xE8,
+      0x2C, 0xD7, 0x75, 0x7A, 0xEB, 0x16, 0x0B, 0xF5, 0x59, 0xCB, 0x5F, 0xB0, 0x9C, 0xA9, 0x51, 0xA0,
+      0x7F, 0x0C, 0xF6, 0x6F, 0x17, 0xC4, 0x49, 0xEC, 0xD8, 0x43, 0x1F, 0x2D, 0xA4, 0x76, 0x7B, 0xB7,
+      0xCC, 0xBB, 0x3E, 0x5A, 0xFB, 0x60, 0xB1, 0x86, 0x3B, 0x52, 0xA1, 0x6C, 0xAA, 0x55, 0x29, 0x9D,
+      0x97, 0xB2, 0x87, 0x90, 0x61, 0xBE, 0xDC, 0xFC, 0xBC, 0x95, 0xCF, 0xCD, 0x37, 0x3F, 0x5B, 0xD1,
+      0x53, 0x39, 0x84, 0x3C, 0x41, 0xA2, 0x6D, 0x47, 0x14, 0x2A, 0x9E, 0x5D, 0x56, 0xF2, 0xD3, 0xAB,
+      0x44, 0x11, 0x92, 0xD9, 0x23, 0x20, 0x2E, 0x89, 0xB4, 0x7C, 0xB8, 0x26, 0x77, 0x99, 0xE3, 0xA5,
+    0x67, 0x4A, 0xED, 0xDE, 0xC5, 0x31, 0xFE, 0x18, 0x0D, 0x63, 0x8C, 0x80, 0xC0, 0xF7, 0x70, 0x07};
+
+    local MIXTABLE = {
+      0x02, 0x03, 0x01, 0x01,
+      0x01, 0x02, 0x03, 0x01,
+      0x01, 0x01, 0x02, 0x03,
+    0x03, 0x01, 0x01, 0x02};
+
+    local IMIXTABLE = {
+      0x0E, 0x0B, 0x0D, 0x09,
+      0x09, 0x0E, 0x0B, 0x0D,
+      0x0D, 0x09, 0x0E, 0x0B,
+    0x0B, 0x0D, 0x09, 0x0E};
+
+    local RCON = {
+      [0] = 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a,
+      0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39,
+      0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a,
+      0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8,
+      0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef,
+      0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc,
+      0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b,
+      0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3,
+      0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94,
+      0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20,
+      0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35,
+      0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f,
+      0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04,
+      0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63,
+      0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd,
+    0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d};
+
+
+    local GMUL = function(A, B)
+      if(A == 0x01) then return B; end
+      if(B == 0x01) then return A; end
+      if(A == 0x00) then return 0; end
+      if(B == 0x00) then return 0; end
+
+      local LA = LTABLE[A];
+      local LB = LTABLE[B];
+
+      local sum = LA + LB;
+      if (sum > 0xFF) then sum = sum - 0xFF; end
+
+      return ETABLE[sum];
+    end
+
+    local byteSub = Array.substitute;
+
+    local shiftRow = Array.permute;
+
+    local mixCol = function(i, mix)
+      local out = {};
+
+      local a, b, c, d;
+
+      a = GMUL(i[ 1], mix[ 1]);
+      b = GMUL(i[ 2], mix[ 2]);
+      c = GMUL(i[ 3], mix[ 3]);
+      d = GMUL(i[ 4], mix[ 4]);
+      out[ 1] = XOR(XOR(a, b), XOR(c, d));
+      a = GMUL(i[ 1], mix[ 5]);
+      b = GMUL(i[ 2], mix[ 6]);
+      c = GMUL(i[ 3], mix[ 7]);
+      d = GMUL(i[ 4], mix[ 8]);
+      out[ 2] = XOR(XOR(a, b), XOR(c, d));
+      a = GMUL(i[ 1], mix[ 9]);
+      b = GMUL(i[ 2], mix[10]);
+      c = GMUL(i[ 3], mix[11]);
+      d = GMUL(i[ 4], mix[12]);
+      out[ 3] = XOR(XOR(a, b), XOR(c, d));
+      a = GMUL(i[ 1], mix[13]);
+      b = GMUL(i[ 2], mix[14]);
+      c = GMUL(i[ 3], mix[15]);
+      d = GMUL(i[ 4], mix[16]);
+      out[ 4] = XOR(XOR(a, b), XOR(c, d));
+
+
+      a = GMUL(i[ 5], mix[ 1]);
+      b = GMUL(i[ 6], mix[ 2]);
+      c = GMUL(i[ 7], mix[ 3]);
+      d = GMUL(i[ 8], mix[ 4]);
+      out[ 5] = XOR(XOR(a, b), XOR(c, d));
+      a = GMUL(i[ 5], mix[ 5]);
+      b = GMUL(i[ 6], mix[ 6]);
+      c = GMUL(i[ 7], mix[ 7]);
+      d = GMUL(i[ 8], mix[ 8]);
+      out[ 6] = XOR(XOR(a, b), XOR(c, d));
+      a = GMUL(i[ 5], mix[ 9]);
+      b = GMUL(i[ 6], mix[10]);
+      c = GMUL(i[ 7], mix[11]);
+      d = GMUL(i[ 8], mix[12]);
+      out[ 7] = XOR(XOR(a, b), XOR(c, d));
+      a = GMUL(i[ 5], mix[13]);
+      b = GMUL(i[ 6], mix[14]);
+      c = GMUL(i[ 7], mix[15]);
+      d = GMUL(i[ 8], mix[16]);
+      out[ 8] = XOR(XOR(a, b), XOR(c, d));
+
+
+      a = GMUL(i[ 9], mix[ 1]);
+      b = GMUL(i[10], mix[ 2]);
+      c = GMUL(i[11], mix[ 3]);
+      d = GMUL(i[12], mix[ 4]);
+      out[ 9] = XOR(XOR(a, b), XOR(c, d));
+      a = GMUL(i[ 9], mix[ 5]);
+      b = GMUL(i[10], mix[ 6]);
+      c = GMUL(i[11], mix[ 7]);
+      d = GMUL(i[12], mix[ 8]);
+      out[10] = XOR(XOR(a, b), XOR(c, d));
+      a = GMUL(i[ 9], mix[ 9]);
+      b = GMUL(i[10], mix[10]);
+      c = GMUL(i[11], mix[11]);
+      d = GMUL(i[12], mix[12]);
+      out[11] = XOR(XOR(a, b), XOR(c, d));
+      a = GMUL(i[ 9], mix[13]);
+      b = GMUL(i[10], mix[14]);
+      c = GMUL(i[11], mix[15]);
+      d = GMUL(i[12], mix[16]);
+      out[12] = XOR(XOR(a, b), XOR(c, d));
+
+
+      a = GMUL(i[13], mix[ 1]);
+      b = GMUL(i[14], mix[ 2]);
+      c = GMUL(i[15], mix[ 3]);
+      d = GMUL(i[16], mix[ 4]);
+      out[13] = XOR(XOR(a, b), XOR(c, d));
+      a = GMUL(i[13], mix[ 5]);
+      b = GMUL(i[14], mix[ 6]);
+      c = GMUL(i[15], mix[ 7]);
+      d = GMUL(i[16], mix[ 8]);
+      out[14] = XOR(XOR(a, b), XOR(c, d));
+      a = GMUL(i[13], mix[ 9]);
+      b = GMUL(i[14], mix[10]);
+      c = GMUL(i[15], mix[11]);
+      d = GMUL(i[16], mix[12]);
+      out[15] = XOR(XOR(a, b), XOR(c, d));
+      a = GMUL(i[13], mix[13]);
+      b = GMUL(i[14], mix[14]);
+      c = GMUL(i[15], mix[15]);
+      d = GMUL(i[16], mix[16]);
+      out[16] = XOR(XOR(a, b), XOR(c, d));
+
+      return out;
+    end
+
+    local keyRound = function(key, round)
+      local out = {};
+
+      out[ 1] = XOR(key[ 1], XOR(SBOX[key[14]], RCON[round]));
+      out[ 2] = XOR(key[ 2], SBOX[key[15]]);
+      out[ 3] = XOR(key[ 3], SBOX[key[16]]);
+      out[ 4] = XOR(key[ 4], SBOX[key[13]]);
+
+      out[ 5] = XOR(out[ 1], key[ 5]);
+      out[ 6] = XOR(out[ 2], key[ 6]);
+      out[ 7] = XOR(out[ 3], key[ 7]);
+      out[ 8] = XOR(out[ 4], key[ 8]);
+
+      out[ 9] = XOR(out[ 5], key[ 9]);
+      out[10] = XOR(out[ 6], key[10]);
+      out[11] = XOR(out[ 7], key[11]);
+      out[12] = XOR(out[ 8], key[12]);
+
+      out[13] = XOR(out[ 9], key[13]);
+      out[14] = XOR(out[10], key[14]);
+      out[15] = XOR(out[11], key[15]);
+      out[16] = XOR(out[12], key[16]);
+
+      return out;
+    end
+
+    local keyExpand = function(key)
+      local keys = {};
+
+      local temp = key;
+
+      keys[1] = temp;
+
+      for i = 1, 10 do
+        temp = keyRound(temp, i);
+        keys[i + 1] = temp;
+      end
+
+      return keys;
+
+    end
+
+    local addKey = Array.XOR;
+
+
+
+    local AES = {};
+
+    AES.blockSize = 16;
+
+    AES.encrypt = function(key, block)
+
+      local key = keyExpand(key);
+
+      --round 0
+      block = addKey(block, key[1]);
+
+      --round 1
+      block = byteSub(block, SBOX);
+      block = shiftRow(block, ROW_SHIFT);
+      block = mixCol(block, MIXTABLE);
+      block = addKey(block, key[2]);
+
+      --round 2
+      block = byteSub(block, SBOX);
+      block = shiftRow(block, ROW_SHIFT);
+      block = mixCol(block, MIXTABLE);
+      block = addKey(block, key[3]);
+
+      --round 3
+      block = byteSub(block, SBOX);
+      block = shiftRow(block, ROW_SHIFT);
+      block = mixCol(block, MIXTABLE);
+      block = addKey(block, key[4]);
+
+      --round 4
+      block = byteSub(block, SBOX);
+      block = shiftRow(block, ROW_SHIFT);
+      block = mixCol(block, MIXTABLE);
+      block = addKey(block, key[5]);
+
+      --round 5
+      block = byteSub(block, SBOX);
+      block = shiftRow(block, ROW_SHIFT);
+      block = mixCol(block, MIXTABLE);
+      block = addKey(block, key[6]);
+
+      --round 6
+      block = byteSub(block, SBOX);
+      block = shiftRow(block, ROW_SHIFT);
+      block = mixCol(block, MIXTABLE);
+      block = addKey(block, key[7]);
+
+      --round 7
+      block = byteSub(block, SBOX);
+      block = shiftRow(block, ROW_SHIFT);
+      block = mixCol(block, MIXTABLE);
+      block = addKey(block, key[8]);
+
+      --round 8
+      block = byteSub(block, SBOX);
+      block = shiftRow(block, ROW_SHIFT);
+      block = mixCol(block, MIXTABLE);
+      block = addKey(block, key[9]);
+
+      --round 9
+      block = byteSub(block, SBOX);
+      block = shiftRow(block, ROW_SHIFT);
+      block = mixCol(block, MIXTABLE);
+      block = addKey(block, key[10]);
+
+      --round 10
+      block = byteSub(block, SBOX);
+      block = shiftRow(block, ROW_SHIFT);
+      block = addKey(block, key[11]);
+
+      return block;
+
+    end
+
+    AES.decrypt = function(key, block)
+
+      local key = keyExpand(key);
+
+      --round 0
+      block = addKey(block, key[11]);
+
+      --round 1
+      block = shiftRow(block, IROW_SHIFT);
+      block = byteSub(block, ISBOX);
+      block = addKey(block, key[10]);
+      block = mixCol(block, IMIXTABLE);
+
+      --round 2
+      block = shiftRow(block, IROW_SHIFT);
+      block = byteSub(block, ISBOX);
+      block = addKey(block, key[9]);
+      block = mixCol(block, IMIXTABLE);
+
+      --round 3
+      block = shiftRow(block, IROW_SHIFT);
+      block = byteSub(block, ISBOX);
+      block = addKey(block, key[8]);
+      block = mixCol(block, IMIXTABLE);
+
+      --round 4
+      block = shiftRow(block, IROW_SHIFT);
+      block = byteSub(block, ISBOX);
+      block = addKey(block, key[7]);
+      block = mixCol(block, IMIXTABLE);
+
+      --round 5
+      block = shiftRow(block, IROW_SHIFT);
+      block = byteSub(block, ISBOX);
+      block = addKey(block, key[6]);
+      block = mixCol(block, IMIXTABLE);
+
+      --round 6
+      block = shiftRow(block, IROW_SHIFT);
+      block = byteSub(block, ISBOX);
+      block = addKey(block, key[5]);
+      block = mixCol(block, IMIXTABLE);
+
+      --round 7
+      block = shiftRow(block, IROW_SHIFT);
+      block = byteSub(block, ISBOX);
+      block = addKey(block, key[4]);
+      block = mixCol(block, IMIXTABLE);
+
+      --round 8
+      block = shiftRow(block, IROW_SHIFT);
+      block = byteSub(block, ISBOX);
+      block = addKey(block, key[3]);
+      block = mixCol(block, IMIXTABLE);
+
+      --round 9
+      block = shiftRow(block, IROW_SHIFT);
+      block = byteSub(block, ISBOX);
+      block = addKey(block, key[2]);
+      block = mixCol(block, IMIXTABLE);
+
+      --round 10
+      block = shiftRow(block, IROW_SHIFT);
+      block = byteSub(block, ISBOX);
+      block = addKey(block, key[1]);
+
+      return block;
+    end
+
+    return AES;
+  end
+
+  function r_lib_lockbox_padding_zero()
+    local Stream = r_lockbox_util_stream()
+
+    local ZeroPadding = function(blockSize, byteCount)
+
+      local paddingCount = blockSize - ((byteCount - 1) % blockSize) + 1;
+      local bytesLeft = paddingCount;
+
+      local stream = function()
+        if bytesLeft > 0 then
+          bytesLeft = bytesLeft - 1;
+          return 0x00;
+        else
+          return nil;
+        end
+      end
+
+      return stream;
+
+    end
+
+    return ZeroPadding;
+  end
+
+  function r_lib_lockbox_cipher_mode_ecb()
+    local Array = r_lib_lockbox_util_array();
+    local Stream = r_lockbox_util_stream();
+    local Queue = r_lockbox_util_queue();
+
+    local String = require("string");
+    local Bit = r_lib_lockbox_util_bit()
+
+    local ECB = {};
+
+    ECB.Cipher = function()
+
+      local public = {};
+
+      local key;
+      local blockCipher;
+      local padding;
+      local inputQueue;
+      local outputQueue;
+
+      public.setKey = function(keyBytes)
+        key = keyBytes;
+        return public;
+      end
+
+      public.setBlockCipher = function(cipher)
+        blockCipher = cipher;
+        return public;
+      end
+
+      public.setPadding = function(paddingMode)
+        padding = paddingMode;
+        return public;
+      end
+
+      public.init = function()
+        inputQueue = Queue();
+        outputQueue = Queue();
+        return public;
+      end
+
+      public.update = function(messageStream)
+        local byte = messageStream();
+        while (byte ~= nil) do
+          inputQueue.push(byte);
+          if(inputQueue.size() >= blockCipher.blockSize) then
+            local block = Array.readFromQueue(inputQueue, blockCipher.blockSize);
+
+            block = blockCipher.encrypt(key, block);
+
+            Array.writeToQueue(outputQueue, block);
+          end
+          byte = messageStream();
+        end
+        return public;
+      end
+
+      public.finish = function()
+        paddingStream = padding(blockCipher.blockSize, inputQueue.getHead());
+        public.update(paddingStream);
+
+        return public;
+      end
+
+      public.getOutputQueue = function()
+        return outputQueue;
+      end
+
+      public.asHex = function()
+        return Stream.toHex(outputQueue.pop);
+      end
+
+      public.asBytes = function()
+        return Stream.toArray(outputQueue.pop);
+      end
+
+      return public;
+
+    end
+
+    ECB.Decipher = function()
+
+      local public = {};
+
+      local key;
+      local blockCipher;
+      local padding;
+      local inputQueue;
+      local outputQueue;
+
+      public.setKey = function(keyBytes)
+        key = keyBytes;
+        return public;
+      end
+
+      public.setBlockCipher = function(cipher)
+        blockCipher = cipher;
+        return public;
+      end
+
+      public.setPadding = function(paddingMode)
+        padding = paddingMode;
+        return public;
+      end
+
+      public.init = function()
+        inputQueue = Queue();
+        outputQueue = Queue();
+        return public;
+      end
+
+      public.update = function(messageStream)
+        local byte = messageStream();
+        while (byte ~= nil) do
+          inputQueue.push(byte);
+          if(inputQueue.size() >= blockCipher.blockSize) then
+            local block = Array.readFromQueue(inputQueue, blockCipher.blockSize);
+
+            block = blockCipher.decrypt(key, block);
+
+            Array.writeToQueue(outputQueue, block);
+          end
+          byte = messageStream();
+        end
+        return public;
+      end
+
+      public.finish = function()
+        paddingStream = padding(blockCipher.blockSize, inputQueue.getHead());
+        public.update(paddingStream);
+
+        return public;
+      end
+
+      public.getOutputQueue = function()
+        return outputQueue;
+      end
+
+      public.asHex = function()
+        return Stream.toHex(outputQueue.pop);
+      end
+
+      public.asBytes = function()
+        return Stream.toArray(outputQueue.pop);
+      end
+
+      return public;
+
+    end
+
+
+    return ECB;
+  end
 end
 --------------------------------------VAR---------------------------------------
 function var_require()
@@ -976,13 +1996,13 @@ function var_require()
   while isSampfuncsLoaded() ~= true do wait(100) end
   while not isSampAvailable() do wait(100) end
   --Проверка лицензии
-  mode = "samp-rp"
+  chklsn()
+  while PROVERKA ~= true do wait(10) end
   r_smart_get_projectresources()
   r_smart_get_sounds()
   r_smart_lib_imgui()
   imgui_init()
   wait(500)
-  inicfg = require "inicfg"
   as_action = require('moonloader').audiostream_state
   key = r_lib_vkeys()
   hk = r_lib_rkeys()
@@ -1001,6 +2021,92 @@ function var_require()
   apply_custom_style()
   r_smart_lib_samp_events()
   RPC_init()
+end
+
+function chklsn()
+  inicfg = require "inicfg"
+  price = "250 рублей"
+  local chk = inicfg.load({
+    license =
+    {
+      ["key"] = "-",
+      ["name"] = "-"
+    },
+  }, 'suplicense')
+
+  if chk.license.key == "-" then
+    local prefix = "[Support's Heaven]: "
+    local color = 0xffa500
+    sampAddChatMessage(prefix.."Внимание: файл лицензии не найден.", color)
+    sampAddChatMessage(prefix.."Введите /buysup [КОД] для сохранения кода лицензии.", color)
+    sampAddChatMessage(prefix.."Введите /buysup, чтобы купить лицензию скрипта.", color)
+    sampAddChatMessage(prefix.."Текущая цена лицензии: "..price.." (без скидок)", color)
+    sampRegisterChatCommand("buysup",
+      function(param)
+        if param:len() > 10 then
+          sampAddChatMessage(prefix.."Ваш код: "..param.." успешно сохранён. Идёт проверка лицензии..", color)
+          chk.license.key = param
+          inicfg.save(chk, "suplicense")
+          thisScript():reload()
+        elseif param == "" then
+          local ffi = require 'ffi'
+          ffi.cdef [[
+						void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
+						uint32_t __stdcall CoInitializeEx(void*, uint32_t);
+					]]
+          local shell32 = ffi.load 'Shell32'
+          local ole32 = ffi.load 'Ole32'
+          ole32.CoInitializeEx(nil, 2 + 4) -- COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE
+          print(shell32.ShellExecuteA(nil, 'open', 'https://vk.com/qrlk.mods', nil, nil, 1))
+          thisScript():reload()
+        else
+          sampAddChatMessage(prefix.."Введите /buysup [КОД] для сохранения кода лицензии.", color)
+        end
+      end
+    )
+  else
+    sampAddChatMessage(chk.license.key, color)
+    cryptography()
+  end
+  mode = "samp-rp"
+  hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
+  if hosts then
+    if string.find(hosts:read("*a"), "rubbishman") or string.find(hosts:read("*a"), "141.8.195.34") then
+      thisScript():unload()
+    end
+  end
+end
+
+function cryptography()
+  Lockbox = r_lib_lockbox()
+  Lockbox.ALLOW_INSECURE = true
+
+  Stream = r_lockbox_util_stream()
+  ECBMode = r_lib_lockbox_cipher_mode_ecb()
+  ZeroPadding = r_lib_lockbox_padding_zero()
+  AES128Cipher = r_lib_lockbox_cipher_aes128()
+
+  local aes = ECBMode.Cipher();
+  aes.setKey(Stream.toArray(Stream.fromString("123456789qwertyu")))
+  aes.setBlockCipher(AES128Cipher)
+  aes.setPadding(ZeroPadding)
+
+  aes.init()
+  aes.update(Stream.fromString("My nick is: James_Bond. I want to get license."))
+  aes.finish()
+  k = aes.asHex()
+	print(k)
+	k = "9df6592ad5635cd2e990321ac7f6c0ec011cae36f51eeba93ef3766a7c4a5a94"
+  local aes = ECBMode.Decipher()
+  aes.setKey(Stream.toArray(Stream.fromString("ASDJOAISJDIOASJOVJEQOJFQ")))
+  aes.setBlockCipher(AES128Cipher)
+  aes.setPadding(ZeroPadding)
+
+  aes.init()
+  aes.update(Stream.fromHex(k))
+  aes.finish()
+  k = aes.asBytes()
+  print(string.char(table.unpack(k)))
 end
 
 function var_cfg()
@@ -1381,7 +2487,6 @@ function var_main()
   math.randomseed(os.time())
 end
 
-
 --[[
 		МЕСТА, ДЛЯ ДОБАВЛЕНИЯ ПОДДЕРЖКИ ДРУГИХ ПРОЕКТОВ, ИСКАТЬ ПО mode == ":
 		1. function main_init_supdoc() - инициализация картинок и метафайла для шпоры, у каждого проекта своя папка и свой метафайл.
@@ -1406,11 +2511,12 @@ end
 
 -------------------------------------MAIN---------------------------------------
 function main()
+  require_status = lua_thread.create(var_require)
   if not isSampfuncsLoaded() or not isSampLoaded() then return end
   while not isSampAvailable() do wait(100) end
   while require_status:status() ~= "dead" do wait(10) end
   if waitforreload then thisScript():reload() wait(1000) end
-  PROVERKA = true
+  while PROVERKA ~= true do wait(10) end
   if PROVERKA == true then
     main_init_sms()
     main_init_supfuncs()
@@ -1799,7 +2905,7 @@ function RPC_init()
       end
     end
   end
-  --говно
+
   function RPC.onServerMessage(color, text)
     if mode == "samp-rp" then
       if main_window_state.v and text:match(" "..tostring(selecteddialogSMS).." %[(%d+)%]") then
@@ -1891,7 +2997,7 @@ function RPC_init()
           if not iHideSmsReceived.v then
             if iReplaceSmsReceivedColor.v then
               sampAddChatMessage(text, SmsReceivedColor_HEX)
-              return false -- ИСПРАВИТЬ
+              return false
             else
               --do nothing
             end
@@ -1930,7 +3036,7 @@ function RPC_init()
           end
         end
       end
-      if DEBUG then return false end -- исправить
+      if DEBUG then return false end
     end
   end
   --считаем активность саппорта
@@ -6064,4 +7170,3 @@ function onScriptTerminate(scr)
   end
 end
 --start script here
-require_status = lua_thread.create(var_require)
