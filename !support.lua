@@ -1995,11 +1995,19 @@ function var_require()
   r_smart_cleo_and_sampfuncs()
   while isSampfuncsLoaded() ~= true do wait(100) end
   while not isSampAvailable() do wait(100) end
+  if getMoonloaderVersion() < 026 then
+    local prefix = "[Support's Heaven]: "
+    local color = 0xffa500
+    sampAddChatMessage(prefix.."Ваша версия MoonLoader не поддерживается.", color)
+    sampAddChatMessage("Пожалуйста, скачайте последнюю версию MoonLoader.", color)
+    thisScript():unload()
+  end
   chkupd()
   r_smart_lib_imgui()
   imgui_init()
   ihk = r_lib_imcustom_hotkey()
   hk = r_lib_rkeys()
+  wait(1500)
   chklsn()
   while PROVERKA ~= true do wait(10) end
   ihk._SETTINGS.noKeysMessage = ("-")
@@ -2022,13 +2030,23 @@ function var_require()
 end
 
 function chklsn()
+  if not doesDirectoryExist(getGameDirectory().."\\moonloader\\resource\\sup\\sounds") then
+    createDirectory(getGameDirectory().."\\moonloader\\resource\\sup\\sounds")
+  end
+  if not doesFileExist(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\granted.mp3") then
+    downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support\'s_heaven/resource/sup/sounds/granted.mp3", getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\granted.mp3")
+  end
+  if not doesFileExist(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\denied.mp3") then
+    downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support\'s_heaven/resource/sup/sounds/denied.mp3", getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\denied.mp3")
+  end
+  Sgranted = loadAudioStream(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\granted.mp3")
+  Sdenied = loadAudioStream(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\denied.mp3")
   inicfg = require "inicfg"
   price = 250
   chk = inicfg.load({
     license =
     {
-      ["key"] = "-",
-      ["name"] = "-"
+      ["key"] = "-"
     },
   }, 'suplicense')
   if chk.license.key == "-" or chk.license.key:len() ~= 16 then
@@ -2084,10 +2102,20 @@ end
 function nokey()
   local prefix = "[Support's Heaven]: "
   local color = 0xffa500
-  sampAddChatMessage(prefix.."{ff0000}Внимание:{ffa500} файл лицензии не найден.", color)
-  sampAddChatMessage(prefix.."Введите /buysup [КЛЮЧ] для сохранения кода лицензии.", color)
+  a1234 = loadAudioStream([[http://www.rubbishman.ru/dev/moonloader/support's_heaven/resource/sup/sounds/kupi.mp3]])
+  while not sampIsLocalPlayerSpawned() do wait(1) end
+  if getAudioStreamState(a1234) ~= 1 then
+    setAudioStreamState(a1234, 1)
+  end
+  sampAddChatMessage("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 0xff0000)
+  sampAddChatMessage(" ВНИМАНИЕ ВНИМАНИЕ ВНИМАНИЕ ВНИМАНИЕ ВНИМАНИЕ ВНИМАНИЕ ВНИМАНИЕ ", 0xff0000)
+  sampAddChatMessage(prefix.."Лицензионный ключ для активации скрипта не был найден.", color)
   sampAddChatMessage(prefix.."Введите /buysup, чтобы купить лицензию скрипта.", color)
-  sampAddChatMessage(prefix.."Текущая цена лицензии: "..currentprice.." (если без скидок).", color)
+  sampAddChatMessage(prefix.."Лицензия привязывается к вашему нику и серверу навсегда.", color)
+  sampAddChatMessage(prefix.."Введите /buysup [КЛЮЧ] для сохранения лицензионного ключа.", color)
+  sampAddChatMessage(prefix.."Ключ будет сохранён в moonloader\\config\\suplicense.ini", color)
+  sampAddChatMessage(prefix.."Текущая цена лицензии: "..currentprice.." (если без промокода).", color)
+  sampAddChatMessage("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 0xff0000)
   sampRegisterChatCommand("buysup",
     function(param)
       if param:len() == 16 then
@@ -2107,14 +2135,16 @@ function nokey()
         print(shell32.ShellExecuteA(nil, 'open', currentbuylink, nil, nil, 1))
         thisScript():reload()
       else
-        sampAddChatMessage(prefix.."Введите /buysup [КЛЮЧ] для сохранения кода лицензии.", color)
+        sampAddChatMessage(prefix.."Введите /buysup [КЛЮЧ] для сохранения лицензионного ключа.", color)
       end
     end
   )
 end
 
 function checkkey()
-  sampAddChatMessage("Запущена проверка лицензии...", 0xffa500)
+  local prefix = "[Support's Heaven]: "
+  asdsadasads, myidasdasas = sampGetPlayerIdByCharHandle(PLAYER_PED)
+  sampAddChatMessage(prefix.."Ну привет, "..sampGetPlayerNickname(myidasdasas)..". Запускаю проверку лицензии...", 0xffa500)
   math.randomseed(os.time())
   local json = getWorkingDirectory() .. '\\config\\'..math.random(1, 93482)..".json"
   local php = [[http://rubbishman.ru/dev/moonloader/support's_heaven/license.php]]
@@ -2220,35 +2250,57 @@ function checkkey()
               aes.finish()
               k = aes.asBytes()
               licensenick, licenseserver, licensemod = string.match(string.char(table.unpack(k)), "Ok. I found you. You are: (.+)%* From: (.+)%* Mode: (.+)%*")
+              if licensenick == nil or licenseserver == nil or licensemod == nil then
+                local prefix = "{ffa500}[Support's Heaven]: {ff0000}"
+                sampAddChatMessage(prefix.."Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
+                sampAddChatMessage(prefix.."Текущая цена: "..currentprice..". Купить можно здесь: "..currentbuylink, 0xff0000)
+								waiter1 = false
+		            waitforunload = true
+              end
               hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
               if hosts then
                 if string.find(hosts:read("*a"), licenseserver) then
-                  thisScript():unload()
+                  local prefix = "{ffa500}[Support's Heaven]: {ff0000}"
+                  sampAddChatMessage(prefix.."Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
+                  sampAddChatMessage(prefix.."Текущая цена: "..currentprice..". Купить можно здесь: "..currentbuylink, 0xff0000)
+									waiter1 = false
+			            waitforunload = true
                 end
               end
               hosts:close()
-              if licensenick == nil or licenseserver == nil or licensemod == nil then
-                thisScript():unload()
-              end
               _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
               if licensenick == sampGetPlayerNickname(myid) and server == licenseserver then
-                sampAddChatMessage("Проверка лицензии пройдена. Активирован мод: "..licensemod..". Приятной игры, "..licensenick..".", 0xffa500)
+                local prefix = "[Support's Heaven]: "
+                sampAddChatMessage(prefix.."Проверка лицензии пройдена. Активирован мод: "..licensemod..". Актуальная цена: "..currentprice..".", 0xffa500)
+                setAudioStreamState(Sgranted, 1)
                 mode = licensemod
                 PROVERKA = true
               end
               waiter1 = false
             else
-              sampAddChatMessage("Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
-              thisScript():unload()
+              local prefix = "{ffa500}[Support's Heaven]: {ff0000}"
+              sampAddChatMessage(prefix.."Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
+              sampAddChatMessage(prefix.."Текущая цена: "..currentprice..". Купить можно здесь: "..currentbuylink, 0xff0000)
+							waiter1 = false
+	            waitforunload = true
             end
           else
-            thisScript():unload()
+            local prefix = "{ffa500}[Support's Heaven]: {ff0000}"
+            sampAddChatMessage(prefix.."Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
+            sampAddChatMessage(prefix.."Текущая цена: "..currentprice..". Купить можно здесь: "..currentbuylink, 0xff0000)
+						waiter1 = false
+            waitforunload = true
           end
         end
       end
     end
   )
   while waiter1 do wait(0) end
+  if waitforunload then
+    setAudioStreamState(Sdenied, 1)
+    wait(2000)
+    thisScript():unload()
+  end
 end
 
 function goupdate()
@@ -2267,9 +2319,9 @@ function goupdate()
     function(id3, status1, p13, p23)
       if status1 == 5 then
         if sampGetChatString(99):find("Загружено") then
-          sampSetChatString(99, prefix..string.format('Загружено %d KB из %d KB.', p13/1000, p23/1000), nil, - 1)
+          sampSetChatString(99, prefix..string.format('Загружено %d KB из %d KB.', p13 / 1000, p23 / 1000), nil, - 1)
         else
-          sampAddChatMessage(prefix..string.format('Загружено %d KB из %d KB.', p13/1000, p23/1000), color)
+          sampAddChatMessage(prefix..string.format('Загружено %d KB из %d KB.', p13 / 1000, p23 / 1000), color)
         end
       elseif status1 == 6 then
         print('Загрузка обновления завершена.')
@@ -2725,6 +2777,10 @@ function main()
     if DEBUG then First = true end
     while true do
       wait(0)
+      asdsadasads, myidasdas = sampGetPlayerIdByCharHandle(PLAYER_PED)
+      if licensenick ~= sampGetPlayerNickname(myidasdas) or sampGetCurrentServerAddress() ~= licenseserver then
+        thisScript():unload()
+      end
       main_while_debug()
       main_while_playsounds()
       imgui.Process = main_window_state.v or spur_windows_state.v
@@ -2988,7 +3044,8 @@ function main_ImColorToHEX()
 end
 
 function main_copyright()
-  sampAddChatMessage(("SUPPORT v"..thisScript().version.." successfully loaded! Команды: /supstats и /supcolor! Author: rubbishman.ru"), color)
+  local prefix = "[Support's Heaven]: "
+  sampAddChatMessage(prefix.."Все системы готовы. Версия скрипта: "..thisScript().version..". Активация: /sup. Приятной игры, "..licensenick..".", 0xffa500)
 end
 
 function main_while_debug()
