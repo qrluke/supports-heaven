@@ -1995,32 +1995,47 @@ function var_require()
   r_smart_cleo_and_sampfuncs()
   while isSampfuncsLoaded() ~= true do wait(100) end
   while not isSampAvailable() do wait(100) end
-  --Проверка лицензии
-  chklsn()
-  while PROVERKA ~= true do wait(10) end
-  r_smart_get_projectresources()
-  r_smart_get_sounds()
+  chkupd()
   r_smart_lib_imgui()
   imgui_init()
-  wait(500)
-  as_action = require('moonloader').audiostream_state
-  key = r_lib_vkeys()
-  hk = r_lib_rkeys()
   ihk = r_lib_imcustom_hotkey()
+  hk = r_lib_rkeys()
+  chklsn()
+  while PROVERKA ~= true do wait(10) end
+  ihk._SETTINGS.noKeysMessage = ("-")
   encoding = r_lib_encoding()
   encoding.default = 'CP1251'
   u8 = encoding.UTF8
-  ihk._SETTINGS.noKeysMessage = u8("-")
-  wait(200)
+  as_action = require('moonloader').audiostream_state
+  key = r_lib_vkeys()
+  apply_custom_style()
   var_cfg()
   var_imgui_ImBool()
   var_imgui_ImFloat4_ImColor()
   var_imgui_ImInt()
   var_imgui_ImBuffer()
   var_main()
-  apply_custom_style()
+  r_smart_get_projectresources()
+  r_smart_get_sounds()
   r_smart_lib_samp_events()
   RPC_init()
+end
+
+function chklsn()
+  inicfg = require "inicfg"
+  price = 250
+  chk = inicfg.load({
+    license =
+    {
+      ["key"] = "-",
+      ["name"] = "-"
+    },
+  }, 'suplicense')
+  if chk.license.key == "-" or chk.license.key:len() ~= 16 then
+    nokey()
+  else
+    checkkey()
+  end
 end
 
 function chkupd()
@@ -2147,18 +2162,13 @@ function checkkey()
   hosts:close()
   downloadUrlToFile("http://worldclockapi.com/api/json/utc/now", json,
     function(id, status, p1, p2)
-      --если скачивание завершило работу: не важно, успешно или нет, продолжаем
       if status == 58 then
-        --если скачивание завершено успешно, должен быть файл
         if doesFileExist(json) then
-          --открываем json
           local f1 = io.open(json, 'r')
-          --если не nil, то продолжаем
           if f1 then
             local info1 = decodeJson(f1:read('*a'))
             code = string.sub(info1["currentDateTime"], 1, 13).."chk"
             f1:close()
-            --удаляем json, он нам не нужен
             os.remove(json)
             os.remove(json)
             waiter1 = false
@@ -2190,22 +2200,15 @@ function checkkey()
   hosts:close()
   downloadUrlToFile(php..'?iam='..k, json,
     function(id, status, p1, p2)
-      --если скачивание завершило работу: не важно, успешно или нет, продолжаем
       if status == 58 then
-        --если скачивание завершено успешно, должен быть файл
         if doesFileExist(json) then
-          --открываем json
           local f = io.open(json, 'r')
-          --если не nil, то продолжаем
           if f then
-            --json декодируем в понятный муну тип данных
             local info = decodeJson(f:read('*a'))
             f:close()
-            --удаляем json, он нам не нужен
             os.remove(json)
             os.remove(json)
             os.remove(json)
-            --присваиваем переменную updateurl
             if info.code ~= nil then
               local aes = ECBMode.Decipher()
               aes.setKey(Stream.toArray(Stream.fromString(chk.license.key)))
@@ -2236,10 +2239,9 @@ function checkkey()
               waiter1 = false
             else
               sampAddChatMessage("Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
-              thisScript().unload()
+              thisScript():unload()
             end
           else
-            --если этого файла нет (не получилось скачать), выводим сообщение в консоль сф об этом
             thisScript():unload()
           end
         end
@@ -2282,24 +2284,6 @@ function goupdate()
         end
       end
   end)
-end
-
-function chklsn()
-  inicfg = require "inicfg"
-  price = 250
-  chk = inicfg.load({
-    license =
-    {
-      ["key"] = "-",
-      ["name"] = "-"
-    },
-  }, 'suplicense')
-  chkupd()
-  if chk.license.key == "-" or chk.license.key:len() ~= 16 then
-    nokey()
-  else
-    checkkey()
-  end
 end
 
 function var_cfg()
