@@ -1,9 +1,9 @@
 --meta
 script_name("Support's Heaven")
 script_author("rubbishman")
-script_version(os.date("%x"))
+script_version("0.11")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
-script_moonloader(025)
+script_moonloader(026)
 --require
 do
   function r_smart_cleo_and_sampfuncs()
@@ -2023,61 +2023,112 @@ function var_require()
   RPC_init()
 end
 
-function chklsn()
-  inicfg = require "inicfg"
-  price = "250 рублей"
-  local chk = inicfg.load({
-    license =
-    {
-      ["key"] = "-",
-      ["name"] = "-"
-    },
-  }, 'suplicense')
-
-  if chk.license.key == "-" then
-    local prefix = "[Support's Heaven]: "
-    local color = 0xffa500
-    sampAddChatMessage(prefix.."Внимание: файл лицензии не найден.", color)
-    sampAddChatMessage(prefix.."Введите /buysup [КОД] для сохранения кода лицензии.", color)
-    sampAddChatMessage(prefix.."Введите /buysup, чтобы купить лицензию скрипта.", color)
-    sampAddChatMessage(prefix.."Текущая цена лицензии: "..price.." (без скидок)", color)
-    sampRegisterChatCommand("buysup",
-      function(param)
-        if param:len() > 10 then
-          sampAddChatMessage(prefix.."Ваш код: "..param.." успешно сохранён. Идёт проверка лицензии..", color)
-          chk.license.key = param
-          inicfg.save(chk, "suplicense")
-          thisScript():reload()
-        elseif param == "" then
-          local ffi = require 'ffi'
-          ffi.cdef [[
-						void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
-						uint32_t __stdcall CoInitializeEx(void*, uint32_t);
-					]]
-          local shell32 = ffi.load 'Shell32'
-          local ole32 = ffi.load 'Ole32'
-          ole32.CoInitializeEx(nil, 2 + 4) -- COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE
-          print(shell32.ShellExecuteA(nil, 'open', 'https://vk.com/qrlk.mods', nil, nil, 1))
-          thisScript():reload()
-        else
-          sampAddChatMessage(prefix.."Введите /buysup [КОД] для сохранения кода лицензии.", color)
-        end
-      end
-    )
-  else
-    sampAddChatMessage(chk.license.key, color)
-    cryptography()
-  end
-  mode = "samp-rp"
+function chkupd()
+  math.randomseed(os.time())
+  local json = getWorkingDirectory() .. '\\config\\'..math.random(1, 93482)..".json"
+  local php = [[http://rubbishman.ru/dev/moonloader/support's_heaven/license.php]]
   hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
   if hosts then
     if string.find(hosts:read("*a"), "rubbishman") or string.find(hosts:read("*a"), "141.8.195.34") then
       thisScript():unload()
     end
   end
+  hosts:close()
+  waiter1 = true
+  downloadUrlToFile(php, json,
+    function(id, status, p1, p2)
+      if status == 58 then
+        if doesFileExist(json) then
+          local f = io.open(json, 'r')
+          if f then
+            local info = decodeJson(f:read('*a'))
+            updatelink = info.updateurl
+            updateversion = info.latest
+            currentprice = info.price
+            currentbuylink = info.buylink
+            f:close()
+            os.remove(json)
+            os.remove(json)
+            os.remove(json)
+            if info.latest > tonumber(thisScript().version) then
+              lua_thread.create(goupdate)
+            else
+              print('v'..thisScript().version..': Обновление не требуется.')
+              waiter1 = false
+            end
+          end
+        else
+          thisScript():unload()
+        end
+      end
+    end
+  )
+  while waiter1 do wait(0) end
 end
 
-function cryptography()
+function nokey()
+  local prefix = "[Support's Heaven]: "
+  local color = 0xffa500
+  sampAddChatMessage(prefix.."{ff0000}Внимание:{ffa500} файл лицензии не найден.", color)
+  sampAddChatMessage(prefix.."Введите /buysup [КЛЮЧ] для сохранения кода лицензии.", color)
+  sampAddChatMessage(prefix.."Введите /buysup, чтобы купить лицензию скрипта.", color)
+  sampAddChatMessage(prefix.."Текущая цена лицензии: "..currentprice.." (если без скидок).", color)
+  sampRegisterChatCommand("buysup",
+    function(param)
+      if param:len() == 16 then
+        sampAddChatMessage(prefix.."Ваш код: "..param.." успешно сохранён. Идёт проверка лицензии..", color)
+        chk.license.key = param
+        inicfg.save(chk, "suplicense")
+        thisScript():reload()
+      elseif param == "" then
+        local ffi = require 'ffi'
+        ffi.cdef [[
+					void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
+					uint32_t __stdcall CoInitializeEx(void*, uint32_t);
+				]]
+        local shell32 = ffi.load 'Shell32'
+        local ole32 = ffi.load 'Ole32'
+        ole32.CoInitializeEx(nil, 2 + 4) -- COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE
+        print(shell32.ShellExecuteA(nil, 'open', currentbuylink, nil, nil, 1))
+        thisScript():reload()
+      else
+        sampAddChatMessage(prefix.."Введите /buysup [КЛЮЧ] для сохранения кода лицензии.", color)
+      end
+    end
+  )
+end
+
+function checkkey()
+  sampAddChatMessage("Запущена проверка лицензии...", 0xffa500)
+  math.randomseed(os.time())
+  local json = getWorkingDirectory() .. '\\config\\'..math.random(1, 93482)..".json"
+  local php = [[http://rubbishman.ru/dev/moonloader/support's_heaven/license.php]]
+  local ffi = require 'ffi'
+  ffi.cdef[[
+	int __stdcall GetVolumeInformationA(
+			const char* lpRootPathName,
+			char* lpVolumeNameBuffer,
+			uint32_t nVolumeNameSize,
+			uint32_t* lpVolumeSerialNumber,
+			uint32_t* lpMaximumComponentLength,
+			uint32_t* lpFileSystemFlags,
+			char* lpFileSystemNameBuffer,
+			uint32_t nFileSystemNameSize
+	);
+	]]
+  local serial = ffi.new("unsigned long[1]", 0)
+  ffi.C.GetVolumeInformationA(nil, nil, 0, serial, nil, nil, nil, 0)
+
+  local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+  local nickname = sampGetPlayerNickname(myid)
+  local server = sampGetCurrentServerAddress()
+  local dir = string.gsub(getGameDirectory(), " ", "_")
+  local sv = thisScript().version
+  local mv = getMoonloaderVersion()
+  local serial = serial[0]
+
+  local text = string.format("Nick: %s * Server: %s * DIR: %s * SV: %s * MV: %s * SERIAL: %s", nickname, server, dir, sv, mv, serial)
+
   Lockbox = r_lib_lockbox()
   Lockbox.ALLOW_INSECURE = true
 
@@ -2085,28 +2136,170 @@ function cryptography()
   ECBMode = r_lib_lockbox_cipher_mode_ecb()
   ZeroPadding = r_lib_lockbox_padding_zero()
   AES128Cipher = r_lib_lockbox_cipher_aes128()
-
+  code = ""
+  waiter1 = true
+  hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
+  if hosts then
+    if string.find(hosts:read("*a"), "rubbishman") or string.find(hosts:read("*a"), "141.8.195.34") then
+      thisScript():unload()
+    end
+  end
+  hosts:close()
+  downloadUrlToFile("http://worldclockapi.com/api/json/utc/now", json,
+    function(id, status, p1, p2)
+      --если скачивание завершило работу: не важно, успешно или нет, продолжаем
+      if status == 58 then
+        --если скачивание завершено успешно, должен быть файл
+        if doesFileExist(json) then
+          --открываем json
+          local f1 = io.open(json, 'r')
+          --если не nil, то продолжаем
+          if f1 then
+            local info1 = decodeJson(f1:read('*a'))
+            code = string.sub(info1["currentDateTime"], 1, 13).."chk"
+            f1:close()
+            --удаляем json, он нам не нужен
+            os.remove(json)
+            os.remove(json)
+            waiter1 = false
+          end
+        else
+          thisScript():unload()
+        end
+      end
+    end
+  )
+  while waiter1 do wait(0) end
+  os.remove(json)
   local aes = ECBMode.Cipher();
-  aes.setKey(Stream.toArray(Stream.fromString("123456789qwertyu")))
+  aes.setKey(Stream.toArray(Stream.fromString(code)))
   aes.setBlockCipher(AES128Cipher)
   aes.setPadding(ZeroPadding)
 
   aes.init()
-  aes.update(Stream.fromString("My nick is: James_Bond. I want to get license."))
+  aes.update(Stream.fromString(text))
   aes.finish()
   k = aes.asHex()
-	print(k)
-	k = "9df6592ad5635cd2e990321ac7f6c0ec011cae36f51eeba93ef3766a7c4a5a94"
-  local aes = ECBMode.Decipher()
-  aes.setKey(Stream.toArray(Stream.fromString("ASDJOAISJDIOASJOVJEQOJFQ")))
-  aes.setBlockCipher(AES128Cipher)
-  aes.setPadding(ZeroPadding)
+  waiter1 = true
+  hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
+  if hosts then
+    if string.find(hosts:read("*a"), "rubbishman") or string.find(hosts:read("*a"), "141.8.195.34") then
+      thisScript():unload()
+    end
+  end
+  hosts:close()
+  downloadUrlToFile(php..'?iam='..k, json,
+    function(id, status, p1, p2)
+      --если скачивание завершило работу: не важно, успешно или нет, продолжаем
+      if status == 58 then
+        --если скачивание завершено успешно, должен быть файл
+        if doesFileExist(json) then
+          --открываем json
+          local f = io.open(json, 'r')
+          --если не nil, то продолжаем
+          if f then
+            --json декодируем в понятный муну тип данных
+            local info = decodeJson(f:read('*a'))
+            f:close()
+            --удаляем json, он нам не нужен
+            os.remove(json)
+            os.remove(json)
+            os.remove(json)
+            --присваиваем переменную updateurl
+            if info.code ~= nil then
+              local aes = ECBMode.Decipher()
+              aes.setKey(Stream.toArray(Stream.fromString(chk.license.key)))
+              aes.setBlockCipher(AES128Cipher)
+              aes.setPadding(ZeroPadding)
 
-  aes.init()
-  aes.update(Stream.fromHex(k))
-  aes.finish()
-  k = aes.asBytes()
-  print(string.char(table.unpack(k)))
+              aes.init()
+              aes.update(Stream.fromHex(info.code))
+              aes.finish()
+              k = aes.asBytes()
+              licensenick, licenseserver, licensemod = string.match(string.char(table.unpack(k)), "Ok. I found you. You are: (.+)%* From: (.+)%* Mode: (.+)%*")
+              hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
+              if hosts then
+                if string.find(hosts:read("*a"), licenseserver) then
+                  thisScript():unload()
+                end
+              end
+              hosts:close()
+              if licensenick == nil or licenseserver == nil or licensemod == nil then
+                thisScript():unload()
+              end
+              _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+              if licensenick == sampGetPlayerNickname(myid) and server == licenseserver then
+                sampAddChatMessage("Проверка лицензии пройдена. Активирован мод: "..licensemod..". Приятной игры, "..licensenick..".", 0xffa500)
+                mode = licensemod
+                PROVERKA = true
+              end
+              waiter1 = false
+            else
+              sampAddChatMessage("Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
+              thisScript().unload()
+            end
+          else
+            --если этого файла нет (не получилось скачать), выводим сообщение в консоль сф об этом
+            thisScript():unload()
+          end
+        end
+      end
+    end
+  )
+  while waiter1 do wait(0) end
+end
+
+function goupdate()
+  local color = -1
+  local prefix = "[Support's Heaven]: "
+  sampAddChatMessage((prefix..'Обнаружено обновление. Пытаюсь обновиться c '..thisScript().version..' на '..updateversion), color)
+  wait(250)
+  hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
+  if hosts then
+    if string.find(hosts:read("*a"), "rubbishman") or string.find(hosts:read("*a"), "141.8.195.34") then
+      thisScript():unload()
+    end
+  end
+  hosts:close()
+  downloadUrlToFile(updatelink, thisScript().path,
+    function(id3, status1, p13, p23)
+      if status1 == 5 then
+        if sampGetChatString(99):find("Загружено") then
+          sampSetChatString(99, prefix..string.format('Загружено %d из %d.', p13, p23), nil, - 1)
+        else
+          sampAddChatMessage(prefix..string.format('Загружено %d из %d.', p13, p23), color)
+        end
+      elseif status1 == 6 then
+        print('Загрузка обновления завершена.')
+        sampAddChatMessage((prefix..'Обновление завершено!'), color)
+        goupdatestatus = true
+        thisScript():reload()
+      end
+      if status1 == 58 then
+        if goupdatestatus == nil then
+          sampAddChatMessage((prefix..'Обновление прошло неудачно. Обратитесь в поддержку.'), color)
+          thisScript():unload()
+        end
+      end
+  end)
+end
+
+function chklsn()
+  inicfg = require "inicfg"
+  price = 250
+  chk = inicfg.load({
+    license =
+    {
+      ["key"] = "-",
+      ["name"] = "-"
+    },
+  }, 'suplicense')
+  chkupd()
+  if chk.license.key == "-" or chk.license.key:len() ~= 16 then
+    nokey()
+  else
+    checkkey()
+  end
 end
 
 function var_cfg()
