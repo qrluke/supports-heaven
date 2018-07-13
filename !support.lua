@@ -1,7 +1,7 @@
 --meta
 script_name("Support's Heaven")
 script_author("rubbishman")
-script_version("0.11")
+script_version("0.1")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
 --require
@@ -2065,7 +2065,7 @@ function chkupd()
             os.remove(json)
             os.remove(json)
             os.remove(json)
-            if info.latest > tonumber(thisScript().version) then
+            if info.latest ~= tonumber(thisScript().version) then
               lua_thread.create(goupdate)
             else
               print('v'..thisScript().version..': Обновление не требуется.')
@@ -2267,9 +2267,9 @@ function goupdate()
     function(id3, status1, p13, p23)
       if status1 == 5 then
         if sampGetChatString(99):find("Загружено") then
-          sampSetChatString(99, prefix..string.format('Загружено %d из %d.', p13, p23), nil, - 1)
+          sampSetChatString(99, prefix..string.format('Загружено %d KB из %d KB.', p13/1000, p23/1000), nil, - 1)
         else
-          sampAddChatMessage(prefix..string.format('Загружено %d из %d.', p13, p23), color)
+          sampAddChatMessage(prefix..string.format('Загружено %d KB из %d KB.', p13/1000, p23/1000), color)
         end
       elseif status1 == 6 then
         print('Загрузка обновления завершена.')
