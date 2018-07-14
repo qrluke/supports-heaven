@@ -51,13 +51,8 @@ if (isset($_GET['iam'])) {
 }
 
 echo "{";
-echo "\"latest\": " . $LASTVERSION . ",";
-echo "\"price\": \"" . $PRICE . "\",";
-echo "\"buylink\": \"" . $BUYLINK . "\",";
-echo "\"updateurl\": \"" . $ACTUALLINK . "\"";
 
 if (isset($result[0])) {
-    echo ",";
     echo "\"code\": \"" . bin2hex(base64_decode(openssl_encrypt("Ok. I found you. You are: " . $keywords[1] . "* From: " . $keywords[4] . "* Mode: " . $mod[0]."*", "AES-128-ECB", $result[0]))) . "\"";
 }
 

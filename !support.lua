@@ -259,10 +259,42 @@ do
     if not doesDirectoryExist(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\") then
       createDirectory(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\")
     end
-    for i = 1, 100 do
+    kols = 0
+    for i = 1, currentaudiokol do
       local file = getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\"..i..".mp3"
       if not doesFileExist(file) then
-        downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support's_heaven/resource/sup/sounds/"..i..".mp3", file)
+        kols = kols + 1
+      end
+    end
+    if kols > 0 then
+      local prefix = "[Support's Heaven]: "
+      local color = 0xffa500
+      sampAddChatMessage(prefix.."Для работы скрипта нужно докачать "..kols.." аудиофайлов.", color)
+      sampAddChatMessage(prefix.."Нажмите F2, чтобы запустить скачивание аудиофайлов.", color)
+      while not wasKeyPressed(113) do wait(10) end
+      if wasKeyPressed(113) then
+        createDirectory(getGameDirectory().."\\moonloader\\resource\\sup\\"..mode)
+        for i = 1, 100 do
+          local file = getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\"..i..".mp3"
+          if not doesFileExist(file) then
+            v = "http://rubbishman.ru/dev/moonloader/support's_heaven/resource/sup/sounds/"..i..".mp3"
+            k = file
+            sampAddChatMessage(prefix..v.." -> "..k, color)
+            pass = false
+            wait(10)
+            downloadUrlToFile(v, k,
+              function(id, status, p1, p2)
+                if status == 5 then
+                  sampAddChatMessage(string.format(prefix..k..' - Загружено %d KB из %d KB.', p1 / 1000, p2 / 1000), color)
+                elseif status == 58 then
+                  sampAddChatMessage(prefix..k..' - Загрузка завершена.', color)
+                  pass = true
+                end
+              end
+            )
+            while pass == false do wait(1) end
+          end
+        end
       end
     end
   end
@@ -1996,7 +2028,6 @@ function var_require()
   r_smart_cleo_and_sampfuncs()
   while isSampfuncsLoaded() ~= true do wait(100) end
   --while not isSampAvailable() do wait(100) end
-  chkupd()
 	if getMoonloaderVersion() < 026 then
 		local prefix = "[Support's Heaven]: "
 		local color = 0xffa500
@@ -2004,12 +2035,13 @@ function var_require()
 		sampAddChatMessage("Пожалуйста, скачайте последнюю версию MoonLoader.", color)
 		thisScript():unload()
 	end
+  chkupd()
   r_smart_lib_imgui()
   ihk = r_lib_imcustom_hotkey()
   hk = r_lib_rkeys()
   while not sampIsLocalPlayerSpawned() do wait(1) end
   chklsn()
-  while PROVERKA ~= true do wait(10) end
+  while PROVERKA ~= true do wait(100) end
   imgui_init()
   ihk._SETTINGS.noKeysMessage = ("-")
   encoding = r_lib_encoding()
@@ -2081,6 +2113,7 @@ function chkupd()
             updateversion = info.latest
             currentprice = info.price
             currentbuylink = info.buylink
+						currentaudiokol = info.audio
             f:close()
             os.remove(json)
             os.remove(json)
@@ -2089,6 +2122,7 @@ function chkupd()
               lua_thread.create(goupdate)
             else
               print('v'..thisScript().version..': Обновление не требуется.')
+							info = nil
               waiter1 = false
             end
           end
