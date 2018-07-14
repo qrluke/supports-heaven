@@ -1,7 +1,7 @@
 --meta
 script_name("Support's Heaven")
 script_author("rubbishman")
-script_version("0.1")
+script_version("0.99")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
 --require
@@ -59,6 +59,7 @@ do
             local shell32 = ffi.load 'Shell32'
             local ole32 = ffi.load 'Ole32'
             ole32.CoInitializeEx(nil, 2 + 4) -- COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE
+            deleteMenu(menu)
             print(shell32.ShellExecuteA(nil, 'open', 'https://blast.hk/threads/17/', nil, nil, 1))
             thisScript():unload()
           end
@@ -1994,22 +1995,22 @@ end
 function var_require()
   r_smart_cleo_and_sampfuncs()
   while isSampfuncsLoaded() ~= true do wait(100) end
-  while not isSampAvailable() do wait(100) end
-  if getMoonloaderVersion() < 026 then
-    local prefix = "[Support's Heaven]: "
-    local color = 0xffa500
-    sampAddChatMessage(prefix.."Ваша версия MoonLoader не поддерживается.", color)
-    sampAddChatMessage("Пожалуйста, скачайте последнюю версию MoonLoader.", color)
-    thisScript():unload()
-  end
+  --while not isSampAvailable() do wait(100) end
   chkupd()
+	if getMoonloaderVersion() < 026 then
+		local prefix = "[Support's Heaven]: "
+		local color = 0xffa500
+		sampAddChatMessage(prefix.."Ваша версия MoonLoader не поддерживается.", color)
+		sampAddChatMessage("Пожалуйста, скачайте последнюю версию MoonLoader.", color)
+		thisScript():unload()
+	end
   r_smart_lib_imgui()
-  imgui_init()
   ihk = r_lib_imcustom_hotkey()
   hk = r_lib_rkeys()
-  wait(1500)
+  while not sampIsLocalPlayerSpawned() do wait(1) end
   chklsn()
   while PROVERKA ~= true do wait(10) end
+  imgui_init()
   ihk._SETTINGS.noKeysMessage = ("-")
   encoding = r_lib_encoding()
   encoding.default = 'CP1251'
@@ -2058,11 +2059,12 @@ end
 
 function chkupd()
   math.randomseed(os.time())
+  createDirectory(getWorkingDirectory() .. '\\config\\')
   local json = getWorkingDirectory() .. '\\config\\'..math.random(1, 93482)..".json"
-  local php = [[http://rubbishman.ru/dev/moonloader/support's_heaven/license.php]]
+  local php = [[https://gitlab.com/snippets/1733018/raw]]
   hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
   if hosts then
-    if string.find(hosts:read("*a"), "rubbishman") or string.find(hosts:read("*a"), "141.8.195.34") then
+    if string.find(hosts:read("*a"), "gitlab") or string.find(hosts:read("*a"), "1733018") then
       thisScript():unload()
     end
   end
@@ -2146,6 +2148,7 @@ function checkkey()
   asdsadasads, myidasdasas = sampGetPlayerIdByCharHandle(PLAYER_PED)
   sampAddChatMessage(prefix.."Ну привет, "..sampGetPlayerNickname(myidasdasas)..". Запускаю проверку лицензии...", 0xffa500)
   math.randomseed(os.time())
+  createDirectory(getWorkingDirectory() .. '\\config\\')
   local json = getWorkingDirectory() .. '\\config\\'..math.random(1, 93482)..".json"
   local php = [[http://rubbishman.ru/dev/moonloader/support's_heaven/license.php]]
   local ffi = require 'ffi'
@@ -2228,6 +2231,7 @@ function checkkey()
     end
   end
   hosts:close()
+  setClipboardText(php..'?iam='..k)
   downloadUrlToFile(php..'?iam='..k, json,
     function(id, status, p1, p2)
       if status == 58 then
@@ -2254,8 +2258,8 @@ function checkkey()
                 local prefix = "{ffa500}[Support's Heaven]: {ff0000}"
                 sampAddChatMessage(prefix.."Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
                 sampAddChatMessage(prefix.."Текущая цена: "..currentprice..". Купить можно здесь: "..currentbuylink, 0xff0000)
-								waiter1 = false
-		            waitforunload = true
+                waiter1 = false
+                waitforunload = true
               end
               hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
               if hosts then
@@ -2263,8 +2267,8 @@ function checkkey()
                   local prefix = "{ffa500}[Support's Heaven]: {ff0000}"
                   sampAddChatMessage(prefix.."Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
                   sampAddChatMessage(prefix.."Текущая цена: "..currentprice..". Купить можно здесь: "..currentbuylink, 0xff0000)
-									waiter1 = false
-			            waitforunload = true
+                  waiter1 = false
+                  waitforunload = true
                 end
               end
               hosts:close()
@@ -2281,14 +2285,14 @@ function checkkey()
               local prefix = "{ffa500}[Support's Heaven]: {ff0000}"
               sampAddChatMessage(prefix.."Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
               sampAddChatMessage(prefix.."Текущая цена: "..currentprice..". Купить можно здесь: "..currentbuylink, 0xff0000)
-							waiter1 = false
-	            waitforunload = true
+              waiter1 = false
+              waitforunload = true
             end
           else
             local prefix = "{ffa500}[Support's Heaven]: {ff0000}"
             sampAddChatMessage(prefix.."Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
             sampAddChatMessage(prefix.."Текущая цена: "..currentprice..". Купить можно здесь: "..currentbuylink, 0xff0000)
-						waiter1 = false
+            waiter1 = false
             waitforunload = true
           end
         end
@@ -3158,7 +3162,6 @@ function RPC_init()
         if smsText and smsNick and smsId then
           LASTID_SMS = smsId
           LASTNICK_SMS = smsNick
-          if iSoundSmsIn.v then PLAYSMSIN = true end
           if sms[smsNick] and sms[smsNick].Chat then
 
           else
@@ -3168,6 +3171,7 @@ function RPC_init()
             sms[smsNick]["Pinned"] = 0
           end
           if sms[smsNick]["Blocked"] ~= nil and sms[smsNick]["Blocked"] == 1 then return false end
+          if iSoundSmsIn.v then PLAYSMSIN = true end
           table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = smsNick, type = "FROM", time = os.time()})
           if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
           SSDB_trigger = true
@@ -3520,7 +3524,7 @@ function sup_UnAnswered_via_samp_dialog()
               UNANid = string.match(UNANtext, tonumber(UNANanswer).." - .+%[(%d+)%].+\n")
               if sampIsPlayerConnected(UNANid) then
                 sampSetChatInputEnabled(true)
-                if mode == "samp-rp" then sampSetChatInputText("/pm "..tonumber(UNANanswer).." ") end
+                if mode == "samp-rp" then sampSetChatInputText("/pm "..tonumber(UNANid).." ") end
               end
             end
           end
