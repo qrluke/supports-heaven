@@ -3700,7 +3700,7 @@ function imgui_spur()
       imgui.Image(spur[spurtab]["img"], imgui.ImVec2(width, height))
       pos = imgui.GetCursorScreenPos()
       if cfg.spur.lupa and imgui.IsItemHovered() then
-        if spur[spurtab]["width"] > imgui.GetContentRegionAvailWidth() or not cfg.spur.onlyresized then
+        if spur[spurtab]["width"] > (imgui.GetContentRegionAvailWidth() - imgui.GetStyle().ScrollbarSize) or not cfg.spur.onlyresized then
           my_tex_h = height
           my_tex_w = width
           imgui.BeginTooltip()
