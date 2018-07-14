@@ -1,9 +1,12 @@
 --meta
 script_name("Support's Heaven")
-script_author("rubbishman")
-script_version("0.99")
+script_author("qrlk")
+script_version("1.0")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
+script_changelog = [[	v1.0 [15.07.2018]
+* Релиз скрипта
+]]
 --require
 do
   function r_smart_cleo_and_sampfuncs()
@@ -2028,17 +2031,18 @@ function var_require()
   r_smart_cleo_and_sampfuncs()
   while isSampfuncsLoaded() ~= true do wait(100) end
   --while not isSampAvailable() do wait(100) end
-	if getMoonloaderVersion() < 026 then
-		local prefix = "[Support's Heaven]: "
-		local color = 0xffa500
-		sampAddChatMessage(prefix.."Ваша версия MoonLoader не поддерживается.", color)
-		sampAddChatMessage("Пожалуйста, скачайте последнюю версию MoonLoader.", color)
-		thisScript():unload()
-	end
+  if getMoonloaderVersion() < 026 then
+    local prefix = "[Support's Heaven]: "
+    local color = 0xffa500
+    sampAddChatMessage(prefix.."Ваша версия MoonLoader не поддерживается.", color)
+    sampAddChatMessage("Пожалуйста, скачайте последнюю версию MoonLoader.", color)
+    thisScript():unload()
+  end
   chkupd()
   r_smart_lib_imgui()
   ihk = r_lib_imcustom_hotkey()
   hk = r_lib_rkeys()
+  wait(2000)
   while not sampIsLocalPlayerSpawned() do wait(1) end
   chklsn()
   while PROVERKA ~= true do wait(100) end
@@ -2079,7 +2083,8 @@ function chklsn()
   chk = inicfg.load({
     license =
     {
-      ["key"] = "-"
+      ["key"] = "-",
+      ["sound"] = true
     },
   }, 'suplicense')
   if chk.license.key == "-" or chk.license.key:len() ~= 16 then
@@ -2113,7 +2118,8 @@ function chkupd()
             updateversion = info.latest
             currentprice = info.price
             currentbuylink = info.buylink
-						currentaudiokol = info.audio
+            currentaudiokol = info.audio
+						currentpromodis = info.promo
             f:close()
             os.remove(json)
             os.remove(json)
@@ -2122,7 +2128,7 @@ function chkupd()
               lua_thread.create(goupdate)
             else
               print('v'..thisScript().version..': Обновление не требуется.')
-							info = nil
+              info = nil
               waiter1 = false
             end
           end
@@ -2265,7 +2271,7 @@ function checkkey()
     end
   end
   hosts:close()
-  setClipboardText(php..'?iam='..k)
+  --  setClipboardText(php..'?iam='..k)
   downloadUrlToFile(php..'?iam='..k, json,
     function(id, status, p1, p2)
       if status == 58 then
@@ -2310,7 +2316,7 @@ function checkkey()
               if licensenick == sampGetPlayerNickname(myid) and server == licenseserver then
                 local prefix = "[Support's Heaven]: "
                 sampAddChatMessage(prefix.."Проверка лицензии пройдена. Активирован мод: "..licensemod..". Актуальная цена: "..currentprice..".", 0xffa500)
-                setAudioStreamState(Sgranted, 1)
+                if chk.license.sound then setAudioStreamState(Sgranted, 1) end
                 mode = licensemod
                 PROVERKA = true
               end
@@ -2363,7 +2369,7 @@ function goupdate()
         end
       elseif status1 == 6 then
         print('Загрузка обновления завершена.')
-        sampAddChatMessage((prefix..'Обновление завершено!'), color)
+        sampAddChatMessage((prefix..'Обновление завершено! Подробнее в changelog (ищите в меню -> информация).'), color)
         goupdatestatus = true
         thisScript():reload()
       end
@@ -2393,17 +2399,17 @@ function var_cfg()
       HideAnswerOthers = false,
       HideSmsIn = false,
       HideSmsOut = false,
-      HideSmsReceived = false,
-      SoundQuestion = true,
+      HideSmsReceived = true,
+      SoundQuestion = false,
       SoundQuestionNumber = 1,
-      SoundAnswerOthers = true,
+      SoundAnswerOthers = false,
       SoundAnswerOthersNumber = 22,
       SoundAnswer = true,
-      SoundAnswerNumber = 15,
-      SoundSmsIn = true,
+      SoundAnswerNumber = 88,
+      SoundSmsIn = false,
       SoundSmsInNumber = 22,
       SoundSmsOut = true,
-      SoundSmsOutNumber = 15,
+      SoundSmsOutNumber = 88,
       settingstab = 1,
       debug = false,
     },
@@ -2420,6 +2426,7 @@ function var_cfg()
       notepad = false,
       logviewer = false,
       histogram = false,
+      info = false,
       settings = false,
       counter = false,
     },
@@ -2474,10 +2481,10 @@ function var_cfg()
     },
     colors =
     {
-      QuestionColor = imgui.ImColor(255, 255, 255):GetU32(),
+      QuestionColor = imgui.ImColor(0, 255, 38):GetU32(),
       AnswerColor = imgui.ImColor(255, 255, 255):GetU32(),
       AnswerColorOthers = imgui.ImColor(255, 255, 255):GetU32(),
-      SmsInColor = imgui.ImColor(255, 255, 255):GetU32(),
+      SmsInColor = imgui.ImColor(0, 255, 166):GetU32(),
       SmsOutColor = imgui.ImColor(255, 255, 255):GetU32(),
       SmsReceivedColor = imgui.ImColor(255, 255, 255):GetU32(),
     },
@@ -2564,6 +2571,7 @@ function var_imgui_ImBool()
   imgui.LockPlayer = false
   imgui.GetIO().MouseDrawCursor = cfg.options.MouseDrawCursor
   MouseDrawCursor = imgui.ImBool(cfg.options.MouseDrawCursor)
+  iSoundGranted = imgui.ImBool(chk.license.sound)
   iAutoResize = imgui.ImBool(cfg.spur.autoresize)
   read_only = imgui.ImBool(true)
   iReplaceQuestionColor = imgui.ImBool(cfg.options.ReplaceQuestionColor)
@@ -2701,6 +2709,8 @@ function var_imgui_ImBuffer()
   textNotepad.v = string.gsub(string.gsub(u8:encode(cfg.notepad.text), "\\n", "\n"), "\\t", "\t")
   fr = imgui.ImBuffer(65536)
   fr.v = string.gsub(string.gsub(u8:encode(cfg.notepad.fr), "\\n", "\n"), "\\t", "\t")
+  changelog = imgui.ImBuffer(65536)
+  changelog.v = u8:encode(script_changelog)
 end
 
 function var_main()
@@ -3638,19 +3648,20 @@ function imgui_main()
   if main_window_state.v then
     imgui.SetNextWindowPos(imgui.ImVec2(cfg.menuwindow.PosX, cfg.menuwindow.PosY), imgui.Cond.FirstUseEver)
     imgui.SetNextWindowSize(imgui.ImVec2(cfg.menuwindow.Width, cfg.menuwindow.Height))
-    if cfg.only.messanger or cfg.only.notepad or cfg.only.logviewer or cfg.only.histogram or cfg.only.settings or cfg.only.counter then
+    if cfg.only.messanger or cfg.only.notepad or cfg.only.logviewer or cfg.only.histogram or cfg.only.settings or cfg.only.counter or cfg.only.info then
       beginflags = imgui.WindowFlags.NoCollapse + imgui.WindowFlags.MenuBar
     else
       beginflags = imgui.WindowFlags.NoCollapse
     end
     imgui.Begin(u8:encode(thisScript().name.." v"..thisScript().version), main_window_state, beginflags)
     imgui_saveposandsize()
-    if not cfg.only.messanger and not cfg.only.notepad and not cfg.only.logviewer and not cfg.only.histogram and not cfg.only.counter and not cfg.only.settings then
+    if not cfg.only.messanger and not cfg.only.notepad and not cfg.only.logviewer and not cfg.only.histogram and not cfg.only.counter and not cfg.only.settings and not cfg.only.info then
       if cfg.messanger.activesduty or cfg.messanger.activesms then imgui_messanger() end
       if cfg.notepad.active then imgui_notepad() end
       if cfg.log.active then imgui_log() end
       if cfg.stats.active then imgui_histogram() end
       if cfg.counter.active then imgui_counter() end
+      imgui_info()
       imgui_settings()
     else
       if cfg.only.messanger then if cfg.messanger.activesduty or cfg.messanger.activesms then imgui_messanger() end end
@@ -3658,6 +3669,7 @@ function imgui_main()
       if cfg.only.logviewer then if cfg.log.active then imgui_log() end end
       if cfg.only.histogram then if cfg.stats.active then imgui_histogram() end end
       if cfg.only.counter and cfg.counter.active then imgui_counter() end
+      if cfg.only.info then imgui_info() end
       if cfg.only.settings then imgui_settings() end
     end
     imgui.End()
@@ -3772,6 +3784,7 @@ function imgui_menu()
     cfg.only.histogram = false
     cfg.only.settings = false
     cfg.only.counter = false
+    cfg.only.info = false
     inicfg.save(cfg, "support")
   end
   imgui.EndMenuBar()
@@ -5595,6 +5608,241 @@ function imgui_counter_rightclick()
   end
 end
 
+function imgui_info()
+  if not cfg.only.info then
+    ch9 = imgui.CollapsingHeader(u8"Информация о скрипте")
+    if ch9 then
+      imgui_info_rightclick()
+      imgui_info_content()
+    end
+    if not ch9 then imgui_info_rightclick() end
+  else
+    imgui_menu()
+    imgui_info_content()
+  end
+end
+
+function imgui_info_content()
+  imgui.Text(thisScript().name.." v"..thisScript().version)
+  imgui_info_open(currentbuylink)
+  imgui.Text("<> by "..thisScript().authors[1])
+  imgui_info_open("https://blast.hk/members/156833/")
+  imgui.Text("")
+  imgui.Text(u8"Группа ВКонтакте (все новости здесь): ".."http://vk.com/qrlk.mods")
+  imgui_info_open("http://vk.com/qrlk.mods")
+  imgui.Text(u8"Сообщение автору (все баги только сюда): ".."http://vk.me/qrlk.mods")
+  imgui_info_open("http://vk.me/qrlk.mods")
+  imgui.Text("")
+  if imgui.TreeNode("Changelog") then
+    imgui.InputTextMultiline("##changelog", changelog, imgui.ImVec2(-1, 200), imgui.InputTextFlags.ReadOnly)
+    imgui.TreePop()
+  end
+  imgui.Text("")
+  imgui.Text(u8:encode("Лицензия принадлежит: "..licensenick..", сервер: "..licenseserver..", купленный мод: "..mode.."."))
+  imgui.Text(u8:encode("Текущая цена: "..currentprice..", (с промокодом скидка "..currentpromodis.."). Купить можно тут: "..currentbuylink))
+  imgui_info_open(currentbuylink)
+  imgui.Text("")
+  imgui.Text(u8:encode("В скрипте задействованы следующие сампотехнологии:"))
+
+  imgui.BeginChild("##credits", imgui.ImVec2(580, 175), true)
+  imgui.Columns(4, nil, false)
+
+  cp1 = 25
+  cp2 = 125
+  cp3 = 260
+  cp4 = 160
+
+  imgui.Text("1")
+  imgui.SetColumnWidth(-1, cp1)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp2)
+  imgui.Text("Moonloader v0"..getMoonloaderVersion())
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp3)
+  link = "https://blast.hk/threads/13305/"
+  imgui.Text(link)
+  imgui_info_open(link)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp4)
+  imgui.Text("FYP, ")
+  imgui_info_open("https://blast.hk/members/2/")
+  imgui.SameLine()
+  imgui.Text("hnnssy, ")
+  imgui_info_open("https://blast.hk/members/66797/")
+  imgui.SameLine()
+  imgui.Text("EvgeN 1137.")
+  imgui_info_open("https://blast.hk/members/1/")
+  imgui.NextColumn()
+
+
+  imgui.Text("2")
+  imgui.SetColumnWidth(-1, cp1)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp2)
+  imgui.Text("SAMPFUNCS v5.3.3")
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp3)
+  link = "https://blast.hk/threads/17/"
+  imgui.Text(link)
+  imgui_info_open(link)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp4)
+  imgui.Text("FYP")
+  imgui_info_open("https://blast.hk/members/2/")
+  imgui.NextColumn()
+
+  imgui.Text("3")
+  imgui.SetColumnWidth(-1, cp1)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp2)
+  imgui.Text("ImGui v1.52")
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp3)
+  link = "https://github.com/ocornut/imgui/"
+  imgui.Text(link)
+  imgui_info_open(link)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp4)
+  imgui.Text("ocornut")
+  imgui_info_open("https://github.com/ocornut/")
+  imgui.NextColumn()
+
+  imgui.Text("4")
+  imgui.SetColumnWidth(-1, cp1)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp2)
+  imgui.Text("Moon ImGui v1.1.3")
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp3)
+  link = "https://blast.hk/threads/19292/"
+  imgui.Text(link)
+  imgui_info_open(link)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp4)
+  imgui.Text("FYP")
+  imgui_info_open("https://blast.hk/members/2/")
+  imgui.NextColumn()
+
+  imgui.Text("5")
+  imgui.SetColumnWidth(-1, cp1)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp2)
+  imgui.Text("SAMP.Lua v2.0.5")
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp3)
+  link = "https://github.com/THE-FYP/SAMP.Lua/"
+  imgui.Text(link)
+  imgui_info_open(link)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp4)
+  imgui.Text("FYP, ")
+  imgui_info_open("https://blast.hk/members/2")
+  imgui.SameLine()
+  imgui.Text("MISTERGONWIK.")
+  imgui_info_open("https://blast.hk/members/3")
+  imgui.NextColumn()
+
+  imgui.Text("6")
+  imgui.SetColumnWidth(-1, cp1)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp2)
+  imgui.Text("lua-lockbox v0.1.0")
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp3)
+  link = "https://github.com/somesocks/lua-lockbox/"
+  imgui.Text(link)
+  imgui_info_open(link)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp4)
+  imgui.Text("somesocks")
+  imgui_info_open("https://github.com/somesocks/")
+  imgui.NextColumn()
+
+  imgui.Text("7")
+  imgui.SetColumnWidth(-1, cp1)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp2)
+  imgui.Text("ImGui Custom v1.1.5")
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp3)
+  link = "https://blast.hk/threads/22080/"
+  imgui.Text(link)
+  imgui_info_open(link)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp4)
+  imgui.Text("DonHomka")
+  imgui_info_open("https://blast.hk/members/161656/")
+  imgui.NextColumn()
+
+  imgui.Text("8")
+  imgui.SetColumnWidth(-1, cp1)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp2)
+  imgui.Text("RKeys v1.0.7")
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp3)
+  link = "https://blast.hk/threads/22145/"
+  imgui.Text(link)
+  imgui_info_open(link)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp4)
+  imgui.Text("DonHomka")
+  imgui_info_open("https://blast.hk/members/161656/")
+  imgui.NextColumn()
+
+  imgui.Text("9")
+  imgui.SetColumnWidth(-1, cp1)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp2)
+  imgui.Text("SupportTools")
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp3)
+  link = "https://github.com/Yafis/SupportTools/"
+  imgui.Text(link)
+  imgui_info_open(link)
+  imgui.NextColumn()
+  imgui.SetColumnWidth(-1, cp4)
+  imgui.Text("Yafis")
+  imgui_info_open("https://github.com/Yafis/")
+  imgui.NextColumn()
+
+  imgui.Columns(1)
+  imgui.EndChild()
+end
+
+
+--[[
+1. Moonloader VERSION - https://blast.hk/threads/13305/ - FYP https://blast.hk/members/2/ hnnssy https://blast.hk/members/66797/ EvgeN 1137 https://blast.hk/members/1/
+2. SAMPFUNCS v5.3.3 - https://blast.hk/threads/17/ - FYP https://blast.hk/members/2/
+3. ImGui v1.52 - https://github.com/ocornut/imgui - ocornut https://github.com/ocornut/
+4. Moon ImGui v1.1.3 - https://blast.hk/threads/19292/ - FYP https://blast.hk/members/2
+5. SAMP.Lua v2.0.5 - https://github.com/THE-FYP/SAMP.Lua - FYP https://blast.hk/members/2 MISTERGONWIK https://blast.hk/members/3/
+6. lua-lockbox - https://github.com/somesocks/lua-lockbox - somesocks https://github.com/somesocks/
+7. ImGui Custom v1.1.5 - https://blast.hk/threads/22080/ - DonHomka https://blast.hk/members/161656/
+8. RKeys v1.0.7 - https://blast.hk/threads/22145/ - DonHomka https
+9. SupportTools - https://github.com/Yafis/SupportTools/ - Yafis https://github.com/Yafis/
+]]
+
+function imgui_info_open(link)
+  if imgui.IsItemHovered() and imgui.IsMouseClicked(0) then
+    local ffi = require 'ffi'
+    ffi.cdef [[
+			void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
+			uint32_t __stdcall CoInitializeEx(void*, uint32_t);
+		]]
+    local shell32 = ffi.load 'Shell32'
+    local ole32 = ffi.load 'Ole32'
+    ole32.CoInitializeEx(nil, 2 + 4) -- COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE
+    print(shell32.ShellExecuteA(nil, 'open', link, nil, nil, 1))
+  end
+end
+
+function imgui_info_rightclick()
+  if imgui.IsItemHovered(imgui.HoveredFlags.RootWindow) and imgui.IsMouseClicked(1) then
+    cfg.only.info = true
+  end
+end
+
 function imgui_settings()
   if not cfg.only.settings then
     ch5 = imgui.CollapsingHeader(u8"Настройки")
@@ -5863,7 +6111,7 @@ function imgui_settings_3_sup_funcs()
   end
   imgui.SameLine()
   if ifastrespondviachat.v then
-    imgui.Text(u8("Быстрый ответ включен"))
+    imgui.Text(u8("Быстрый ответ включен."))
   else
     imgui.TextDisabled(u8"Включить быстрый ответ?")
   end
@@ -5882,7 +6130,7 @@ function imgui_settings_3_sup_funcs()
   end
   imgui.SameLine()
   if iunanswereddialog.v then
-    imgui.Text(u8("Список проигнорированных вопросов включен")) else
+    imgui.Text(u8("Список проигнорированных вопросов включен.")) else
     imgui.TextDisabled(u8"Включить список проигнорированных вопросов?")
   end
   imgui.SameLine()
@@ -5898,7 +6146,7 @@ function imgui_settings_3_sup_funcs()
   end
   imgui.SameLine()
   if ifastrespondviadialoglastid.v then
-    imgui.Text(u8("Быстрый ответ по базе на последний вопрос по базе ответов включен"))
+    imgui.Text(u8("Быстрый ответ по базе на последний вопрос по базе ответов включен."))
   else
     imgui.TextDisabled(u8"Включить быстрый ответ на последний вопрос по базе ответов?")
   end
@@ -5914,7 +6162,7 @@ function imgui_settings_3_sup_funcs()
   end
   imgui.SameLine()
   if ifastrespondviadialog.v then
-    imgui.Text(u8("Быстрый ответ по базе ответов включен"))
+    imgui.Text(u8("Быстрый ответ по базе ответов включен."))
   else
     imgui.TextDisabled(u8"Включить быстрый ответ по базе ответов?")
   end
@@ -6992,7 +7240,6 @@ function imgui_settings_14_hotkeys()
       imgui.SetTooltip(u8"По нажатию хоткея открывается мессенджер смс с фокусом на ввод ника/id нового собеседника.")
     end
   end
-
 end
 
 function imgui_settings_15_extra()
@@ -7005,6 +7252,15 @@ function imgui_settings_15_extra()
   imgui.TextDisabled("(?)")
   if imgui.IsItemHovered() then
     imgui.SetTooltip(u8"Если включить, курсор будет отображаться на скринах.\nМинус: курсор будет немного лагать.")
+  end
+  if imgui.Checkbox(u8"Звуковое уведомление при успешной проверке лицензии?", iSoundGranted) then
+    chk.license.sound = iSoundGranted.v
+    inicfg.save(chk, "suplicense")
+  end
+  imgui.SameLine()
+  imgui.TextDisabled("(?)")
+  if imgui.IsItemHovered() then
+    imgui.SetTooltip(u8"Вкл/выкл звуковое уведомление об успешной проверки лицензии.")
   end
 end
 
