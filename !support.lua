@@ -2909,7 +2909,7 @@ function main_init_hotkeys()
 
   if cfg.spur.active then
     hotkeys["hkSpur"] = {}
-    for i = 1, #cfg.hkMainMenu do
+    for i = 1, #cfg.hkSpur do
       table.insert(hotkeys["hkSpur"], cfg["hkSpur"][i])
     end
     hk.unRegisterHotKey(hotkeys["hkSpur"])
