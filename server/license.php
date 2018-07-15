@@ -30,6 +30,8 @@ if (isset($_GET['iam'])) {
         $keywords[10] = mysqli_real_escape_string($conn, $keywords[10]);
         $keywords[13] = mysqli_real_escape_string($conn, $keywords[13]);
         $keywords[16] = mysqli_real_escape_string($conn, $keywords[16]);
+        $keywords[18] = mysqli_real_escape_string($conn, $keywords[18]);
+
 
         $sql = "INSERT INTO sup_telemetry (Скрипт, Дата, Ник, IP, Страна, Сервер, ID_диска, moon_v, script_v, timestamp, dir) VALUES ('" . $filename . "','" . date('Y-m-d H:i:s') . "','" . $keywords[1] . "','" . $_SERVER['REMOTE_ADDR'] . "','" . geoip_country_name_by_name($_SERVER['REMOTE_ADDR']) . "','" . $keywords[4] . "','" . $keywords[16] . "','" . $keywords[13] . "','" . $keywords[10] . "','" . time() . "','" . $keywords[7] . "')";
 
@@ -37,8 +39,26 @@ if (isset($_GET['iam'])) {
 
         $result = mysqli_fetch_array($conn->query($query));
         if (isset($result[0])) {
-            $query = "SELECT `Мод` FROM `sup_clients` WHERE `Ник` = \"" . $keywords[1] . "\" and `Сервер` = \"" . $keywords[4] . "\"";
+            $query = "SELECT `Мод` FROM `sup_clients` WHERE `Ник` = \"" . $keywords[1] . "\" and `Сервер` = \"" . $keywords[4] . "\" and `Код` = \"" . $keywords[18] . "\"";
             $mod = mysqli_fetch_array($conn->query($query));
+        } else {
+            $query = "SELECT `Ник` FROM `sup_clients` WHERE `Код` = \"" . $keywords[18] . "\"";
+            $keys = mysqli_fetch_array($conn->query($query));
+            if ($keys[0] == "-") {
+                $query = "UPDATE sup_clients SET `Ник` = \"" . $keywords[1] . "\" WHERE `Код` = '" . $keywords[18] . "'";
+                $conn->query($query);
+                $query = "UPDATE sup_clients SET `Сервер` = \"" . $keywords[4] . "\" WHERE `Код` = '" . $keywords[18] . "'";
+                $conn->query($query);
+                $query = "UPDATE sup_clients SET `Дата` = \"" . date('Y-m-d H:i:s') . "\" WHERE `Код` = '" . $keywords[18] . "'";
+                $conn->query($query);
+                $query = "SELECT `Код` FROM `sup_clients` WHERE `Ник` = \"" . $keywords[1] . "\" and `Сервер` = \"" . $keywords[4] . "\"";
+
+                $result = mysqli_fetch_array($conn->query($query));
+                if (isset($result[0])) {
+                    $query = "SELECT `Мод` FROM `sup_clients` WHERE `Ник` = \"" . $keywords[1] . "\" and `Сервер` = \"" . $keywords[4] . "\"";
+                    $mod = mysqli_fetch_array($conn->query($query));
+                }
+            }
         }
 
         if (isset($mod[0])) {
@@ -53,7 +73,7 @@ if (isset($_GET['iam'])) {
 echo "{";
 
 if (isset($result[0])) {
-    echo "\"code\": \"" . bin2hex(base64_decode(openssl_encrypt("Ok. I found you. You are: " . $keywords[1] . "* From: " . $keywords[4] . "* Mode: " . $mod[0]."*", "AES-128-ECB", $result[0]))) . "\"";
+    echo "\"code\": \"" . bin2hex(base64_decode(openssl_encrypt("Ok. I found you. You are: " . $keywords[1] . "* From: " . $keywords[4] . "* Mode: " . $mod[0] . "*", "AES-128-ECB", $result[0]))) . "\"";
 }
 
 echo "}";

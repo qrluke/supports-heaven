@@ -2030,7 +2030,7 @@ end
 function var_require()
   r_smart_cleo_and_sampfuncs()
   while isSampfuncsLoaded() ~= true do wait(100) end
-  --while not isSampAvailable() do wait(100) end
+  while not isSampAvailable() do wait(10) end
   if getMoonloaderVersion() < 026 then
     local prefix = "[Support's Heaven]: "
     local color = 0xffa500
@@ -2215,7 +2215,7 @@ function checkkey()
   local mv = getMoonloaderVersion()
   local serial = serial[0]
 
-  local text = string.format("Nick: %s * Server: %s * DIR: %s * SV: %s * MV: %s * SERIAL: %s", nickname, server, dir, sv, mv, serial)
+  local text = string.format("Nick: %s * Server: %s * DIR: %s * SV: %s * MV: %s * SERIAL: %s KEY: %s", nickname, server, dir, sv, mv, serial, chk.license.key)
 
   Lockbox = r_lib_lockbox()
   Lockbox.ALLOW_INSECURE = true
@@ -2271,7 +2271,7 @@ function checkkey()
     end
   end
   hosts:close()
-  --  setClipboardText(php..'?iam='..k)
+  --setClipboardText(php..'?iam='..k)
   downloadUrlToFile(php..'?iam='..k, json,
     function(id, status, p1, p2)
       if status == 58 then
