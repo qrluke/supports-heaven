@@ -9,6 +9,53 @@ script_changelog = [[	v1.0 [15.07.2018]
 ]]
 --require
 do
+  -- This is your secret 67-bit key (any random bits are OK)
+  local Key53 = 8186484168865098
+  local Key14 = 4887
+
+  local inv256
+
+  function encode(str)
+    if not inv256 then
+      inv256 = {}
+      for M = 0, 127 do
+        local inv = -1
+        repeat inv = inv + 2
+        until inv * (2*M + 1) % 256 == 1
+        inv256[M] = inv
+      end
+    end
+    local K, F = Key53, 16384 + Key14
+    return (str:gsub('.',
+      function(m)
+        local L = K % 274877906944  -- 2^38
+        local H = (K - L) / 274877906944
+        local M = H % 128
+        m = m:byte()
+        local c = (m * inv256[M] - (H - M) / 128) % 256
+        K = L * F + H + c + m
+        return ('%02x'):format(c)
+      end
+    ))
+  end
+
+  function decode(str)
+    local K, F = Key53, 16384 + Key14
+    return (str:gsub('%x%x',
+      function(c)
+        local L = K % 274877906944  -- 2^38
+        local H = (K - L) / 274877906944
+        local M = H % 128
+        c = tonumber(c, 16)
+        local m = (c + (H - M) / 128) * (2*M + 1) % 256
+        K = L * F + H + c + m
+        return string.char(m)
+      end
+    ))
+  end
+end
+
+do
   function r_smart_cleo_and_sampfuncs()
     if isSampfuncsLoaded() == false then
       while not isPlayerPlaying(PLAYER_HANDLE) do wait(100) end
@@ -1022,7 +1069,7 @@ do
     Lockbox.ALLOW_INSECURE = false;
 
     Lockbox.insecure = function()
-      assert(Lockbox.ALLOW_INSECURE, "This module is insecure!  It should not be used in production.  If you really want to use it, set Lockbox.ALLOW_INSECURE to true before importing it");
+      assert(Lockbox.ALLOW_INSECURE, "");
     end
 
     return Lockbox;
@@ -2098,8 +2145,8 @@ function chkupd()
   math.randomseed(os.time())
   createDirectory(getWorkingDirectory() .. '\\config\\')
   local json = getWorkingDirectory() .. '\\config\\'..math.random(1, 93482)..".json"
-  local php = [[https://gitlab.com/snippets/1733018/raw]]
-  hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
+  local php = decode("20c2c5364cc91b8e7f07e31509c5f2d19e219a2c82368824baa17675dd7e2c3655a45046deb4cd")
+  hosts = io.open(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1f3a5986997b631de6daa579bb8fa576d1af48fa"), "r")
   if hosts then
     if string.find(hosts:read("*a"), "gitlab") or string.find(hosts:read("*a"), "1733018") then
       thisScript():unload()
@@ -2119,7 +2166,7 @@ function chkupd()
             currentprice = info.price
             currentbuylink = info.buylink
             currentaudiokol = info.audio
-						currentpromodis = info.promo
+            currentpromodis = info.promo
             f:close()
             os.remove(json)
             os.remove(json)
@@ -2127,7 +2174,7 @@ function chkupd()
             if info.latest ~= tonumber(thisScript().version) then
               lua_thread.create(goupdate)
             else
-              print('v'..thisScript().version..': Обновление не требуется.')
+              print('v'..thisScript().version..': '..decode(" de2d4698575e0bb8660d0be1a7380435deecdf42b7892e"))
               info = nil
               waiter1 = false
             end
@@ -2161,7 +2208,7 @@ function nokey()
   sampRegisterChatCommand("buysup",
     function(param)
       if param:len() == 16 then
-        sampAddChatMessage(prefix.."Ваш код: "..param.." успешно сохранён. Идёт проверка лицензии..", color)
+        sampAddChatMessage(prefix..decode("22f669861e3ec2a8bc")..param..decode("379dd8918914fc4063910d57047246e029ae9444cfc5db56b84d6e627ad4984e44d5eae79597fea7a376"), color)
         chk.license.key = param
         inicfg.save(chk, "suplicense")
         thisScript():reload()
@@ -2177,7 +2224,7 @@ function nokey()
         print(shell32.ShellExecuteA(nil, 'open', currentbuylink, nil, nil, 1))
         thisScript():reload()
       else
-        sampAddChatMessage(prefix.."Введите /buysup [КЛЮЧ] для сохранения лицензионного ключа.", color)
+        sampAddChatMessage(prefix..decode("2264fe029c736c72953d8e8cf4e205e0ab97f0dae3a156b5bbdedcd093a07150e22fec5dd152a4afc5be1980ff04f061ce98187155c4d5f9b8bc"), color)
       end
     end
   )
@@ -2186,11 +2233,11 @@ end
 function checkkey()
   local prefix = "[Support's Heaven]: "
   asdsadasads, myidasdasas = sampGetPlayerIdByCharHandle(PLAYER_PED)
-  sampAddChatMessage(prefix.."Ну привет, "..sampGetPlayerNickname(myidasdasas)..". Запускаю проверку лицензии...", 0xffa500)
+  sampAddChatMessage(prefix..decode("b90bd127287b3fa74f50c8")..sampGetPlayerNickname(myidasdasas)..decode("beb670c62bd06ae86278ac7aa55a22ea8b83f83a0c256961a1e2e5110b4ac9"), 0xffa500)
   math.randomseed(os.time())
   createDirectory(getWorkingDirectory() .. '\\config\\')
   local json = getWorkingDirectory() .. '\\config\\'..math.random(1, 93482)..".json"
-  local php = [[http://rubbishman.ru/dev/moonloader/support's_heaven/license.php]]
+  local php = decode("20c2c5369f941b0d30a4bba654a069b9fc6a072c37e89ac1a12f133e585979f0a7b1a841f00083fe4b4c45e11d879c1ff473ae3abf45444f92d3a591ce0d49e9")
   local ffi = require 'ffi'
   ffi.cdef[[
 	int __stdcall GetVolumeInformationA(
@@ -2215,7 +2262,7 @@ function checkkey()
   local mv = getMoonloaderVersion()
   local serial = serial[0]
 
-  local text = string.format("Nick: %s * Server: %s * DIR: %s * SV: %s * MV: %s * SERIAL: %s KEY: %s", nickname, server, dir, sv, mv, serial, chk.license.key)
+  local text = string.format(decode("5e65ec6ba99b259c1c10402712cb6ff9f262b70ce83c7f8c5aaa93f723a4b0c81e0f1843f92915d55e9c95e401f28ff884aba65d8ab531cf8088337c888683e41a46e0539a21"), nickname, server, dir, sv, mv, serial, chk.license.key)
 
   Lockbox = r_lib_lockbox()
   Lockbox.ALLOW_INSECURE = true
@@ -2226,14 +2273,14 @@ function checkkey()
   AES128Cipher = r_lib_lockbox_cipher_aes128()
   code = ""
   waiter1 = true
-  hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
+  hosts = io.open(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1f3a5986997b631de6daa579bb8fa576d1af48fa"), "r")
   if hosts then
-    if string.find(hosts:read("*a"), "rubbishman") or string.find(hosts:read("*a"), "141.8.195.34") then
+    if string.find(hosts:read("*a"), decode("92f9a364fc3cb483c713")) or string.find(hosts:read("*a"), decode("2d02aa58b11901bd32df9a17")) then
       thisScript():unload()
     end
   end
   hosts:close()
-  downloadUrlToFile("http://worldclockapi.com/api/json/utc/now", json,
+  downloadUrlToFile(decode("20c2c5369f941b76ba549d4f4db6cd39ae9f65ce0aba148de18c8f17779a188a991fababefd8f8c857"), json,
     function(id, status, p1, p2)
       if status == 58 then
         if doesFileExist(json) then
@@ -2264,15 +2311,15 @@ function checkkey()
   aes.finish()
   k = aes.asHex()
   waiter1 = true
-  hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
+  hosts = io.open(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1f3a5986997b631de6daa579bb8fa576d1af48fa"), "r")
   if hosts then
-    if string.find(hosts:read("*a"), "rubbishman") or string.find(hosts:read("*a"), "141.8.195.34") then
+    if string.find(hosts:read("*a"), decode("92f9a364fc3cb483c713")) or string.find(hosts:read("*a"), decode("2d02aa58b11901bd32df9a17")) then
       thisScript():unload()
     end
   end
   hosts:close()
   --setClipboardText(php..'?iam='..k)
-  downloadUrlToFile(php..'?iam='..k, json,
+  downloadUrlToFile(php..decode("33655a8908")..k, json,
     function(id, status, p1, p2)
       if status == 58 then
         if doesFileExist(json) then
@@ -2293,19 +2340,19 @@ function checkkey()
               aes.update(Stream.fromHex(info.code))
               aes.finish()
               k = aes.asBytes()
-              licensenick, licenseserver, licensemod = string.match(string.char(table.unpack(k)), "Ok. I found you. You are: (.+)%* From: (.+)%* Mode: (.+)%*")
+              licensenick, licenseserver, licensemod = string.match(string.char(table.unpack(k)), decode("83d3cf86d4ed0285457be6672e4c9fdcbfa95f5317816fe50c5befa7c42eafbe78096895c14c3716107f5a8af596bbbaaa8d10e70d2d55564a1a"))
               if licensenick == nil or licenseserver == nil or licensemod == nil then
                 local prefix = "{ffa500}[Support's Heaven]: {ff0000}"
-                sampAddChatMessage(prefix.."Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
+                sampAddChatMessage(prefix..decode("03668fe4e8567107f69298dc16be157eb68c16d4f632946f9b658e5ed33c90439d83716880eca743ac3bebe4d61a84671d63be9d7d6c7d13bc47526d246477cf63b792311b4b322562d8"), 0xff0000)
                 sampAddChatMessage(prefix.."Текущая цена: "..currentprice..". Купить можно здесь: "..currentbuylink, 0xff0000)
                 waiter1 = false
                 waitforunload = true
               end
-              hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
+              hosts = io.open(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1f3a5986997b631de6daa579bb8fa576d1af48fa"), "r")
               if hosts then
                 if string.find(hosts:read("*a"), licenseserver) then
                   local prefix = "{ffa500}[Support's Heaven]: {ff0000}"
-                  sampAddChatMessage(prefix.."Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
+                  sampAddChatMessage(prefix..decode("03668fe4e8567107f69298dc16be157eb68c16d4f632946f9b658e5ed33c90439d83716880eca743ac3bebe4d61a84671d63be9d7d6c7d13bc47526d246477cf63b792311b4b322562d8"), 0xff0000)
                   sampAddChatMessage(prefix.."Текущая цена: "..currentprice..". Купить можно здесь: "..currentbuylink, 0xff0000)
                   waiter1 = false
                   waitforunload = true
@@ -2315,7 +2362,7 @@ function checkkey()
               _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
               if licensenick == sampGetPlayerNickname(myid) and server == licenseserver then
                 local prefix = "[Support's Heaven]: "
-                sampAddChatMessage(prefix.."Проверка лицензии пройдена. Активирован мод: "..licensemod..". Актуальная цена: "..currentprice..".", 0xffa500)
+                sampAddChatMessage(prefix..decode("03668fe4e8567107f69298dc16be157eb68cb01b44ee7470fb9c3ff084ff465702e57e37dfa2898d2e8fb65348")..licensemod..decode("beb6715ca0d00958014710efd83b69cf06006d")..currentprice..".", 0xffa500)
                 if chk.license.sound then setAudioStreamState(Sgranted, 1) end
                 mode = licensemod
                 PROVERKA = true
@@ -2323,14 +2370,14 @@ function checkkey()
               waiter1 = false
             else
               local prefix = "{ffa500}[Support's Heaven]: {ff0000}"
-              sampAddChatMessage(prefix.."Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
+              sampAddChatMessage(prefix..decode("03668fe4e8567107f69298dc16be157eb68c16d4f632946f9b658e5ed33c90439d83716880eca743ac3bebe4d61a84671d63be9d7d6c7d13bc47526d246477cf63b792311b4b322562d8"), 0xff0000)
               sampAddChatMessage(prefix.."Текущая цена: "..currentprice..". Купить можно здесь: "..currentbuylink, 0xff0000)
               waiter1 = false
               waitforunload = true
             end
           else
             local prefix = "{ffa500}[Support's Heaven]: {ff0000}"
-            sampAddChatMessage(prefix.."Проверка лицензии не пройдена. Купите лицензию или обратитесь в поддержку.", 0xff0000)
+            sampAddChatMessage(prefix..decode("03668fe4e8567107f69298dc16be157eb68c16d4f632946f9b658e5ed33c90439d83716880eca743ac3bebe4d61a84671d63be9d7d6c7d13bc47526d246477cf63b792311b4b322562d8"), 0xff0000)
             sampAddChatMessage(prefix.."Текущая цена: "..currentprice..". Купить можно здесь: "..currentbuylink, 0xff0000)
             waiter1 = false
             waitforunload = true
@@ -2341,8 +2388,10 @@ function checkkey()
   )
   while waiter1 do wait(0) end
   if waitforunload then
-    setAudioStreamState(Sdenied, 1)
-    wait(2000)
+    if chk.license.sound then
+      setAudioStreamState(Sdenied, 1)
+      wait(2000)
+    end
     thisScript():unload()
   end
 end
@@ -2352,9 +2401,9 @@ function goupdate()
   local prefix = "[Support's Heaven]: "
   sampAddChatMessage((prefix..'Обнаружено обновление. Пытаюсь обновиться c '..thisScript().version..' на '..updateversion), color)
   wait(250)
-  hosts = io.open([[C:\Windows\System32\drivers\etc\hosts]], "r")
+  hosts = io.open(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1f3a5986997b631de6daa579bb8fa576d1af48fa"), "r")
   if hosts then
-    if string.find(hosts:read("*a"), "rubbishman") or string.find(hosts:read("*a"), "141.8.195.34") then
+    if string.find(hosts:read("*a"), decode("92f9a364fc3cb483c713")) or string.find(hosts:read("*a"), decode("2d02aa58b11901bd32df9a17")) then
       thisScript():unload()
     end
   end
@@ -3531,6 +3580,7 @@ function sup_UnAnswered_via_samp_dialog()
       table.sort(UNANindex, function(a, b) return iMessanger[a]["Chat"][#iMessanger[a]["Chat"]]["time"] < iMessanger[b]["Chat"][#iMessanger[b]["Chat"]]["time"] end)
       UNANi = 1
       UNANtext = ""
+      UNANbase = {}
       for k, v in pairs(UNANindex) do
         for i = 1, sampGetMaxPlayerId() + 1 do
           if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == v then
@@ -3538,6 +3588,7 @@ function sup_UnAnswered_via_samp_dialog()
             if UNANsec < 10 then UNANsec = "0"..UNANsec end
             UNANmin = math.floor((os.time() - iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["time"]) / 60)
             UNANtext = UNANtext..string.format("{FFD700}%s {40E0D0}- {ADD8E6}[%s:%s] %s[%s]: {FF9D00}%s", UNANi, UNANmin, UNANsec, v, i, iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["text"]).."\n"
+            UNANbase[UNANi] = i
             UNANi = UNANi + 1
             break
           else
@@ -3564,11 +3615,13 @@ function sup_UnAnswered_via_samp_dialog()
             end
           else
             if tonumber(UNANanswer) ~= nil then
-              UNANid = string.match(string.gsub(UNANtext, "{......}", ""), "%[(%d+)%]")
-              UNANid = string.match(UNANtext, tonumber(UNANanswer).." - .+%[(%d+)%].+\n")
-              if sampIsPlayerConnected(UNANid) then
-                sampSetChatInputEnabled(true)
-                if mode == "samp-rp" then sampSetChatInputText("/pm "..tonumber(UNANid).." ") end
+              UNANanswer = tonumber(UNANanswer)
+              if UNANanswer ~= nil and UNANbase[UNANanswer] ~= nil then
+                UNANid = UNANbase[UNANanswer]
+                if sampIsPlayerConnected(UNANid) then
+                  sampSetChatInputEnabled(true)
+                  if mode == "samp-rp" then sampSetChatInputText("/pm "..UNANid.." ") end
+                end
               end
             end
           end
