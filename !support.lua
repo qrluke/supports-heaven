@@ -2208,7 +2208,7 @@ function nokey()
   sampRegisterChatCommand("buysup",
     function(param)
       if param:len() == 16 then
-        sampAddChatMessage(prefix..decode("22f669861e3ec2a8bc")..param..decode("379dd8918914fc4063910d57047246e029ae9444cfc5db56b84d6e627ad4984e44d5eae79597fea7a376"), color)
+        sampAddChatMessage(prefix..decode("22f669861e3ec2a8bc")..param.." "..decode("379dd8918914fc4063910d57047246e029ae9444cfc5db56b84d6e627ad4984e44d5eae79597fea7a376"), color)
         chk.license.key = param
         inicfg.save(chk, "suplicense")
         thisScript():reload()
