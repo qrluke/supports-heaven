@@ -1,10 +1,14 @@
 --meta
 script_name("Support's Heaven")
 script_author("qrlk")
-script_version("1.0")
+script_version("1.01")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
-script_changelog = [[	v1.0 [15.07.2018]
+script_changelog = [[	v1.01 [16.07.2018]
+* FIX: вылет скрипта при поступлении вопроса/ответа.
+* FIX: изменённые цвета теперь сохраняются правильно.
+* FIX: теперь скрипт правильно работает с 0 id.
+	v1.0 [15.07.2018]
 * Релиз скрипта
 ]]
 --require
@@ -2089,7 +2093,7 @@ function var_require()
   r_smart_lib_imgui()
   ihk = r_lib_imcustom_hotkey()
   hk = r_lib_rkeys()
-  wait(2000)
+  wait(2500)
   while not sampIsLocalPlayerSpawned() do wait(1) end
   chklsn()
   while PROVERKA ~= true do wait(100) end
@@ -3138,6 +3142,8 @@ function main_ImColorToHEX()
 
   local r, g, b, a = imgui.ImColor.FromFloat4(SmsReceivedColor.v[1], SmsReceivedColor.v[2], SmsReceivedColor.v[3], SmsReceivedColor.v[4]):GetRGBA()
   SmsReceivedColor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
+
+	inicfg.save(cfg, "support")
 end
 
 function main_copyright()
@@ -3322,7 +3328,7 @@ function RPC_init()
         end
       end
       if color == -5963521 then
-        if text:find("->Вопрос", true) then
+        if text:find("->Вопрос", 1, true) then
           sup_AddQ(text)
           if iSoundQuestion.v then PLAYQ = true end
           if not iHideSmsReceived.v then
@@ -3336,7 +3342,7 @@ function RPC_init()
             return false
           end
         end
-        if text:find("<-", true) and text:find("to", true) then
+        if text:find("<-", 1, true) and text:find("to", 1, true) then
           sup_AddA(text)
           SupportNick, SupportID, ClientNick, ClientID, Answer = string.match(text, "<%-(%a.+)%[(%d+)%] to ([%a_]+)%[(%d+)%]: (.+)")
           asdsadasads, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
@@ -3582,7 +3588,7 @@ function sup_UnAnswered_via_samp_dialog()
       UNANtext = ""
       UNANbase = {}
       for k, v in pairs(UNANindex) do
-        for i = 1, sampGetMaxPlayerId() + 1 do
+        for i = 0, sampGetMaxPlayerId() + 1 do
           if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == v then
             UNANsec = math.fmod(os.time() - iMessanger[v]["Chat"][#iMessanger[v]["Chat"]]["time"], 60)
             if UNANsec < 10 then UNANsec = "0"..UNANsec end
@@ -4748,7 +4754,7 @@ function imgui_messanger_sms_header()
         imgui.PushStyleColor(imgui.Col.Button, imgui.ImColor(0, 255, 0, 113):GetVec4())
       end
       if imgui.Button(smsafk[selecteddialogSMS]) then
-        for i = 1, sampGetMaxPlayerId() do
+        for i = 0, sampGetMaxPlayerId() do
           if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSMS then
             if mode == "samp-rp" then
               sampSendChat("/id "..i)
@@ -5044,7 +5050,7 @@ function imgui_messanger_sup_keyboard()
       elseif getfr ~= nil and toAnswerSDUTY.v:find("/fr (%S+)") then
         imgui_messanger_sup_keyboard_getfr(1)
       else
-        for i = 1, sampGetMaxPlayerId() do
+        for i = 0, sampGetMaxPlayerId() do
           if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSDUTY then k = i break end
           if i == sampGetMaxPlayerId() then k = "-" end
         end
@@ -5077,7 +5083,7 @@ function imgui_messanger_sup_keyboard()
       elseif getfr ~= nil and toAnswerSDUTY.v:find("/fr (%S+)") then
         imgui_messanger_sup_keyboard_getfr(1)
       else
-        for i = 1, sampGetMaxPlayerId() do
+        for i = 0, sampGetMaxPlayerId() do
           if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSDUTY then k = i break end
           if i == sampGetMaxPlayerId() then k = "-" end
         end
@@ -5254,7 +5260,7 @@ function imgui_messanger_sms_keyboard()
     end
     imgui.PushItemWidth(imgui.GetContentRegionAvailWidth() - 70)
     if imgui.InputText("##keyboardSMSKA", toAnswerSMS, imgui.InputTextFlags.EnterReturnsTrue) then
-      for i = 1, sampGetMaxPlayerId() do
+      for i = 0, sampGetMaxPlayerId() do
         if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSMS then k = i break end
         if i == sampGetMaxPlayerId() then k = "-" end
       end
@@ -5274,7 +5280,7 @@ function imgui_messanger_sms_keyboard()
       lockPlayerControl(false)
     end
     if imgui.SameLine() or imgui.Button(u8"Отправить") then
-      for i = 1, sampGetMaxPlayerId() do
+      for i = 0, sampGetMaxPlayerId() do
         if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == selecteddialogSMS then k = i break end
         if i == sampGetMaxPlayerId() then k = "-" end
       end
@@ -6030,7 +6036,7 @@ function imgui_settings_1_sup_hideandcol()
       imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##Acolor1", Acolor1, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
-        cfg.colors.AnswerColor = imgui.ImColor.FromFloat4(Acolor1.v[1], Acolor1.v[2], Acolor1.v[3], Acolor1.v[4]):GetU32()
+        cfg.colors.AnswerColorOthers = imgui.ImColor.FromFloat4(Acolor1.v[1], Acolor1.v[2], Acolor1.v[3], Acolor1.v[4]):GetU32()
         local r, g, b, a = imgui.ImColor.FromFloat4(Acolor1.v[1], Acolor1.v[2], Acolor1.v[3], Acolor1.v[4]):GetRGBA()
         Acolor1_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
         inicfg.save(cfg, "support")
@@ -6086,7 +6092,7 @@ function imgui_settings_2_sms_hideandcol()
       imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##SmsInColor", SmsInColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
-        cfg.colors.QuestionColor = imgui.ImColor.FromFloat4(SmsInColor.v[1], SmsInColor.v[2], SmsInColor.v[3], SmsInColor.v[4]):GetU32()
+        cfg.colors.SmsInColor = imgui.ImColor.FromFloat4(SmsInColor.v[1], SmsInColor.v[2], SmsInColor.v[3], SmsInColor.v[4]):GetU32()
         local r, g, b, a = imgui.ImColor.FromFloat4(SmsInColor.v[1], SmsInColor.v[2], SmsInColor.v[3], SmsInColor.v[4]):GetRGBA()
         SmsInColor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
         inicfg.save(cfg, "support")
@@ -6108,7 +6114,7 @@ function imgui_settings_2_sms_hideandcol()
       imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##SmsOutColor", SmsOutColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
-        cfg.colors.AnswerColor = imgui.ImColor.FromFloat4(SmsOutColor.v[1], SmsOutColor.v[2], SmsOutColor.v[3], SmsOutColor.v[4]):GetU32()
+        cfg.colors.SmsOutColor = imgui.ImColor.FromFloat4(SmsOutColor.v[1], SmsOutColor.v[2], SmsOutColor.v[3], SmsOutColor.v[4]):GetU32()
         local r, g, b, a = imgui.ImColor.FromFloat4(SmsOutColor.v[1], SmsOutColor.v[2], SmsOutColor.v[3], SmsOutColor.v[4]):GetRGBA()
         SmsOutColor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
         inicfg.save(cfg, "support")
@@ -6129,7 +6135,7 @@ function imgui_settings_2_sms_hideandcol()
       imgui.Text("")
       imgui.SameLine()
       if imgui.ColorEdit4("##SmsReceivedColor", SmsReceivedColor, imgui.ColorEditFlags.NoInputs + imgui.ColorEditFlags.NoLabel + imgui.ColorEditFlags.NoAlpha + imgui.ColorEditFlags.NoOptions) then
-        cfg.colors.AnswerColor = imgui.ImColor.FromFloat4(SmsReceivedColor.v[1], SmsReceivedColor.v[2], SmsReceivedColor.v[3], SmsReceivedColor.v[4]):GetU32()
+        cfg.colors.SmsReceivedColor = imgui.ImColor.FromFloat4(SmsReceivedColor.v[1], SmsReceivedColor.v[2], SmsReceivedColor.v[3], SmsReceivedColor.v[4]):GetU32()
         local r, g, b, a = imgui.ImColor.FromFloat4(SmsReceivedColor.v[1], SmsReceivedColor.v[2], SmsReceivedColor.v[3], SmsReceivedColor.v[4]):GetRGBA()
         SmsReceivedColor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
         inicfg.save(cfg, "support")
