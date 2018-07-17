@@ -1,10 +1,19 @@
 --meta
 script_name("Support's Heaven")
 script_author("qrlk")
-script_version("1.01")
+script_version("1.03")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
-script_changelog = [[	v1.01 [16.07.2018]
+script_changelog = [[	v1.03 [16.07.2018]
+* /hh для чата.
+* /hc для чата.
+* FIX: быстрая остановка авто при нажатии хоткея с полем ввода.
+* FIX: sduty - диалог не считается непрочитанным при ответе через /pm.
+* FIX: sms - диалог не считается непрочитанным при ответе через /sms.
+* FIX: списки диалогов смс зависили от настроек sduty.
+	v1.02 [16.07.2018]
+* FIX: изменение цвета вопроса.
+	v1.01 [16.07.2018]
 * FIX: вылет скрипта при поступлении вопроса/ответа.
 * FIX: изменённые цвета теперь сохраняются правильно.
 * FIX: теперь скрипт правильно работает с 0 id.
@@ -19,43 +28,18 @@ do
 
   local inv256
 
-  function encode(str)
-    if not inv256 then
-      inv256 = {}
-      for M = 0, 127 do
-        local inv = -1
-        repeat inv = inv + 2
-        until inv * (2*M + 1) % 256 == 1
-        inv256[M] = inv
-      end
-    end
-    local K, F = Key53, 16384 + Key14
-    return (str:gsub('.',
-      function(m)
-        local L = K % 274877906944  -- 2^38
-        local H = (K - L) / 274877906944
-        local M = H % 128
-        m = m:byte()
-        local c = (m * inv256[M] - (H - M) / 128) % 256
-        K = L * F + H + c + m
-        return ('%02x'):format(c)
-      end
-    ))
-  end
-
   function decode(str)
     local K, F = Key53, 16384 + Key14
     return (str:gsub('%x%x',
       function(c)
-        local L = K % 274877906944  -- 2^38
-        local H = (K - L) / 274877906944
-        local M = H % 128
-        c = tonumber(c, 16)
-        local m = (c + (H - M) / 128) * (2*M + 1) % 256
-        K = L * F + H + c + m
-        return string.char(m)
-      end
-    ))
+      local L = K % 274877906944 -- 2^38
+      local H = (K - L) / 274877906944
+      local M = H % 128
+      c = tonumber(c, 16)
+      local m = (c + (H - M) / 128) * (2 * M + 1) % 256
+      K = L * F + H + c + m
+      return string.char(m)
+    end))
   end
 end
 
@@ -2487,6 +2471,8 @@ function var_cfg()
       fastrespondviachat = true,
       fastrespondviadialog = true,
       unanswereddialog = true,
+      suphh = true,
+      suphc = true,
       fastrespondviadialoglastid = true,
       autosduty = true,
     },
@@ -2683,6 +2669,8 @@ function var_imgui_ImBool()
   main_window_state = imgui.ImBool(false)
   spur_windows_state = imgui.ImBool(false)
   iStats = imgui.ImBool(true)
+  iSupHc = imgui.ImBool(cfg.supfuncs.suphc)
+  iSupHh = imgui.ImBool(cfg.supfuncs.suphh)
 end
 
 function var_imgui_ImFloat4_ImColor()
@@ -2860,6 +2848,64 @@ function main()
         main_window_state.v = not main_window_state.v
       end
     )
+    sampRegisterChatCommand("hh",
+      function(text)
+        if cfg.supfuncs.suphh then
+          if string.find(text, "(%d+) (%d+)") then
+            sup_hh_id = string.match(text, "(%d+)")
+            if gethh ~= nil and text:find("%d+ (%d+)") then
+              gethhnumber = nil
+              gethhnumber = string.match(text, "%d+ (%d+)")
+              if gethhnumber ~= nil then
+                for i = 1, #gethh do
+                  hh = string.match(gethh[i], "ID (%d+)")
+                  if hh and hh == gethhnumber then
+                    sampSendChat("/pm "..sup_hh_id.." "..gethh[i])
+                    break
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    )
+
+    sampRegisterChatCommand("hc",
+      function(text)
+        if cfg.supfuncs.suphc then
+          if string.find(text, "(%d+) (%d+)") or string.find(text, "(%d+) (%S+)") then
+            sup_hc_id = string.match(text, "(%d+)")
+            if gethc ~= nil then
+              if text:find("%d+ (%d+)") then
+                gethcnumber = nil
+                gethcnumber = string.match(text, "%d+ (%d+)")
+                if gethcnumber ~= nil then
+                  for i = 1, #gethc do
+                    hcid, hcname = string.match(gethc[i], "(%d+) | (%S+)")
+                    if hcid and hcid == gethcnumber then
+                      sampSendChat("/pm "..sup_hc_id.." "..gethc[i])
+                      break
+                    end
+                  end
+                end
+              elseif text:find("%d+ (%S+)") then
+                gethcname = nil
+                gethcname = string.match(text, "%d+ (%S+)")
+                for i = 1, #gethc do
+                  hcid, hcname = string.match(gethc[i], "(%d+) | (%S+)")
+                  if hcname and string.find(string.rlower(gethc[i]), string.rlower(gethcname)) then
+                    sampSendChat("/pm "..sup_hc_id.." "..gethc[i])
+                    break
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    )
+
     sampRegisterChatCommand("smsblacklist",
       function()
         blockedlist = "Для удаления из списка создайте диалог в мессендежере и разблокируйте собеседника по правой кнопке мыши.\n\nСписок:\n"
@@ -3143,7 +3189,7 @@ function main_ImColorToHEX()
   local r, g, b, a = imgui.ImColor.FromFloat4(SmsReceivedColor.v[1], SmsReceivedColor.v[2], SmsReceivedColor.v[3], SmsReceivedColor.v[4]):GetRGBA()
   SmsReceivedColor_HEX = "0x"..string.sub(bit.tohex(join_argb(a, r, g, b)), 3, 8)
 
-	inicfg.save(cfg, "support")
+  inicfg.save(cfg, "support")
 end
 
 function main_copyright()
@@ -3301,6 +3347,11 @@ function RPC_init()
           end
           table.insert(sms[smsNick]["Chat"], {text = smsText, Nick = sampGetPlayerNickname(myid), type = "TO", time = os.time()})
           if selecteddialogSMS == smsNick then ScrollToDialogSMS = true end
+          if sampIsPlayerConnected(smsId) then
+            if sms ~= nil and sms[sampGetPlayerNickname(smsId)] ~= nil and sms[sampGetPlayerNickname(smsId)]["Checked"] ~= nil then
+              sms[sampGetPlayerNickname(smsId)]["Checked"] = os.time()
+            end
+          end
           SSDB_trigger = true
           if not iHideSmsOut.v then
             if iReplaceSmsOutColor.v then
@@ -3331,9 +3382,9 @@ function RPC_init()
         if text:find("->Вопрос", 1, true) then
           sup_AddQ(text)
           if iSoundQuestion.v then PLAYQ = true end
-          if not iHideSmsReceived.v then
-            if iReplaceSmsReceivedColor.v then
-              sampAddChatMessage(text, SmsReceivedColor_HEX)
+          if not iHideQuestion.v then
+            if iReplaceQuestionColor.v then
+              sampAddChatMessage(text, Qcolor_HEX)
               return false
             else
               --do nothing
@@ -3389,6 +3440,9 @@ function RPC_init()
             if iSoundAnswer.v then PLAYA = true end
             id, text = string.match(text, "(%d+) (.+)")
             if sampIsPlayerConnected(id) then
+              if iMessanger ~= nil and iMessanger[sampGetPlayerNickname(id)] ~= nil and iMessanger[sampGetPlayerNickname(id)]["Checked"] ~= nil then
+                iMessanger[sampGetPlayerNickname(id)]["Checked"] = os.time()
+              end
               if selecteddialogSDUTY == sampGetPlayerNickname(id) then ScrollToDialogSDUTY = true end
               if DEBUG then
                 local _asdasd, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
@@ -3944,7 +3998,7 @@ function imgui_messanger_FO(mode)
         online = "Оффлайн"
       end
       selecteddialogSDUTY = LASTNICK
-      keyboard = true
+      if not isCharInAnyCar(playerPed) then keyboard = true end
       cfg.messanger.mode = 1
       cfg.only.notepad = false
       cfg.only.logviewer = false
@@ -3997,7 +4051,7 @@ function imgui_messanger_FO(mode)
         end
         selecteddialogSMS = LASTNICK_SMS
         smsafk[selecteddialogSMS] = "CHECK AFK"
-        keyboard = true
+        if not isCharInAnyCar(playerPed) then keyboard = true end
         cfg.messanger.mode = 2
         cfg.only.notepad = false
         ScrollToDialogSMS = true
@@ -4020,7 +4074,7 @@ function imgui_messanger_FO(mode)
     if cfg.messanger.activesms and cfg.messanger.hotkey5 then
       cfg.only.messanger = true
       iAddSMS = true
-      KeyboardFocusResetForNewDialog = true
+      if not isCharInAnyCar(playerPed) then KeyboardFocusResetForNewDialog = true end
       cfg.messanger.mode = 2
       cfg.only.notepad = false
       cfg.only.counter = false
@@ -4264,10 +4318,10 @@ function imgui_messanger_sms_player_list()
   table.sort(smsindex_PINNEDVIEWED, function(a, b) return sms[a]["Chat"][#sms[a]["Chat"]]["time"] > sms[b]["Chat"][#sms[b]["Chat"]]["time"] end)
   table.sort(smsindex_NEW, function(a, b) return sms[a]["Chat"][#sms[a]["Chat"]]["time"] > sms[b]["Chat"][#sms[b]["Chat"]]["time"] end)
   table.sort(smsindex_NEWVIEWED, function(a, b) return sms[a]["Chat"][#sms[a]["Chat"]]["time"] > sms[b]["Chat"][#sms[b]["Chat"]]["time"] end)
-  if iShowUA1.v then imgui_messanger_sms_showdialogs(smsindex_PINNED, "Pinned") end
-  if iShowUA2.v then imgui_messanger_sms_showdialogs(smsindex_PINNEDVIEWED, "Pinned") end
-  if iShowA1.v then imgui_messanger_sms_showdialogs(smsindex_NEW, "NotPinned") end
-  if iShowA2.v then imgui_messanger_sms_showdialogs(smsindex_NEWVIEWED, "NotPinned") end
+  imgui_messanger_sms_showdialogs(smsindex_PINNED, "Pinned")
+  imgui_messanger_sms_showdialogs(smsindex_PINNEDVIEWED, "Pinned")
+  imgui_messanger_sms_showdialogs(smsindex_NEW, "NotPinned")
+  imgui_messanger_sms_showdialogs(smsindex_NEWVIEWED, "NotPinned")
   imgui.EndChild()
 end
 
@@ -6180,7 +6234,37 @@ function imgui_settings_3_sup_funcs()
     imgui.SetTooltip(u8"По нажатию хоткея открывается чат с /pm id последнего вопроса.")
   end
 
+  if imgui.Checkbox("##iSupHh", iSupHh) then
+    cfg.supfuncs.suphh = iSupHh.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if iSupHh.v then
+    imgui.Text(u8("/hh в чате включено."))
+  else
+    imgui.TextDisabled(u8"Включить /hh в чате?")
+  end
+  imgui.SameLine()
+  imgui.TextDisabled("(?)")
+  if imgui.IsItemHovered() then
+    imgui.SetTooltip(u8"/hh id [id дома]\nБерет из house.txt информацию о домах.")
+  end
 
+  if imgui.Checkbox("##iSupHc", iSupHc) then
+    cfg.supfuncs.suphc = iSupHc.v
+    inicfg.save(cfg, "support")
+  end
+  imgui.SameLine()
+  if iSupHc.v then
+    imgui.Text(u8("/hc в чате включено."))
+  else
+    imgui.TextDisabled(u8"Включить /hc в чате?")
+  end
+  imgui.SameLine()
+  imgui.TextDisabled("(?)")
+  if imgui.IsItemHovered() then
+    imgui.SetTooltip(u8"/hc id [id/название тс]\nБерет из vehicle.txt информацию о т/с.")
+  end
 
   if imgui.Checkbox("##iunanswereddialog", iunanswereddialog) then
     cfg.supfuncs.unanswereddialog = iunanswereddialog.v
