@@ -1,25 +1,31 @@
 --meta
 script_name("Support's Heaven")
 script_author("qrlk")
-script_version("1.03")
+script_version("1.04")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
-script_changelog = [[	v1.03 [16.07.2018]
+script_changelog = [[	v1.04 [18.07.2018]
+* Уменьшен буфер поля ввода у мессенджеров.
+* Несколько мелких фиксов.
+
+	v1.03 [17.07.2018]
 * /hh для чата.
 * /hc для чата.
 * FIX: быстрая остановка авто при нажатии хоткея с полем ввода.
 * FIX: sduty - диалог не считается непрочитанным при ответе через /pm.
 * FIX: sms - диалог не считается непрочитанным при ответе через /sms.
 * FIX: списки диалогов смс зависили от настроек sduty.
+
 	v1.02 [16.07.2018]
 * FIX: изменение цвета вопроса.
+
 	v1.01 [16.07.2018]
 * FIX: вылет скрипта при поступлении вопроса/ответа.
 * FIX: изменённые цвета теперь сохраняются правильно.
 * FIX: теперь скрипт правильно работает с 0 id.
+
 	v1.0 [15.07.2018]
-* Релиз скрипта
-]]
+* Релиз скрипта.]]
 --require
 do
   -- This is your secret 67-bit key (any random bits are OK)
@@ -2741,8 +2747,8 @@ function var_imgui_ImInt()
 end
 
 function var_imgui_ImBuffer()
-  toAnswerSDUTY = imgui.ImBuffer(150)
-  toAnswerSMS = imgui.ImBuffer(150)
+  toAnswerSDUTY = imgui.ImBuffer(140)
+  toAnswerSMS = imgui.ImBuffer(140)
   iSMSfilter = imgui.ImBuffer(64)
   iSMSAddDialog = imgui.ImBuffer(64)
   textNotepad = imgui.ImBuffer(65536)
@@ -4761,7 +4767,7 @@ function imgui_messanger_sup_header()
   imgui.BeginChild("##header", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 35), true)
   if iMessanger[selecteddialogSDUTY] ~= nil and iMessanger[selecteddialogSDUTY]["Chat"] ~= nil and iMessanger[selecteddialogSDUTY]["Q"] ~= nil then
     for id = 0, sampGetMaxPlayerId() do
-      if sampIsPlayerConnected(id) and sampGetPlayerNickname(id) == selecteddialogSDUTY then
+      if sampIsPlayerConnected(id) and sampGetPlayerNickname(id) == tostring(selecteddialogSDUTY) then
         sId = id
         break
         if id == sampGetMaxPlayerId() then sId = "-" end
@@ -4772,7 +4778,7 @@ function imgui_messanger_sup_header()
     else
       qtime = "-"
     end
-    imgui.Text(u8:encode("["..tostring(online).."] Ник: "..selecteddialogSDUTY..". ID: "..tonumber(sId)..". LVL: "..sampGetPlayerScore(tonumber(sId))..". Время: "..qtime.." сек."))
+    imgui.Text(u8:encode("["..tostring(online).."] Ник: "..tostring(selecteddialogSDUTY)..". ID: "..tonumber(sId)..". LVL: "..tostring(sampGetPlayerScore(tonumber(sId)))..". Время: "..tostring(qtime).." сек."))
     imgui.SameLine(imgui.GetContentRegionAvailWidth() - 10)
     if imgui.Checkbox("##iHideOtherAnswers", iHideOtherAnswers) then
       cfg.messanger.HideOthersAnswers = iHideOtherAnswers.v
@@ -4789,7 +4795,7 @@ function imgui_messanger_sms_header()
   imgui.BeginChild("##header", imgui.ImVec2(imgui.GetContentRegionAvailWidth(), 35), true)
   if sms[selecteddialogSMS] ~= nil and sms[selecteddialogSMS]["Chat"] ~= nil then
     for id = 0, sampGetMaxPlayerId() + 1 do
-      if sampIsPlayerConnected(id) and sampGetPlayerNickname(id) == selecteddialogSMS then
+      if sampIsPlayerConnected(id) and sampGetPlayerNickname(id) == tostring(selecteddialogSMS) then
         shId = id
         break
       end
@@ -4798,7 +4804,7 @@ function imgui_messanger_sms_header()
     if shId == "-" then
       imgui.Text(u8:encode("[Оффлайн] Ник: "..tostring(selecteddialogSMS)..". Всего сообщений: "..tostring(#sms[selecteddialogSMS]["Chat"]).."."))
     else
-      imgui.Text(u8:encode("[Онлайн] Ник: "..selecteddialogSMS..". ID: "..tostring(shId)..". LVL: "..tostring(sampGetPlayerScore(tonumber(shId)))..". Всего сообщений: "..tostring(#sms[selecteddialogSMS]["Chat"]).."."))
+      imgui.Text(u8:encode("[Онлайн] Ник: "..tostring(selecteddialogSMS)..". ID: "..tostring(shId)..". LVL: "..tostring(sampGetPlayerScore(tonumber(shId)))..". Всего сообщений: "..tostring(#sms[selecteddialogSMS]["Chat"]).."."))
       if smsafk[selecteddialogSMS] == nil then smsafk[selecteddialogSMS] = "CHECK AFK" end
       imgui.SameLine(imgui.GetContentRegionAvailWidth() - imgui.CalcTextSize(smsafk[selecteddialogSMS]).x)
       if smsafk[selecteddialogSMS]:find("s") then
