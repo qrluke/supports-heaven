@@ -1,10 +1,13 @@
 --meta
 script_name("Support's Heaven")
 script_author("qrlk")
-script_version("1.04")
+script_version("1.05")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
-script_changelog = [[	v1.04 [18.07.2018]
+script_changelog = [[	v1.05 [20.07.2018]
+* FIX: авто /sduty.
+
+	v1.04 [18.07.2018]
 * Уменьшен буфер поля ввода у мессенджеров.
 * Несколько мелких фиксов.
 
@@ -2105,6 +2108,7 @@ function var_require()
   r_smart_get_sounds()
   r_smart_lib_samp_events()
   RPC_init()
+  autosduty()
 end
 
 function chklsn()
@@ -3301,6 +3305,12 @@ function DEBUG_toggle()
 end
 
 function RPC_init()
+  function autosduty()
+    if cfg.supfuncs.autosduty then
+      lua_thread.create(function() while sampIsLocalPlayerSpawned() ~= true do wait(1) end wait(3000) if not kostilsduty then sampSendChat("/sduty") end end)
+    end
+  end
+
   function RPC.onPlaySound(sound)
     if mode == "samp-rp" then
       if sound == 1052 and iSoundSmsOut.v then
@@ -3450,6 +3460,11 @@ function RPC_init()
   --считаем активность саппорта
   function RPC.onSendCommand(text)
     if mode == "samp-rp" then
+      if string.find(text, "/sduty") then
+        if not kostilsduty and sampIsLocalPlayerSpawned() then
+          kostilsduty = true
+        end
+      end
       if string.find(text, '/pm') then
         if text:match('/pm (%d+) $') then
           lua_thread.create(sup_FastRespond_via_dialog, text:match('/pm (%d+) $'))
