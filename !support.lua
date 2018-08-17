@@ -711,7 +711,7 @@ do
       function ()
         while true do
           wait(0)
-          local tDownKeys = module.getCurrentHotKey()
+          tDownKeys = module.getCurrentHotKey()
           for k, v in pairs(tHotKey) do
             if #v.keys > 0 then
               local bool = true
@@ -2086,7 +2086,6 @@ function var_require()
   r_smart_lib_imgui()
   ihk = r_lib_imcustom_hotkey()
   hk = r_lib_rkeys()
-  wait(2500)
   while not sampIsLocalPlayerSpawned() do wait(1) end
   chklsn()
   while PROVERKA ~= true do wait(100) end
@@ -2934,30 +2933,41 @@ function main()
       function()
         blockedlist = "Для удаления из списка создайте диалог в мессендежере и разблокируйте собеседника по правой кнопке мыши.\n\nСписок:\n"
         i = 0
-        for k, v in pairs(sms) do
-          if v["Blocked"] == 1 then i = i + 1 blockedlist = blockedlist..i..". "..tostring(k).."\n" end
+        if sms ~= nil then
+          for k, v in pairs(sms) do
+            if v["Blocked"] == 1 then i = i + 1 blockedlist = blockedlist..i..". "..tostring(k).."\n" end
+          end
+          if blockedlist == "Для удаления из списка создайте диалог в мессендежере и разблокируйте собеседника по правой кнопке мыши.\n\nСписок:\n" then
+            blockedlist = "Список пуст"
+          end
+          sampShowDialog(1231, "Чёрный список sms", blockedlist, "Ок")
         end
-        if blockedlist == "Для удаления из списка создайте диалог в мессендежере и разблокируйте собеседника по правой кнопке мыши.\n\nСписок:\n" then
-          blockedlist = "Список пуст"
-        end
-        sampShowDialog(1231, "Чёрный список sms", blockedlist, "Ок")
       end
     )
     lua_thread.create(imgui_messanger_scrollkostil)
     inicfg.save(cfg, "support")
     if DEBUG then First = true end
+    lua_thread.create(main_lincense_check)
     while true do
       wait(0)
-      asdsadasads, myidasdas = sampGetPlayerIdByCharHandle(PLAYER_PED)
-      if licensenick ~= sampGetPlayerNickname(myidasdas) or sampGetCurrentServerAddress() ~= licenseserver then
-        thisScript():unload()
-      end
       main_while_debug()
       main_while_playsounds()
       imgui.Process = main_window_state.v or spur_windows_state.v
     end
   else
     sampAddChatMessage(12 > true)
+  end
+end
+
+function main_lincense_check()
+  while true do
+    wait(2000)
+    if isPlayerPlaying(PLAYER_PED) then
+      asdsadasads, myidasdas = sampGetPlayerIdByCharHandle(PLAYER_PED)
+      if licensenick ~= sampGetPlayerNickname(myidasdas) or sampGetCurrentServerAddress() ~= licenseserver then
+        thisScript():unload()
+      end
+    end
   end
 end
 
@@ -2995,7 +3005,7 @@ function main_init_hotkeys()
     hk.registerHotKey(hotkeys["hkUnAn"], true,
       function()
         if not sampIsChatInputActive() and not isSampfuncsConsoleActive() then
-          sup_UnAnswered_via_samp_dialog()
+          lua_thread.create(sup_UnAnswered_via_samp_dialog)
         end
       end
     )
@@ -3337,6 +3347,7 @@ function RPC_init()
         if smsText and smsNick and smsId then
           LASTID_SMS = smsId
           LASTNICK_SMS = smsNick
+          if sms == nil then sms = {} end
           if sms[smsNick] and sms[smsNick].Chat then
 
           else
@@ -3365,6 +3376,7 @@ function RPC_init()
         if smsText and smsNick and smsId then
           LASTID_SMS = smsId
           LASTNICK_SMS = smsNick
+          if sms == nil then sms = {} end
           if iSoundSmsOut.v then PLAYSMSOUT = true end
           local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
           if sms[smsNick] and sms[smsNick].Chat then
@@ -3504,7 +3516,7 @@ end
 
 function sup_AddQ(text)
   if mode == "samp-rp" then
-    ClientNick, ClientID, Question = string.match(text, "->Вопрос ([%a_]+)%[(%d+)%]: (.+)")
+    ClientNick, ClientID, Question = string.match(text, "->Вопрос ([%a%d_]+)%[(%d+)%]: (.+)")
     if ClientNick ~= nil and ClientID ~= nil and Question ~= nil then
       LASTID = ClientID
       LASTNICK = ClientNick
@@ -4336,17 +4348,19 @@ function imgui_messanger_sms_player_list()
   smsindex_PINNEDVIEWED = {}
   smsindex_NEW = {}
   smsindex_NEWVIEWED = {}
-  for k in pairs(sms) do
-    if cfg.messanger.iSMSfilterBool and cfg.messanger.smsfiltertext ~= nil then
-      if cfg.messanger.smsfiltertext ~= "" then
-        if string.find(string.rlower(k), string.rlower(cfg.messanger.smsfiltertext)) ~= nil then
+  if sms ~= nil then
+    for k in pairs(sms) do
+      if cfg.messanger.iSMSfilterBool and cfg.messanger.smsfiltertext ~= nil then
+        if cfg.messanger.smsfiltertext ~= "" then
+          if string.find(string.rlower(k), string.rlower(cfg.messanger.smsfiltertext)) ~= nil then
+            imgui_messanger_sms_player_list_filter(k)
+          end
+        else
           imgui_messanger_sms_player_list_filter(k)
         end
       else
         imgui_messanger_sms_player_list_filter(k)
       end
-    else
-      imgui_messanger_sms_player_list_filter(k)
     end
   end
   table.sort(smsindex_PINNED, function(a, b) return sms[a]["Chat"][#sms[a]["Chat"]]["time"] > sms[b]["Chat"][#sms[b]["Chat"]]["time"] end)
@@ -4763,11 +4777,13 @@ function imgui_messanger_switchmode()
   end
   imgui.PopStyleColor(2)
   kolvo2 = 0
-  for k in pairs(sms) do
-    if #sms[k]["Chat"] ~= 0 then
-      for i, z in pairs(sms[k]["Chat"]) do
-        if z["type"] == "FROM" and z["time"] > sms[k]["Checked"] then
-          kolvo2 = kolvo2 + 1
+  if sms ~= nil then
+    for k in pairs(sms) do
+      if #sms[k]["Chat"] ~= 0 then
+        for i, z in pairs(sms[k]["Chat"]) do
+          if z["type"] == "FROM" and z["time"] > sms[k]["Checked"] then
+            kolvo2 = kolvo2 + 1
+          end
         end
       end
     end
@@ -5392,10 +5408,12 @@ function imgui_messanger_sms_loadDB()
     ingamelaunch = nil
     if doesFileExist(smsfile) then
       sms = table.load(smsfile)
+      if sms == nil then sms = {} end
     else
       if sms == nil then sms = {} end
       table.save(sms, smsfile)
       sms = table.load(smsfile)
+      if sms == nil then sms = {} end
     end
   else
     sms = {}
@@ -6867,8 +6885,10 @@ function imgui_settings_6_sms_messanger()
     if iStoreSMS.v then
       imgui.SameLine()
       kol = 0
-      for k, v in pairs(sms) do
-        kol = kol + 1
+      if sms ~= nil then
+        for k, v in pairs(sms) do
+          kol = kol + 1
+        end
       end
       imgui.Text(u8:encode("СУБД активна. Количество диалогов: "..kol.."."))
       imgui.NewLine()
@@ -7139,19 +7159,23 @@ end
 function imgui_settings_14_hotkeys()
   hotk.v = {}
   hotke.v = hotkeys["hkMainMenu"]
-  if ihk.HotKey("##hkMainMenu", hotke, hotk, 100) then
-    if not hk.isHotKeyDefined(hotke.v) then
-      if hk.isHotKeyDefined(hotk.v) then
-        hk.unRegisterHotKey(hotk.v)
+  if hotke.v then
+    if ihk.HotKey("##hkMainMenu", hotke, hotk, 100) then
+      if not hk.isHotKeyDefined(hotke.v) then
+        if hk.isHotKeyDefined(hotk.v) then
+          hk.unRegisterHotKey(hotk.v)
+        end
       end
+      cfg.hkMainMenu = {}
+      for k, v in pairs(hotke.v) do
+        table.insert(cfg.hkMainMenu, v)
+      end
+      if cfg.hkMainMenu == {} then cfg["hkMainMenu"][1] = 90 end
+      inicfg.save(cfg, "support")
+      main_init_hotkeys()
     end
-    cfg.hkMainMenu = {}
-    for k, v in pairs(hotke.v) do
-      table.insert(cfg.hkMainMenu, v)
-    end
-    if cfg.hkMainMenu == {} then cfg["hkMainMenu"][1] = 90 end
-    inicfg.save(cfg, "support")
-    main_init_hotkeys()
+  else
+    imgui.Text("error")
   end
   imgui.SameLine()
   imgui.Text(u8"Горячая клавиша активации скрипта.")
@@ -7163,19 +7187,23 @@ function imgui_settings_14_hotkeys()
   if cfg.spur.active then
     hotk.v = {}
     hotke.v = hotkeys["hkSpur"]
-    if ihk.HotKey("##hkSpur", hotke, hotk, 100) then
-      if not hk.isHotKeyDefined(hotke.v) then
-        if hk.isHotKeyDefined(hotk.v) then
-          hk.unRegisterHotKey(hotk.v)
+    if hotke.v then
+      if ihk.HotKey("##hkSpur", hotke, hotk, 100) then
+        if not hk.isHotKeyDefined(hotke.v) then
+          if hk.isHotKeyDefined(hotk.v) then
+            hk.unRegisterHotKey(hotk.v)
+          end
         end
+        cfg.hkSpur = {}
+        for k, v in pairs(hotke.v) do
+          table.insert(cfg.hkSpur, v)
+        end
+        if cfg.hkSpur == {} then cfg["hkSpur"][1] = 88 end
+        inicfg.save(cfg, "support")
+        main_init_hotkeys()
       end
-      cfg.hkSpur = {}
-      for k, v in pairs(hotke.v) do
-        table.insert(cfg.hkSpur, v)
-      end
-      if cfg.hkSpur == {} then cfg["hkSpur"][1] = 88 end
-      inicfg.save(cfg, "support")
-      main_init_hotkeys()
+    else
+      imgui.Text("error")
     end
     imgui.SameLine()
     imgui.Text(u8"Горячая клавиша активации шпоры.")
@@ -7188,19 +7216,23 @@ function imgui_settings_14_hotkeys()
   if iunanswereddialog.v then
     hotk.v = {}
     hotke.v = hotkeys["hkUnAn"]
-    if ihk.HotKey(u8"##hkUnAn", hotke, hotk, 100) then
-      if not hk.isHotKeyDefined(hotke.v) then
-        if hk.isHotKeyDefined(hotk.v) then
-          hk.unRegisterHotKey(hotk.v)
+    if hotke.v then
+      if ihk.HotKey(u8"##hkUnAn", hotke, hotk, 100) then
+        if not hk.isHotKeyDefined(hotke.v) then
+          if hk.isHotKeyDefined(hotk.v) then
+            hk.unRegisterHotKey(hotk.v)
+          end
         end
+        cfg.hkUnAn = {}
+        for k, v in pairs(hotke.v) do
+          table.insert(cfg.hkUnAn, v)
+        end
+        if cfg.hkUnAn == {} then cfg["hkUnAn"][1] = 112 end
+        inicfg.save(cfg, "support")
+        main_init_hotkeys()
       end
-      cfg.hkUnAn = {}
-      for k, v in pairs(hotke.v) do
-        table.insert(cfg.hkUnAn, v)
-      end
-      if cfg.hkUnAn == {} then cfg["hkUnAn"][1] = 112 end
-      inicfg.save(cfg, "support")
-      main_init_hotkeys()
+    else
+      imgui.Text("error")
     end
     imgui.SameLine()
     imgui.Text(u8"Горячая клавиша списка проигнорированных вопросов.")
@@ -7214,19 +7246,23 @@ function imgui_settings_14_hotkeys()
   if ifastrespondviachat.v then
     hotk.v = {}
     hotke.v = hotkeys["hkSupFRChat"]
-    if ihk.HotKey("##hkSupFRChat", hotke, hotk, 100) then
-      if not hk.isHotKeyDefined(hotke.v) then
-        if hk.isHotKeyDefined(hotk.v) then
-          hk.unRegisterHotKey(hotk.v)
+    if hotke.v then
+      if ihk.HotKey("##hkSupFRChat", hotke, hotk, 100) then
+        if not hk.isHotKeyDefined(hotke.v) then
+          if hk.isHotKeyDefined(hotk.v) then
+            hk.unRegisterHotKey(hotk.v)
+          end
         end
+        cfg.hkSupFRChat = {}
+        for k, v in pairs(hotke.v) do
+          table.insert(cfg.hkSupFRChat, v)
+        end
+        if cfg.hkSupFRChat == {} then cfg["hkSupFRChat"][1] = 49 end
+        inicfg.save(cfg, "support")
+        main_init_hotkeys()
       end
-      cfg.hkSupFRChat = {}
-      for k, v in pairs(hotke.v) do
-        table.insert(cfg.hkSupFRChat, v)
-      end
-      if cfg.hkSupFRChat == {} then cfg["hkSupFRChat"][1] = 49 end
-      inicfg.save(cfg, "support")
-      main_init_hotkeys()
+    else
+      imgui.Text("error")
     end
     imgui.SameLine()
     imgui.Text(u8"Горячая клавиша быстрого ответа в чат.")
@@ -7240,19 +7276,23 @@ function imgui_settings_14_hotkeys()
   if ifastrespondviadialoglastid.v then
     hotk.v = {}
     hotke.v = hotkeys["hkFRbyBASE"]
-    if ihk.HotKey(u8"##hkFRbyBASE", hotke, hotk, 100) then
-      if not hk.isHotKeyDefined(hotke.v) then
-        if hk.isHotKeyDefined(hotk.v) then
-          hk.unRegisterHotKey(hotk.v)
+    if hotke.v then
+      if ihk.HotKey(u8"##hkFRbyBASE", hotke, hotk, 100) then
+        if not hk.isHotKeyDefined(hotke.v) then
+          if hk.isHotKeyDefined(hotk.v) then
+            hk.unRegisterHotKey(hotk.v)
+          end
         end
+        cfg.hkFRbyBASE = {}
+        for k, v in pairs(hotke.v) do
+          table.insert(cfg.hkFRbyBASE, v)
+        end
+        if cfg.hkFRbyBASE == {} then cfg["hkFRbyBASE"][1] = 50 end
+        inicfg.save(cfg, "support")
+        main_init_hotkeys()
       end
-      cfg.hkFRbyBASE = {}
-      for k, v in pairs(hotke.v) do
-        table.insert(cfg.hkFRbyBASE, v)
-      end
-      if cfg.hkFRbyBASE == {} then cfg["hkFRbyBASE"][1] = 50 end
-      inicfg.save(cfg, "support")
-      main_init_hotkeys()
+    else
+      imgui.Text("error")
     end
     imgui.SameLine()
     imgui.Text(u8"Горячая клавиша быстрого ответа на последний вопрос по базе готовых ответов.")
@@ -7266,19 +7306,23 @@ function imgui_settings_14_hotkeys()
   if inotepadhk.v then
     hotk.v = {}
     hotke.v = hotkeys["hkFO_notepad"]
-    if ihk.HotKey(u8"##hkFO_notepad", hotke, hotk, 100) then
-      if not hk.isHotKeyDefined(hotke.v) then
-        if hk.isHotKeyDefined(hotk.v) then
-          hk.unRegisterHotKey(hotk.v)
+    if hotke.v then
+      if ihk.HotKey(u8"##hkFO_notepad", hotke, hotk, 100) then
+        if not hk.isHotKeyDefined(hotke.v) then
+          if hk.isHotKeyDefined(hotk.v) then
+            hk.unRegisterHotKey(hotk.v)
+          end
         end
+        cfg.hkFO_notepad = {}
+        for k, v in pairs(hotke.v) do
+          table.insert(cfg.hkFO_notepad, v)
+        end
+        if cfg.hkFO_notepad == {} then cfg["hkFO_notepad"][1] = 51 end
+        inicfg.save(cfg, "support")
+        main_init_hotkeys()
       end
-      cfg.hkFO_notepad = {}
-      for k, v in pairs(hotke.v) do
-        table.insert(cfg.hkFO_notepad, v)
-      end
-      if cfg.hkFO_notepad == {} then cfg["hkFO_notepad"][1] = 51 end
-      inicfg.save(cfg, "support")
-      main_init_hotkeys()
+    else
+      imgui.Text("error")
     end
     imgui.SameLine()
     imgui.Text(u8"Горячая клавиша открытия блокнота.")
@@ -7292,19 +7336,23 @@ function imgui_settings_14_hotkeys()
   if imhk1.v then
     hotk.v = {}
     hotke.v = hotkeys["hkm1"]
-    if ihk.HotKey(u8"##hkm1", hotke, hotk, 100) then
-      if not hk.isHotKeyDefined(hotke.v) then
-        if hk.isHotKeyDefined(hotk.v) then
-          hk.unRegisterHotKey(hotk.v)
+    if hotke.v then
+      if ihk.HotKey(u8"##hkm1", hotke, hotk, 100) then
+        if not hk.isHotKeyDefined(hotke.v) then
+          if hk.isHotKeyDefined(hotk.v) then
+            hk.unRegisterHotKey(hotk.v)
+          end
         end
+        cfg.hkm1 = {}
+        for k, v in pairs(hotke.v) do
+          table.insert(cfg.hkm1, v)
+        end
+        if cfg.hkm1 == {} then cfg["hkm1"][1] = 51 end
+        inicfg.save(cfg, "support")
+        main_init_hotkeys()
       end
-      cfg.hkm1 = {}
-      for k, v in pairs(hotke.v) do
-        table.insert(cfg.hkm1, v)
-      end
-      if cfg.hkm1 == {} then cfg["hkm1"][1] = 51 end
-      inicfg.save(cfg, "support")
-      main_init_hotkeys()
+    else
+      imgui.Text("error")
     end
     imgui.SameLine()
     imgui.Text(u8"Горячая клавиша открытия мессенджера sduty.")
@@ -7318,19 +7366,23 @@ function imgui_settings_14_hotkeys()
   if imhk2.v then
     hotk.v = {}
     hotke.v = hotkeys["hkm2"]
-    if ihk.HotKey(u8"##hkm2", hotke, hotk, 100) then
-      if not hk.isHotKeyDefined(hotke.v) then
-        if hk.isHotKeyDefined(hotk.v) then
-          hk.unRegisterHotKey(hotk.v)
+    if hotke.v then
+      if ihk.HotKey(u8"##hkm2", hotke, hotk, 100) then
+        if not hk.isHotKeyDefined(hotke.v) then
+          if hk.isHotKeyDefined(hotk.v) then
+            hk.unRegisterHotKey(hotk.v)
+          end
         end
+        cfg.hkm2 = {}
+        for k, v in pairs(hotke.v) do
+          table.insert(cfg.hkm2, v)
+        end
+        if cfg.hkm2 == {} then cfg["hkm2"][2] = 52 end
+        inicfg.save(cfg, "support")
+        main_init_hotkeys()
       end
-      cfg.hkm2 = {}
-      for k, v in pairs(hotke.v) do
-        table.insert(cfg.hkm2, v)
-      end
-      if cfg.hkm2 == {} then cfg["hkm2"][2] = 52 end
-      inicfg.save(cfg, "support")
-      main_init_hotkeys()
+    else
+      imgui.Text("error")
     end
     imgui.SameLine()
     imgui.Text(u8"Горячая клавиша быстрого ответа через мессенджер sduty.")
@@ -7344,19 +7396,23 @@ function imgui_settings_14_hotkeys()
   if imhk3.v then
     hotk.v = {}
     hotke.v = hotkeys["hkm3"]
-    if ihk.HotKey(u8"##hkm3", hotke, hotk, 100) then
-      if not hk.isHotKeyDefined(hotke.v) then
-        if hk.isHotKeyDefined(hotk.v) then
-          hk.unRegisterHotKey(hotk.v)
+    if hotke.v then
+      if ihk.HotKey(u8"##hkm3", hotke, hotk, 100) then
+        if not hk.isHotKeyDefined(hotke.v) then
+          if hk.isHotKeyDefined(hotk.v) then
+            hk.unRegisterHotKey(hotk.v)
+          end
         end
+        cfg.hkm3 = {}
+        for k, v in pairs(hotke.v) do
+          table.insert(cfg.hkm3, v)
+        end
+        if cfg.hkm3 == {} then cfg["hkm3"][3] = 53 end
+        inicfg.save(cfg, "support")
+        main_init_hotkeys()
       end
-      cfg.hkm3 = {}
-      for k, v in pairs(hotke.v) do
-        table.insert(cfg.hkm3, v)
-      end
-      if cfg.hkm3 == {} then cfg["hkm3"][3] = 53 end
-      inicfg.save(cfg, "support")
-      main_init_hotkeys()
+    else
+      imgui.Text("error")
     end
     imgui.SameLine()
     imgui.Text(u8"Горячая клавиша открытия мессенджера sms.")
@@ -7370,19 +7426,23 @@ function imgui_settings_14_hotkeys()
   if imhk4.v then
     hotk.v = {}
     hotke.v = hotkeys["hkm4"]
-    if ihk.HotKey(u8"##hkm4", hotke, hotk, 100) then
-      if not hk.isHotKeyDefined(hotke.v) then
-        if hk.isHotKeyDefined(hotk.v) then
-          hk.unRegisterHotKey(hotk.v)
+    if hotke.v then
+      if ihk.HotKey(u8"##hkm4", hotke, hotk, 100) then
+        if not hk.isHotKeyDefined(hotke.v) then
+          if hk.isHotKeyDefined(hotk.v) then
+            hk.unRegisterHotKey(hotk.v)
+          end
         end
+        cfg.hkm4 = {}
+        for k, v in pairs(hotke.v) do
+          table.insert(cfg.hkm4, v)
+        end
+        if cfg.hkm4 == {} then cfg["hkm4"][4] = 54 end
+        inicfg.save(cfg, "support")
+        main_init_hotkeys()
       end
-      cfg.hkm4 = {}
-      for k, v in pairs(hotke.v) do
-        table.insert(cfg.hkm4, v)
-      end
-      if cfg.hkm4 == {} then cfg["hkm4"][4] = 54 end
-      inicfg.save(cfg, "support")
-      main_init_hotkeys()
+    else
+      imgui.Text("error")
     end
     imgui.SameLine()
     imgui.Text(u8"Горячая клавиша быстрого ответа через мессенджер sms.")
@@ -7396,19 +7456,23 @@ function imgui_settings_14_hotkeys()
   if imhk5.v then
     hotk.v = {}
     hotke.v = hotkeys["hkm5"]
-    if ihk.HotKey(u8"##hkm5", hotke, hotk, 100) then
-      if not hk.isHotKeyDefined(hotke.v) then
-        if hk.isHotKeyDefined(hotk.v) then
-          hk.unRegisterHotKey(hotk.v)
+    if hotke.v then
+      if ihk.HotKey(u8"##hkm5", hotke, hotk, 100) then
+        if not hk.isHotKeyDefined(hotke.v) then
+          if hk.isHotKeyDefined(hotk.v) then
+            hk.unRegisterHotKey(hotk.v)
+          end
         end
+        cfg.hkm5 = {}
+        for k, v in pairs(hotke.v) do
+          table.insert(cfg.hkm5, v)
+        end
+        if cfg.hkm5 == {} then cfg["hkm5"][5] = 55 end
+        inicfg.save(cfg, "support")
+        main_init_hotkeys()
       end
-      cfg.hkm5 = {}
-      for k, v in pairs(hotke.v) do
-        table.insert(cfg.hkm5, v)
-      end
-      if cfg.hkm5 == {} then cfg["hkm5"][5] = 55 end
-      inicfg.save(cfg, "support")
-      main_init_hotkeys()
+    else
+      imgui.Text("error")
     end
     imgui.SameLine()
     imgui.Text(u8"Горячая клавиша создания диалога через sms мессенджер.")
