@@ -1,10 +1,19 @@
 --meta
 script_name("Support's Heaven")
 script_author("qrlk")
-script_version("1.05")
+script_version("1.06")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
-script_changelog = [[	v1.05 [20.07.2018]
+script_changelog = [[	v1.06 [21.08.2018]
+* FIX: вылет "in function 'sampGetPlayerNickname'".
+* FIX: вылет "cannot resume non-suspended coroutine stack traceback: [C]: in function 'sampGetCurrentServerAddress'"
+* FIX: вылет "cannot resume non-suspended coroutine stack traceback: [C]: in function 'sampGetPlayerNickname'"
+* FIX: вылет "attempt to index global 'sms' (a nil value)"
+* FIX: вылет "bad argument #1 to 'ipairs' (table expected, got nil) in function 'getKeysName'"
+* FIX: вылет "bad argument #1 to 'pairs' (table expected, got nil) in function 'imgui_settings_6_sms_messanger'"
+* FIX: теперь скрипт должен корректно захватывать ники игроков с цифрами.
+
+	v1.05 [20.07.2018]
 * FIX: авто /sduty.
 
 	v1.04 [18.07.2018]
@@ -2083,11 +2092,11 @@ function var_require()
     thisScript():unload()
   end
   chkupd()
+	chklsn()
+  while not sampIsLocalPlayerSpawned() do wait(1) end
   r_smart_lib_imgui()
   ihk = r_lib_imcustom_hotkey()
   hk = r_lib_rkeys()
-  while not sampIsLocalPlayerSpawned() do wait(1) end
-  chklsn()
   while PROVERKA ~= true do wait(100) end
   imgui_init()
   ihk._SETTINGS.noKeysMessage = ("-")
@@ -3317,7 +3326,7 @@ end
 function RPC_init()
   function autosduty()
     if cfg.supfuncs.autosduty then
-      lua_thread.create(function() while sampIsLocalPlayerSpawned() ~= true do wait(1) end wait(3000) if not kostilsduty then sampSendChat("/sduty") end end)
+      lua_thread.create(function()   while not sampIsLocalPlayerSpawned() do wait(1) end wait(5500) if not kostilsduty then sampSendChat("/sduty") end end)
     end
   end
 
