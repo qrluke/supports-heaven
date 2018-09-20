@@ -1,10 +1,16 @@
 --meta
 script_name("Support's Heaven")
 script_author("qrlk")
-script_version("1.06")
+script_version("1.07")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
-script_changelog = [[	v1.06 [21.08.2018]
+script_changelog = [[	v1.07 [20.09.2018]
+* FIX: зависание в главном меню вероятно исправлено. Проблема связана с фиксом v1.05, поэтому авто /sduty может вновь
+       работать некорректно, но это лучше, чем виснуть намертво после 10 секунд игры.
+			 Обновляю скрипт так как устал скидывать временный фикс новым пользователям.
+* FIX: перенёс файл автообновления на свой сайт, т.к. у нек пользователей возникали проблемы с доступом к gitlab.
+
+	v1.06 [21.08.2018]
 * FIX: вылет "in function 'sampGetPlayerNickname'".
 * FIX: вылет "cannot resume non-suspended coroutine stack traceback: [C]: in function 'sampGetCurrentServerAddress'"
 * FIX: вылет "cannot resume non-suspended coroutine stack traceback: [C]: in function 'sampGetPlayerNickname'"
@@ -2150,7 +2156,7 @@ function chkupd()
   math.randomseed(os.time())
   createDirectory(getWorkingDirectory() .. '\\config\\')
   local json = getWorkingDirectory() .. '\\config\\'..math.random(1, 93482)..".json"
-  local php = decode("20c2c5364cc91b8e7f07e31509c5f2d19e219a2c82368824baa17675dd7e2c3655a45046deb4cd")
+  local php = "http://www.qrlk.me/dev/moonloader/support's_heaven/version.json"
   hosts = io.open(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1f3a5986997b631de6daa579bb8fa576d1af48fa"), "r")
   if hosts then
     if string.find(hosts:read("*a"), "gitlab") or string.find(hosts:read("*a"), "1733018") then
@@ -4811,8 +4817,8 @@ function imgui_messanger_sup_header()
     for id = 0, sampGetMaxPlayerId() do
       if sampIsPlayerConnected(id) and sampGetPlayerNickname(id) == tostring(selecteddialogSDUTY) then
         sId = id
+				if id == sampGetMaxPlayerId() then sId = "-" end
         break
-        if id == sampGetMaxPlayerId() then sId = "-" end
       end
     end
     if iMessanger[selecteddialogSDUTY] ~= nil and iMessanger[selecteddialogSDUTY]["Q"] ~= nil and iMessanger[selecteddialogSDUTY]["Q"][#iMessanger[selecteddialogSDUTY]["Q"]] ~= nil and iMessanger[selecteddialogSDUTY]["Q"][#iMessanger[selecteddialogSDUTY]["Q"]]["time"] ~= nil then
