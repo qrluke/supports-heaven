@@ -1,6 +1,6 @@
 <?php
 
-$conn = new mysqli('localhost', 'f0142362_base', 'a8OCFlE8', 'f0142362_base');
+                $conn = new mysqli('localhost', 'f0234519_base', 'ai0TPqOR', 'f0234519_base');
 
 $PRICE = "300 RUB";
 $BUYLINK = "http://vk.com/qrlk.mods";
@@ -38,25 +38,40 @@ if (isset($_GET['iam'])) {
         $query = "SELECT `Код` FROM `sup_clients` WHERE `Ник` = \"" . $keywords[1] . "\" and `Сервер` = \"" . $keywords[4] . "\"";
 
         $result = mysqli_fetch_array($conn->query($query));
+        file_put_contents("license.log", date('Y-m-d H:i:s') . " - " . $query . "\n", FILE_APPEND);
         if (isset($result[0])) {
             $query = "SELECT `Мод` FROM `sup_clients` WHERE `Ник` = \"" . $keywords[1] . "\" and `Сервер` = \"" . $keywords[4] . "\" and `Код` = \"" . $keywords[18] . "\"";
             $mod = mysqli_fetch_array($conn->query($query));
+            file_put_contents("license.log", date('Y-m-d H:i:s') . " - " . $query . "\n", FILE_APPEND);
         } else {
             $query = "SELECT `Ник` FROM `sup_clients` WHERE `Код` = \"" . $keywords[18] . "\"";
             $keys = mysqli_fetch_array($conn->query($query));
+            file_put_contents("license.log", date('Y-m-d H:i:s') . " - " . $query . "\n", FILE_APPEND);
             if ($keys[0] == "-") {
                 $query = "UPDATE sup_clients SET `Ник` = \"" . $keywords[1] . "\" WHERE `Код` = '" . $keywords[18] . "'";
                 $conn->query($query);
+                file_put_contents("license.log", date('Y-m-d H:i:s') . " - " . $query . "\n", FILE_APPEND);
                 $query = "UPDATE sup_clients SET `Сервер` = \"" . $keywords[4] . "\" WHERE `Код` = '" . $keywords[18] . "'";
                 $conn->query($query);
+                file_put_contents("license.log", date('Y-m-d H:i:s') . " - " . $query . "\n", FILE_APPEND);
                 $query = "UPDATE sup_clients SET `Дата` = \"" . date('Y-m-d H:i:s') . "\" WHERE `Код` = '" . $keywords[18] . "'";
                 $conn->query($query);
+                if ($keywords[4] == "185.169.134.67" or $keywords[4] == "185.169.134.68") {
+                  $query = "UPDATE sup_clients SET `Мод` = \"evolve-rp\" WHERE `Код` = '" . $keywords[18] . "'";
+                  $conn->query($query);
+                        } else {
+                          $query = "UPDATE sup_clients SET `Мод` = \"samp-rp\" WHERE `Код` = '" . $keywords[18] . "'";
+                          $conn->query($query);
+                          }
+                file_put_contents("license.log", date('Y-m-d H:i:s') . " - " . $query . "\n", FILE_APPEND);
                 $query = "SELECT `Код` FROM `sup_clients` WHERE `Ник` = \"" . $keywords[1] . "\" and `Сервер` = \"" . $keywords[4] . "\"";
 
                 $result = mysqli_fetch_array($conn->query($query));
+                file_put_contents("license.log", date('Y-m-d H:i:s') . " - " . $query . "\n", FILE_APPEND);
                 if (isset($result[0])) {
                     $query = "SELECT `Мод` FROM `sup_clients` WHERE `Ник` = \"" . $keywords[1] . "\" and `Сервер` = \"" . $keywords[4] . "\"";
                     $mod = mysqli_fetch_array($conn->query($query));
+                    file_put_contents("license.log", date('Y-m-d H:i:s') . " - " . $query . "\n", FILE_APPEND);
                 }
             }
         }
@@ -66,6 +81,7 @@ if (isset($_GET['iam'])) {
         }
 
         $conn->query($sql);
+        file_put_contents("license.log", date('Y-m-d H:i:s') . " - " . $sql . "\n", FILE_APPEND);
         $conn->close();
     }
 }
