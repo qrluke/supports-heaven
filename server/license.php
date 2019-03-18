@@ -15,9 +15,9 @@ function mc_decrypt($decrypt, $mc_key) {
 }
 
 if (isset($_GET['iam'])) {
-    $json = file_get_contents('http://worldclockapi.com/api/json/utc/now');
+    $json = file_get_contents('http://worldtimeapi.org/api/timezone/Europe/Moscow');
     $obj = json_decode($json);
-    $publickey = substr($obj->currentDateTime, 0, 13) . "chk";
+    $publickey = substr($obj->datetime, 0, 13) . "chk";
     $decrypted = mc_decrypt($_GET['iam'], $publickey);
     $keywords = preg_split("/[\s,]+/", $decrypted);
 

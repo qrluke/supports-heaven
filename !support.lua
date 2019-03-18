@@ -1,7 +1,7 @@
 --meta
 script_name("Support's Heaven")
 script_author("qrlk")
-script_version("1.09")
+script_version("1.10")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
 script_changelog = [[	v1.09 [11.11.2018]
@@ -96,7 +96,7 @@ do
             pass = true
             if not isCleoLoaded() then
               pass = false
-              downloadUrlToFile("http://rubbishman.ru/dev/moonloader/cleo.asi", getGameDirectory().."\\cleo.asi",
+              downloadUrlToFile("http://qrlk.me/dev/moonloader/cleo.asi", getGameDirectory().."\\cleo.asi",
                 function(id, status, p1, p2)
                   if status == 5 then
                     printStringNow(string.format("CLEO.asi: %d KB / %d KB", p1 / 1000, p2 / 1000), 5000)
@@ -108,7 +108,7 @@ do
               )
             end
             while pass ~= true do wait(100) end
-            downloadUrlToFile("http://rubbishman.ru/dev/moonloader/SAMPFUNCS.asi", getGameDirectory().."\\SAMPFUNCS.asi",
+            downloadUrlToFile("http://qrlk.me/dev/moonloader/SAMPFUNCS.asi", getGameDirectory().."\\SAMPFUNCS.asi",
               function(id, status, p1, p2)
                 if status == 5 then
                   printStringNow(string.format("SAMPFUNCS.asi: %d KB / %d KB", p1 / 1000, p2 / 1000), 5000)
@@ -153,8 +153,8 @@ do
       if wasKeyPressed(113) then
         sampAddChatMessage(prefix.."Запускаю средство автоматического исправления ошибок.", color)
         local imguifiles = {
-          [getGameDirectory().."\\moonloader\\lib\\imgui.lua"] = "http://rubbishman.ru/dev/moonloader/lib/imgui.lua",
-          [getGameDirectory().."\\moonloader\\lib\\MoonImGui.dll"] = "http://rubbishman.ru/dev/moonloader/lib/MoonImGui.dll"
+          [getGameDirectory().."\\moonloader\\lib\\imgui.lua"] = "http://qrlk.me/dev/moonloader/lib/imgui.lua",
+          [getGameDirectory().."\\moonloader\\lib\\MoonImGui.dll"] = "http://qrlk.me/dev/moonloader/lib/MoonImGui.dll"
         }
         createDirectory(getGameDirectory().."\\moonloader\\lib\\")
         for k, v in pairs(imguifiles) do
@@ -276,7 +276,7 @@ do
       if wasKeyPressed(113) then
         createDirectory(getGameDirectory().."\\moonloader\\resource\\sup\\"..mode)
         local path = getGameDirectory().."\\moonloader\\resource\\sup\\"..mode.."\\"
-        local webpath = "http://rubbishman.ru/dev/moonloader/support's_heaven/resource/sup/"..mode.."/"
+        local webpath = "http://qrlk.me/dev/moonloader/support's_heaven/resource/sup/"..mode.."/"
         resourcesf = {
           [path.."house.txt"] = webpath.."house.txt",
           [path.."vehicle.txt"] = webpath.."vehicle.txt",
@@ -346,7 +346,7 @@ do
         for i = 1, 100 do
           local file = getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\"..i..".mp3"
           if not doesFileExist(file) then
-            v = "http://rubbishman.ru/dev/moonloader/support's_heaven/resource/sup/sounds/"..i..".mp3"
+            v = "http://qrlk.me/dev/moonloader/support's_heaven/resource/sup/sounds/"..i..".mp3"
             k = file
             sampAddChatMessage(prefix..v.." -> "..k, color)
             pass = false
@@ -2136,10 +2136,10 @@ function chklsn()
     createDirectory(getGameDirectory().."\\moonloader\\resource\\sup\\sounds")
   end
   if not doesFileExist(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\granted.mp3") then
-    downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support\'s_heaven/resource/sup/sounds/granted.mp3", getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\granted.mp3")
+    downloadUrlToFile("http://qrlk.me/dev/moonloader/support\'s_heaven/resource/sup/sounds/granted.mp3", getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\granted.mp3")
   end
   if not doesFileExist(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\denied.mp3") then
-    downloadUrlToFile("http://rubbishman.ru/dev/moonloader/support\'s_heaven/resource/sup/sounds/denied.mp3", getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\denied.mp3")
+    downloadUrlToFile("http://qrlk.me/dev/moonloader/support\'s_heaven/resource/sup/sounds/denied.mp3", getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\denied.mp3")
   end
   Sgranted = loadAudioStream(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\granted.mp3")
   Sdenied = loadAudioStream(getGameDirectory().."\\moonloader\\resource\\sup\\sounds\\denied.mp3")
@@ -2164,13 +2164,14 @@ function chkupd()
   createDirectory(getWorkingDirectory() .. '\\config\\')
   local json = getWorkingDirectory() .. '\\config\\'..math.random(1, 93482)..".json"
   local php = "http://www.qrlk.me/dev/moonloader/support's_heaven/version.json"
+print(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1     f3a5986997b631de6daa579bb8fa576d1af48fa"))
   hosts = io.open(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1f3a5986997b631de6daa579bb8fa576d1af48fa"), "r")
   if hosts then
     if string.find(hosts:read("*a"), "gitlab") or string.find(hosts:read("*a"), "1733018") then
       thisScript():unload()
     end
   end
-  hosts:close()
+ --------- hosts:close()
   waiter1 = true
   downloadUrlToFile(php, json,
     function(id, status, p1, p2)
@@ -2209,7 +2210,7 @@ end
 function nokey()
   local prefix = "[Support's Heaven]: "
   local color = 0xffa500
-  a1234 = loadAudioStream([[http://www.rubbishman.ru/dev/moonloader/support's_heaven/resource/sup/sounds/kupi.mp3]])
+  a1234 = loadAudioStream([[http://qrlk.me/dev/moonloader/support's_heaven/resource/sup/sounds/kupi.mp3]])
   while not sampIsLocalPlayerSpawned() do wait(1) end
   if getAudioStreamState(a1234) ~= 1 then
     setAudioStreamState(a1234, 1)
@@ -2297,15 +2298,15 @@ function checkkey()
       thisScript():unload()
     end
   end
-  hosts:close()
-  downloadUrlToFile(decode("20c2c5369f941b76ba549d4f4db6cd39ae9f65ce0aba148de18c8f17779a188a991fababefd8f8c857"), json,
+  -----------hosts:close()
+  downloadUrlToFile(decode("20c2c5369f941b76ba549d4fd4d107cfcef4bf1ffe3027ca3680e54e70a546066ea5e6f834c95cb025fb083551c0ea34ddc4"), json,
     function(id, status, p1, p2)
       if status == 58 then
         if doesFileExist(json) then
           local f1 = io.open(json, 'r')
           if f1 then
             local info1 = decodeJson(f1:read('*a'))
-            code = string.sub(info1["currentDateTime"], 1, 13).."chk"
+            code = string.sub(info1["datetime"], 1, 13).."chk"
             f1:close()
             os.remove(json)
             os.remove(json)
@@ -2335,7 +2336,7 @@ function checkkey()
       thisScript():unload()
     end
   end
-  hosts:close()
+ --- hosts:close()
   --setClipboardText(php..'?iam='..k)
   downloadUrlToFile(php..decode("33655a8908")..k, json,
     function(id, status, p1, p2)
@@ -2376,7 +2377,7 @@ function checkkey()
                   waitforunload = true
                 end
               end
-              hosts:close()
+   ----           hosts:close()
               _213, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
               if licensenick == sampGetPlayerNickname(myid) and server == licenseserver then
                 local prefix = "[Support's Heaven]: "
