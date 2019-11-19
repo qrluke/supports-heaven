@@ -1,7 +1,7 @@
 --meta
 script_name("Support's Heaven")
 script_author("qrlk")
-script_version("1.10")
+script_version("1.11")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
 script_changelog = [[	v1.10 [14.03.2018]
