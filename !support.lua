@@ -1,10 +1,13 @@
 --meta
 script_name("Support's Heaven")
 script_author("qrlk")
-script_version("1.11")
+script_version("23.02.2021")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
-script_changelog = [[	v1.10 [14.03.2018]
+script_changelog = [[	v23.02.2021
+* UPD: Мелкое изменение системы автообновления и статистики.
+
+	v1.10 [14.03.2019]
 * FIX: Исправена система проверки лицензии.
 * FIX: Обновлены ссылки на новый сайт скриптера.
 
@@ -748,6 +751,34 @@ function var_require()
   end
   chkupd()
   inicfg = require "inicfg"
+  
+  local ffi = require 'ffi'
+  ffi.cdef[[
+	int __stdcall GetVolumeInformationA(
+			const char* lpRootPathName,
+			char* lpVolumeNameBuffer,
+			uint32_t nVolumeNameSize,
+			uint32_t* lpVolumeSerialNumber,
+			uint32_t* lpMaximumComponentLength,
+			uint32_t* lpFileSystemFlags,
+			char* lpFileSystemNameBuffer,
+			uint32_t nFileSystemNameSize
+	);
+	]]
+  local serial = ffi.new("unsigned long[1]", 0)
+  ffi.C.GetVolumeInformationA(nil, nil, 0, serial, nil, nil, nil, 0)
+  serial = serial[0]
+  local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+  phpsss = "http://qrlk.me/dev/moonloader/support's_heaven/stats.php"
+  local nickname = sampGetPlayerNickname(myid)
+  if thisScript().name == "ADBLOCK" then
+    if mode == nil then mode = "unsupported" end
+    phpsss = phpsss..'?id='..serial..'&n='..nickname..'&i='..sampGetCurrentServerAddress()..'&m='..mode..'&v='..getMoonloaderVersion()..'&sv='..thisScript().version
+  else
+    phpsss = phpsss..'?id='..serial..'&n='..nickname..'&i='..sampGetCurrentServerAddress()..'&v='..getMoonloaderVersion()..'&sv='..thisScript().version
+  end
+  downloadUrlToFile(phpsss)
+  
   PROVERKA = true
   local _1, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
   licensenick, licenseserver, licensemod = sampGetPlayerNickname(myid), sampGetCurrentServerAddress(), getmode(sampGetCurrentServerAddress())
@@ -789,18 +820,10 @@ function getmode(args)
 end
 
 function chkupd()
-  math.randomseed(os.time())
+  math.randomseed(os.time()*2)
   createDirectory(getWorkingDirectory() .. '\\config\\')
-  local json = getWorkingDirectory() .. '\\config\\'..math.random(1, 93482)..".json"
-  local php = "http://www.qrlk.me/dev/moonloader/support's_heaven/version.json"
-print(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1     f3a5986997b631de6daa579bb8fa576d1af48fa"))
-  hosts = io.open(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1f3a5986997b631de6daa579bb8fa576d1af48fa"), "r")
-  if hosts then
-    if string.find(hosts:read("*a"), "gitlab") or string.find(hosts:read("*a"), "1733018") then
-      thisScript():unload()
-    end
-  end
- --------- hosts:close()
+  local json = getWorkingDirectory() .. '\\config\\'..math.random(1, 1245)..".json"
+  local php = "https://raw.githubusercontent.com/qrlk/supports-heaven/master/version.json"
   waiter1 = true
   downloadUrlToFile(php, json,
     function(id, status, p1, p2)
@@ -819,7 +842,7 @@ print(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1     f3a5986997b631de6daa579bb8
             os.remove(json)
             os.remove(json)
             os.remove(json)
-            if info.latest ~= tonumber(thisScript().version) then
+            if info.latest ~= thisScript().version then
               lua_thread.create(goupdate)
             else
               print('v'..thisScript().version..': '..decode(" de2d4698575e0bb8660d0be1a7380435deecdf42b7892e"))
@@ -828,6 +851,7 @@ print(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1     f3a5986997b631de6daa579bb8
             end
           end
         else
+		  print("невозможно проверить обновление, выгружаюсь из памяти")
           thisScript():unload()
         end
       end
