@@ -1,3 +1,29 @@
+<h1 align="center">Support's Heaven</h1>
+
+<p align="center">
+
+<img src="https://img.shields.io/badge/made%20for-GTA%20SA--MP-blue" >
+
+<img src="https://img.shields.io/badge/Server-SRP%20|%20ERP-red">
+
+<img src="https://img.shields.io/github/languages/top/qrlk/supports-heaven">
+
+<img src="https://img.shields.io/badge/dynamic/json?color=blueviolet&label=users%20%28active%29&query=result&url=http%3A%2F%2Fqrlk.me%2Fdev%2Fmoonloader%2Fusers_active.php%3Fscript%3Dsupport's_heaven">
+
+<img src="https://img.shields.io/badge/dynamic/json?color=blueviolet&label=users%20%28all%20time%29&query=result&url=http%3A%2F%2Fqrlk.me%2Fdev%2Fmoonloader%2Fusers_all.php%3Fscript%3Dsupport's_heaven">
+
+<img src="https://img.shields.io/date/1531947600?label=released" >
+
+</p>
+
+A **[moonloader](https://gtaforums.com/topic/890987-moonloader/)** script which combines a set of useful features for role-playing server's support staff (**[gta samp](https://sa-mp.com/)**).  
+
+It requires **[CLEO 4+](http://cleo.li/?lang=ru)**, **[SAMPFUNCS 5+](https://blast.hk/threads/17/page-59#post-279414)**, **[MoonImgui](https://blast.hk/threads/19292/)** and **[Samp.Lua](https://blast.hk/threads/14624/)**.
+
+---
+
+**The following description is in Russian, because it is the main language of the user base**.
+
 # Описание
 **Support's Heaven** - это lua скрипт для MoonLoader, который добавляет в игру множество полезных инструментов для игроков-саппортов.  
 Подробная информация: [тут](https://blast.hk/threads/22928/)  
