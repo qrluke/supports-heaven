@@ -1,10 +1,13 @@
 --meta
 script_name("Support's Heaven")
 script_author("qrlk")
-script_version("23.02.2021-1")
+script_version("04.05.2021")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
-script_changelog = [[	v23.02.2021-1
+script_changelog = [[  v04.05.2021
+* UPD: Обновлены IP адреса серверов.
+
+  v23.02.2021-1
 * UPD: Мелкое изменение системы автообновления и статистики.
 * UPD: Обновлены IP адреса серверов.
 
@@ -809,10 +812,10 @@ function var_require()
 end
 function getmode(args)
   local servers = {
-    ["95.181.158.75"] = "samp-rp",
-    ["95.181.158.64"] = "samp-rp",
-    ["95.181.158.70"] = "samp-rp",
-    ["95.181.158.78"] = "samp-rp",
+    ["91.243.35.11"] = "samp-rp",
+    ["91.243.35.12"] = "samp-rp",
+    ["91.243.35.13"] = "samp-rp",
+    ["91.243.35.14"] = "samp-rp",
     ["185.169.134.67"] = "evolve-rp",
     ["185.169.134.68"] = "evolve-rp",
     ["185.169.134.91"] = "evolve-rp",
