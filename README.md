@@ -23,7 +23,9 @@ It requires **[CLEO 4+](http://cleo.li/?lang=ru)**, **[SAMPFUNCS 5+](https://bla
 ---
 
 **The following description is in Russian, because it is the main language of the user base**.
-
+<details>
+  <summary>Описание на русском языке.</summary>
+ 
 # Описание
 **Support's Heaven** - это lua скрипт для MoonLoader, который добавляет в игру множество полезных инструментов для игроков-саппортов.  
 Подробная информация: [тут](https://blast.hk/threads/22928/)  
@@ -214,3 +216,4 @@ It requires **[CLEO 4+](http://cleo.li/?lang=ru)**, **[SAMPFUNCS 5+](https://bla
   * Хоткеи настраиваются через [Исходник - Софт - ImGui Custom](https://blast.hk/threads/22080/), а не через .ini или как-нибудь ещё.
   * Все хоткеи могут быть выключены, кроме хоткея открытия главного меню.
   * Возможно рендерить курсор через гта, чтобы он был виден на скринах и видео.
+</details>
