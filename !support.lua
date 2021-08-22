@@ -1,4 +1,5 @@
---meta
+require "lib.moonloader"
+
 script_name("Support's Heaven")
 script_author("qrlk")
 script_version("11.05.2021")
