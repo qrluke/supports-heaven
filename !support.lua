@@ -774,8 +774,9 @@ function var_require()
   inicfg = require "inicfg"
 
   PROVERKA = true
-  local _1, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
   while sampGetCurrentServerName() == "SA-MP" do wait(100) end
+
+  local _1, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
 
   licensenick, licenseserver, licensemod = sampGetPlayerNickname(myid), sampGetCurrentServerAddress(), getmode(sampGetCurrentServerAddress()) or getModeByServerName(sampGetCurrentServerName())
   mode = licensemod
