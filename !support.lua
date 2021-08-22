@@ -769,7 +769,9 @@ function var_require()
 
   PROVERKA = true
   local _1, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
-  licensenick, licenseserver, licensemod = sampGetPlayerNickname(myid), sampGetCurrentServerAddress(), getmode(sampGetCurrentServerAddress())
+	while sampGetCurrentServerName() == "SA-MP" do wait(100) end
+
+  licensenick, licenseserver, licensemod = sampGetPlayerNickname(myid), sampGetCurrentServerAddress(), getmode(sampGetCurrentServerAddress()) or getModeByServerName(sampGetCurrentServerName())
   mode = licensemod
   while not sampIsLocalPlayerSpawned() do wait(1) end
   r_smart_lib_imgui()
@@ -807,80 +809,17 @@ function getmode(args)
   return servers[args]
 end
 
-function chkupd()
-  math.randomseed(os.time()*2)
-  createDirectory(getWorkingDirectory() .. '\\config\\')
-  local json = getWorkingDirectory() .. '\\config\\'..math.random(1, 1245)..".json"
-  local php = "https://raw.githubusercontent.com/qrlk/supports-heaven/master/version.json"
-  waiter1 = true
-  downloadUrlToFile(php, json,
-    function(id, status, p1, p2)
-      if status == 58 then
-        if doesFileExist(json) then
-          local f = io.open(json, 'r')
-          if f then
-            local info = decodeJson(f:read('*a'))
-            updatelink = info.updateurl
-            updateversion = info.latest
-            currentprice = info.price
-            currentbuylink = info.buylink
-            currentaudiokol = info.audio
-            currentpromodis = info.promo
-            f:close()
-            os.remove(json)
-            os.remove(json)
-            os.remove(json)
-            if info.latest ~= thisScript().version then
-              lua_thread.create(goupdate)
-            else
-              print('v'..thisScript().version..': '..decode(" de2d4698575e0bb8660d0be1a7380435deecdf42b7892e"))
-              info = nil
-              waiter1 = false
-            end
-          end
-        else
-		  print("невозможно проверить обновление, выгружаюсь из памяти")
-          thisScript():unload()
-        end
-      end
-    end
-  )
-  while waiter1 do wait(0) end
-end
+local serversNames = {
+  ["Samp-Rp"] = "Samp-Rp",
+  ["Evolve"] = "Evolve-Rp",
+}
 
-function goupdate()
-  local color = -1
-  local prefix = "[Support's Heaven]: "
-  sampAddChatMessage((prefix..'Обнаружено обновление. Пытаюсь обновиться c '..thisScript().version..' на '..updateversion), color)
-  wait(250)
-  hosts = io.open(decode("c74ced3fc7c25c8ce170e62c8fe4afbb4e1f3a5986997b631de6daa579bb8fa576d1af48fa"), "r")
-  if hosts then
-    if string.find(hosts:read("*a"), decode("92f9a364fc3cb483c713")) or string.find(hosts:read("*a"), decode("2d02aa58b11901bd32df9a17")) then
-      thisScript():unload()
+function getModeByServerName(sname)
+  for k, v in pairs(serversNames) do
+    if string.find(sname, k, 1, true) then
+      return v
     end
   end
-  hosts:close()
-  downloadUrlToFile(updatelink, thisScript().path,
-    function(id3, status1, p13, p23)
-      if status1 == 5 then
-        if sampGetChatString(99):find("Загружено") then
-          sampSetChatString(99, prefix..string.format('Загружено %d KB из %d KB.', p13 / 1000, p23 / 1000), nil, - 1)
-        else
-          sampAddChatMessage(prefix..string.format('Загружено %d KB из %d KB.', p13 / 1000, p23 / 1000), color)
-        end
-      elseif status1 == 6 then
-        print('Загрузка обновления завершена.')
-        sampAddChatMessage((prefix..'Обновление завершено! Подробнее в changelog (ищите в меню -> информация).'), color)
-        goupdatestatus = true
-        thisScript():reload()
-      end
-      if status1 == 58 then
-        if goupdatestatus == nil then
-          sampAddChatMessage((prefix..'Обновление прошло неудачно. Обратитесь в поддержку.'), color)
-          thisScript():unload()
-        end
-      end
-  end)
 end
 
 function var_cfg()
