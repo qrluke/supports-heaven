@@ -820,9 +820,9 @@ function getmode(args)
 end
 
 local serversNames = {
-  ["SRP"] = "Samp-Rp",
-  ["Samp-Rp"] = "Samp-Rp",
-  ["Evolve"] = "Evolve-Rp",
+  ["SRP"] = "samp-rp",
+  ["Samp-Rp"] = "samp-rp",
+  ["Evolve"] = "evolve-rp",
 }
 
 function getModeByServerName(sname)
