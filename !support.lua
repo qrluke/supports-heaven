@@ -2,7 +2,7 @@ require "lib.moonloader"
 
 script_name("Support's Heaven")
 script_author("qrlk")
-script_version("28.08.2021")
+script_version("25.06.2022")
 script_dependencies('CLEO 4+', 'SAMPFUNCS', 'Dear Imgui', 'SAMP.Lua')
 script_moonloader(026)
 script_url("https://github.com/qrlk/supports-heaven")
